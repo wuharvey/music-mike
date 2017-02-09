@@ -1,4 +1,4 @@
-Playlist
+MUSICMIKE
 =====
 
 ### Intro
@@ -15,10 +15,16 @@ MUSICMIKE is based on the following observations regarding Western music: one, t
 
 Our model of music software is based off tunes - a collection of lists that specify the relative pitches, rhythms, and mode, of the tune. Tunes can be manipulated both in temporal placement in ultimately generated .wav file and in actual content through use of map() (applying functions to the tune) and plot() (converting the tune into data such that it is convertible to a .wav file). 
 
-This system yields several advantages. 1) One can easily transpose between different keys by applying functions on the tune’s list of pitches; though the absolute notes of the scale will change, the mapping of mode will ensure the tune remains the same. 2) One can change the mode in tune while keeping other parameters constant, thus altering a melody in interesting ways (for example, altering “Happy birthday” so it’s rendered in a minor key).
+This system yields several advantages. 
+1) One can easily transpose between different keys by applying functions on the tune’s list of pitches; though the absolute notes of the scale will change, the mapping of mode will ensure the tune remains the same. 
+2) One can change the mode in tune while keeping other parameters constant, thus altering a melody in interesting ways (for example, altering “Happy birthday” so it’s rendered in a minor key).
 
 By taking advantage of music theory and the relationships of notes within scales and modes with each other along with the relationships between notes from different scales and modes, MUSICMIKE can create a more intuitive programming language for musicians. 
 
+
+### EXAMPLE PROGRAM
+The bread and butter of MUSICMIKE are the unique list constructors. Square brackets construct a "normal list" - this is similar to a list in OCaml. Double square brackets [[]] are designed for convenient creation of rhythm lists and take expressions that are converted to floats. These expressions take the following form:
+Angular brackets < > facilitate pitch list creation.  
 
 	// Happy Birthday
 	mode = Cmajor; 
