@@ -19,7 +19,7 @@ This system yields several advantages. 1) One can easily transpose between diffe
 
 By taking advantage of music theory and the relationships of notes within scales and modes with each other along with the relationships between notes from different scales and modes, MUSICMIKE can create a more intuitive programming language for musicians. 
 
-'''
+
 	// Happy Birthday
 	mode = Cmajor; 
 	// Alternatively could define as major=[C D E F G A B];
@@ -42,13 +42,13 @@ By taking advantage of music theory and the relationships of notes within scales
 	new_rhythm = map(Augment, rhythm);
 	more_melody = wrap(mode, pitches, new_rhythm);
 	//now twice as long as the original melody
-'''
+
 
 ### Team Members
 
 | Name               | UNI     | Role                |
 |--------------------|---------|---------------------|
-| Husam Abdul-Kafi   | hsa2136 | System Architect 	 |
+| Husam Abdul-Kafi   | hsa2136 | System Architect   |
 | Mounika Bodapati   | lmb2254 | Manager             |
 | Kaitlin Pet        | khp210  | Tester              |
 | Harvey Wu          | hw2473  | Language Guru       |
