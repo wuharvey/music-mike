@@ -1,17 +1,21 @@
-Musicmike
+Music-mike
 =====
 
 ### Introduction
 Western music is usually notated on a five-line staff, on which **notes** are given a **duration** based on symbol type, and **pitch** based on location in the staff. Composers can use proprietary software such as Sibelius or Finale to manipulate a virtual five-line staff through mouse clicks or keyboard gestures. Fans of computer music might instead use music synthesis libraries to programmatically create music in languages such as C++, but such libraries can be unintuitive for musicians unfamiliar with signals and waves.
 
-We propose Musicmike, a strongly typed, high-level, functional programming language, to give users an alternative option in music creation. Musicmike is designed for users to create music based on varied manipulations of short patterns. We owe this idea to Note Hashtag, a previous project completed in COMS W4115. However, unlike Note Hashtag, Musicmike is **modal** rather than **key-based**, such that mode is user-defined or pre-programmed. Furthermore, lists - treated as the fundamental building block of music - are manipulated with special list operators (syntactic sugar) which create an intuitive interface for musicians based on traditional staff notation.
+We propose Music-mike, a strongly typed, high-level, functional programming language, to give users an alternative option in music creation. Music-mike is designed for users to create music based on varied manipulations of short patterns. We owe this idea to Note Hashtag, a previous project completed in COMS W4115. However, unlike Note Hashtag, Music-mike is **modal** rather than **key-based**, such that mode is user-defined or pre-programmed. Furthermore, lists - treated as the fundamental building block of music - are manipulated with special list operators (syntactic sugar) which create an intuitive interface for musicians based on traditional staff notation.
 
 ### Design Ethos
 The most basic unit in music is a **note**, which can be decomposed into pitch and duration. A simple melody can thus be described as two lists: one list of pitches and another of durations. A **chord** is a collection of notes played simultaneously. 
 
 A set of pitches is defined as a **mode**. All modes are subsets of the chromatic scale, which contains all twelve pitch classes used in Western music. Most music constrains the pitches of its notes to a small set of familiar modes, such as the major and minor scales. The sound of a **chord** is very much dependent on the **mode** that its notes come from.
 
-Musicmike is based on the following observations regarding Western music: one, that Western music is fundamentally  **chordal** and **modal**. Two, that Western music is repetitive and manipulative: simple building blocks of music are modified, then repeated multiple times in a piece. Finally, and most importantly, that these simple building blocks can described using lists and altered using a functional paradigm. 
+Music-mike is based on the following observations regarding Western music: one, that Western music is fundamentally  **chordal** and **modal**. Two, that Western music is repetitive and manipulative: simple building blocks of music are modified, then repeated multiple times in a piece. Finally, and most importantly, that these simple building blocks can described using lists and altered using a functional paradigm. 
+
+### Features
+>*Hi
+>*Hello
 
 Tunes - a collection of lists that specify the relative pitches, rhythms, and mode, of the tune. Tunes can be manipulated both in temporal placement in ultimately generated .wav file and in actual content through use of map() (applying functions to the tune) and plot() (converting the tune into data such that it is convertible to a .wav file). 
 
@@ -22,14 +26,14 @@ This system yields several advantages.
 By taking advantage of music theory and the relationships of notes within scales and modes with each other along with the relationships between notes from different scales and modes, MUSICMIKE can create a more intuitive programming language for musicians. 
 
 ### Example Program
-The bread and butter of MUSICMIKE are the unique list constructors. Lists can only take one type in MUSICMIKE, similar to OCaml. 
+The bread and butter of Music-mike are the unique list constructors. Lists can only take one type in Music-mike, similar to OCaml. 
 
-Square brackets construct a "normal list". Double square brackets [[]] are designed for convenient creation of rhythm lists and take expressions that are converted to floats. These expressions take the following form: [insert here]
-Angular brackets < > facilitate pitch list creation. 
+Square brackets construct a "normal" list. Double square brackets [[]] are designed for convenient creation of rhythm lists and take expressions that are converted to floats. Angular brackets < > facilitate pitch list creation. These constructors manipulate their contents in subtle ways that are explained in the comments below.
 
 	// Happy Birthday
 	mode = Cmajor; 
-	// Alternatively could define as major=[C D E F G A B];
+	// Alternatively could define as major=[C D E F G A B]; 
+	// For such definitions we default to the fourth octave, i.e. C4 D4 E4 F4 G4 A4 B4.
 
 	rhythm = [[ 8o 16 4 4 4 2 8o 16 4 4 4 2 1 ]]; 
 	// o is an operator that “dots” a rhythm unit. 
