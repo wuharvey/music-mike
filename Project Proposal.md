@@ -22,7 +22,6 @@ In programming speak:
 
 (Don't worry, these features will be outlined in the example program.)
 
-### Features 
 In music speak:
 - Phrases can be: augmented, diminished, transposed, or even mapped to different modes!
 - Melodies can be placed on a timeframe allowing for easy polyphonic composition.
