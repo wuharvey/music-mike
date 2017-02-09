@@ -14,8 +14,12 @@ A set of pitches is defined as a **mode**. All modes are subsets of the chromati
 Music-mike is based on the following observations regarding Western music: one, that Western music is fundamentally  **chordal** and **modal**. Two, that Western music is repetitive and manipulative: simple building blocks of music are modified, then repeated multiple times in a piece. Finally, and most importantly, that these simple building blocks can described using lists and altered using a functional paradigm. 
 
 ### Features
->*Hi
->*Hello
+- Functional Programming (Maps and stuff) 
+- Immutable Everything 
+- Intuitive List Defintion and Manipulation
+- Sweet Syntactic Sugar 
+
+Some of these features will be outlined in the example program.
 
 Tunes - a collection of lists that specify the relative pitches, rhythms, and mode, of the tune. Tunes can be manipulated both in temporal placement in ultimately generated .wav file and in actual content through use of map() (applying functions to the tune) and plot() (converting the tune into data such that it is convertible to a .wav file). 
 
@@ -30,15 +34,20 @@ The bread and butter of Music-mike are the unique list constructors. Lists can o
 
 Square brackets construct a "normal" list. Double square brackets [[]] are designed for convenient creation of rhythm lists and take expressions that are converted to floats. Angular brackets < > facilitate pitch list creation. These constructors manipulate their contents in subtle ways that are explained in the comments below.
 
-	// Happy Birthday
-	mode = Cmajor; 
-	// Alternatively could define as major=[C D E F G A B]; 
-	// For such definitions we default to the fourth octave, i.e. C4 D4 E4 F4 G4 A4 B4.
+	// Happy Birthday. Oh by the way, this is a single line comment. Nested comments will 
+	// not be supported.
+	
+	mode = MAJOR;  
+	// Alternatively could define as major=[1 3 5 6 8 10 12]; 
 
 	rhythm = [[ 8o 16 4 4 4 2 8o 16 4 4 4 2 1 ]]; 
 	// o is an operator that “dots” a rhythm unit. 
+	// The actual rhythm here is: Dotted Eighth Note - Sixteenth Note - Quarter Note ... etc.
+	// So [[ ]] constructor takes int-expressions and takes their inverse. 
 
-	pitches = <5 5 6 5 1 7 5 5 6 5 2 1 0>; 
+	pitches = <1&5 5 6 5 ^1 7 5 5 6 5 ^2 ^1 0>; 
+	// The prefix operator ^ moves up pitch by an octave. 
+	// The infix operator & creates a chord. Actually, every note is a chord of one for type consistency.
 	// Zero notates a rest.
 
 	melody = wrap(mode, pitches, rhythm);
@@ -47,7 +56,7 @@ Square brackets construct a "normal" list. Double square brackets [[]] are desig
 	fun Ascend x = x#;
 	new_pitches = map(Ascend, pitches);
 	new_melody = wrap(mode, new_pitches, rhythm);
-	//now in key of c# major
+	//now in key of C# major
 
 	fun Augment x = x*2;
 	new_rhythm = map(Augment, rhythm);
