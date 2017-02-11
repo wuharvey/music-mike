@@ -42,14 +42,6 @@ In music speak:
 - Phrases can be: augmented, diminished, transposed, or even mapped to different modes.
 - Melodies can be placed on a timeframe allowing for easy polyphonic composition.
 
-### Types
-
-| Name               | UNI     | Role                |
-|--------------------|---------|---------------------|
-| Husam Abdul-Kafi   | hsa2136 | Systems Architect   |
-| Mounika Bodapati   | lmb2254 | Manager             |
-| Kaitlin Pet        | khp210  | Tester              |
-| Harvey Wu          | hw2473  | Language Guru       |
 
 ### Example Program
 The bread and butter of Music-mike are the unique list constructors. Lists can only take one type in Music-mike, similar to OCaml. 
