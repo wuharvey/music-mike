@@ -16,12 +16,16 @@ Music-mike is based on the following observations regarding Western music: one, 
 ### Features 
 #####Primitive Data Types:
 **int** : Four bytes.
+
 **float** : Eight bytes. 
+
 **bool** : 
 
 #####Special Data Types:
-**pitch** :
+**pitch** : 
+
 **rhythm** :
+
 **list** : 
 
 
