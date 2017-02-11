@@ -4,7 +4,7 @@ Music-mike
 ### Introduction
 Western music is usually notated on a five-line staff, on which **notes** are given a **duration** based on symbol type, and **pitch** based on location in the staff. Composers can use proprietary software such as Sibelius or Finale to manipulate a virtual five-line staff through mouse clicks or keyboard gestures. Fans of computer music might instead use music synthesis libraries to programmatically create music in languages such as C++, but such libraries can be unintuitive for musicians unfamiliar with signals and waves.
 
-We propose Music-mike, a strongly typed, high-level, functional programming language, to give users an alternative option in music creation. Music-mike is designed for users to create music based on varied manipulations of short patterns. We owe this idea to Note Hashtag, a previous project completed in COMS W4115. However, unlike Note Hashtag, Music-mike is **modal** rather than **key-based**. Furthermore, lists - treated as the fundamental building block of music - are manipulated with special list operators (syntactic sugar) which create an intuitive interface based on traditional staff notation.
+We propose Music-mike, a compiled, strongly typed, functional programming language, to give users an alternative option in music creation. Music-mike is designed for users to create music based on varied manipulations of short patterns. We owe this idea to Note Hashtag, a previous project completed in COMS W4115. However, unlike Note Hashtag, Music-mike is **modal** rather than **key-based**. Furthermore, lists - treated as the fundamental building block of music - are manipulated with special list operators (syntactic sugar) which create an intuitive interface based on traditional staff notation.
 
 ### Design Ethos
 The most basic unit in music is a **note**, which can be decomposed into pitch and duration. A simple melody can thus be described as two lists: one list of pitches and another of durations. A **chord** is a collection of notes played simultaneously. 
@@ -14,17 +14,38 @@ A set of pitches is defined as a **mode**. All modes are subsets of the chromati
 Music-mike is based on the following observations regarding Western music: one, that Western music is fundamentally  **chordal** and **modal**. Two, that Western music is repetitive and manipulative: simple building blocks of music are modified, then repeated multiple times in a piece. Finally, and most importantly, that these simple building blocks can described using lists and altered using a functional paradigm. 
 
 ### Features 
+#####Primitive Data Types:
+**int** : Four bytes.
+**float** : Eight bytes. 
+**bool** : 
+
+#####Special Data Types:
+**pitch** :
+**rhythm** :
+**list** : 
+
+
+
 In programming speak:
-- Functional Programming (Maps and stuff) 
-- Immutable Everything 
+- Functional Programming (maps and stuff) 
+- Type Inference (also, immutable everything) 
 - Intuitive List Defintion and Manipulation
 - Sweet Syntactic Sugar 
 
 (Don't worry, these features will be outlined in the example program.)
 
 In music speak:
-- Phrases can be: augmented, diminished, transposed, or even mapped to different modes!
+- Phrases can be: augmented, diminished, transposed, or even mapped to different modes.
 - Melodies can be placed on a timeframe allowing for easy polyphonic composition.
+
+### Types
+
+| Name               | UNI     | Role                |
+|--------------------|---------|---------------------|
+| Husam Abdul-Kafi   | hsa2136 | Systems Architect   |
+| Mounika Bodapati   | lmb2254 | Manager             |
+| Kaitlin Pet        | khp210  | Tester              |
+| Harvey Wu          | hw2473  | Language Guru       |
 
 ### Example Program
 The bread and butter of Music-mike are the unique list constructors. Lists can only take one type in Music-mike, similar to OCaml. 
