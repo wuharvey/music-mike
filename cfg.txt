@@ -1,23 +1,23 @@
 
-
+//need to define scoping to finish this stuff
 
 
 program= decls EOF
 
 decls= expr ; decls | e
 
-expr -> decl | fun | type | stmt
+expr -> decl | fun | type | stmt | loop
 
 
 //if then else? how to integrate
 stmt -> dstmt | cstmt
     dstmt: if quer then stmt | if quer then cstmt else dstmt
-    cstmt: if quer then cstmt else cstmt | expr
+    cstmt: if quer then cstmt else cstmt | block //block of statments. we need to figure out how to use brackets (via microc)
         quer -> data == data | data > data | data < data | data >= data | data <= data 
 
- decl -> name = data 
+ decl -> name = stmt 
    
-    data -> list | fun | prim | usertype | tuple | name
+    data -> list | fun | prim | tuple | name
     
         name-> [$a-$Z][$a-$Z, $0-$9, _]*  //name of variable
     
@@ -39,7 +39,7 @@ stmt -> dstmt | cstmt
             reglist -> [ reg ]
                 reg -> _ reg | e
         
-        function -> 
+        fun -> 
 
         prim -> bool | unit | num | str | char  
             bool -> bool || bool | bool && bool | true | false
@@ -49,7 +49,7 @@ stmt -> dstmt | cstmt
             str -> " [$0-$9, $a-$Z, _ ]*"
             char -> ' [$a-$Z, $0-$9] '
 
-       usertype -> [$a-$Z, $0-$9]*
+    
 
 
 
