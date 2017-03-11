@@ -2,12 +2,25 @@
 
 
 
-expr -> expr ; expr | decl | fun | type
+program= decls EOF
+
+decls= expr ; decls | e
+
+expr -> expr ; expr | decl | fun | type | stmt
+
+
+//if then else? how to integrate
+stmt -> dstmt | cstmt
+    dstmt: if quer then stmt | if quer then cstmt else dstmt
+    cstmt: if quer then cstmt else cstmt | 
 
     decl -> var = data 
         var  -> [$a-$Z][$a-$Z, $0-$9, _]* 
 
-    data -> list | fun | prim | usertype
+    data -> list | fun | prim | usertype | tuple
+    
+        tuple -> << tuple_inside >>
+            tuple_inside -> _ tuple | e
 
         list -> plist | rlist | reglist
             plist -> p:[ pitch ] 
@@ -29,12 +42,12 @@ expr -> expr ; expr | decl | fun | type
         prim -> bool | unit | num | str | char  
             bool -> bool || bool | bool && bool | true | false
             num -> int | float
-                float -> int . int
+                float -> int . int | .int | int.
 
             str -> " [$0-$9, $a-$Z, _ ]*"
             char -> ' [$a-$Z, $0-$9] '
 
-       usertype ->     
+       usertype -> [$a-$Z, $0-$9]*
 
 
 
