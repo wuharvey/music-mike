@@ -1,0 +1,43 @@
+
+
+
+
+expr -> expr ; expr | decl | fun | type
+
+    decl -> var = data 
+        var  -> [$a-$Z][$a-$Z, $0-$9, _]* 
+
+    data -> list | fun | prim | usertype
+
+        list -> plist | rlist | reglist
+            plist -> p:[ pitch ] 
+                pitch -> chord pitch | e
+                    chord -> note / note
+                        note -> preop note postop | int | e
+                            preop -> ^ preop | v preop | e
+                            postop -> # postop | b postop | e
+            rlist -> r:[ rhythm ]
+                rhythm -> beat rhythm | e
+                    beat -> beat bpo | char | float
+                        bpo -> o
+       
+            reglist -> [ reg ]
+                reg -> _ reg | e
+        
+        function -> 
+
+        prim -> bool | unit | num | str | char  
+            bool -> bool || bool | bool && bool | true | false
+            num -> int | float
+                float -> int . int
+
+            str -> " [$0-$9, $a-$Z, _ ]*"
+            char -> ' [$a-$Z, $0-$9] '
+
+       usertype ->     
+
+
+
+
+
+
