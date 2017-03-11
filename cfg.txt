@@ -13,13 +13,13 @@ expr -> decl | fun | type | stmt
 stmt -> dstmt | cstmt
     dstmt: if quer then stmt | if quer then cstmt else dstmt
     cstmt: if quer then cstmt else cstmt | expr
+        quer -> data == data | data > data | data < data | data >= data | data <= data 
+
+ decl -> name = data 
+   
+    data -> list | fun | prim | usertype | tuple | name
     
-        quer -> data == data | data > data | data < data | data >= data | data <= data
-
-    decl -> var = data 
-        var  -> [$a-$Z][$a-$Z, $0-$9, _]* 
-
-    data -> list | fun | prim | usertype | tuple
+        name-> [$a-$Z][$a-$Z, $0-$9, _]*  //name of variable
     
         tuple -> << tuple_inside >>
             tuple_inside -> _ tuple | e
