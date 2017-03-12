@@ -12,10 +12,10 @@ expr -> decl | fun | type | stmt | loop
 //if then else? how to integrate
 stmt -> dstmt | cstmt
     dstmt: if quer then stmt | if quer then cstmt else dstmt
-    cstmt: if quer then cstmt else cstmt | block //block of statments. we need to figure out how to use brackets (via microc)
+    cstmt: if quer then cstmt else cstmt | decls
         quer -> data == data | data > data | data < data | data >= data | data <= data 
 
- decl -> name = stmt 
+decl -> name = stmt 
    
     data -> list | fun | prim | tuple | name
     
@@ -39,7 +39,7 @@ stmt -> dstmt | cstmt
             reglist -> [ reg ]
                 reg -> _ reg | e
         
-        fun -> 
+   
 
         prim -> bool | unit | num | str | char  
             bool -> bool || bool | bool && bool | true | false
@@ -51,8 +51,11 @@ stmt -> dstmt | cstmt
 
     
 
+fun -> 
 
+type->
 
-
-
+loop-> for element in list { decls }
+    element-> name
+ 
 
