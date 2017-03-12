@@ -1,21 +1,26 @@
 
 //need to define scoping to finish this stuff
+//block of code: decls
 
 
-program= decls EOF
+ 
+program= decls EOF  
 
-decls= expr ; decls | e
+decls= expr ; decls | e  //block of expressions
 
-expr -> decl | fun | type | stmt | loop
+
+expr -> declaration | function_name | function_call | type | stmt | loop
 
 
 //if then else? how to integrate
 stmt -> dstmt | cstmt
-    dstmt: if quer then stmt | if quer then cstmt else dstmt
-    cstmt: if quer then cstmt else cstmt | decls
+    
+    dstmt-> IF  quer THEN { stmt }| IF quer THEN { cstmt } ELSE { dstmt }
+    cstmt-> IF quer THEN { cstmt } ELSE { cstmt } | decls
+        
         quer -> data == data | data > data | data < data | data >= data | data <= data 
 
-decl -> name = stmt 
+declaration -> name = stmt   //any declaration can be to a block of statements because earlier cstmt -> decls
    
     data -> list | fun | prim | tuple | name
     
@@ -30,12 +35,12 @@ decl -> name = stmt
                     chord -> note / note
                         note -> preop note postop | int | e
                             preop -> ^ preop | v preop | e
-                            postop -> # postop | b postop | e
+                            postop -> # postop | B postop | e
             rlist -> r:[ rhythm ]
                 rhythm -> beat rhythm | e
                     beat -> beat bpo | char | float
                         bpo -> o
-       
+      
             reglist -> [ reg ]
                 reg -> _ reg | e
         
@@ -51,11 +56,15 @@ decl -> name = stmt
 
     
 
-fun -> 
+function_name -> FUN name arg = expr
+function_call -> name arg
+    arg -> data arg | e
+    
+    
+type-> TYPE name { type_content }
+    type_content-> name = data ; type_content | e
 
-type->
-
-loop-> for element in list { decls }
+loop-> FOR element IN list :{ decls }
     element-> name
  
 
