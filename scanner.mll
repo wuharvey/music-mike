@@ -1,4 +1,4 @@
-(* Ocamllex scanner for MicroC *)
+(* Ocamllex scanner for Music-Mike *)
 
 { open Parser }
 
@@ -11,8 +11,6 @@ rule token = parse
 | '}'      { RBRACE }
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
-| '[|'     { LINDEX }
-| '|]'     { RINDEX }
 | "p:["    { PLBRACKET }
 | "r:["    { RLBRACKET }
 | ';'      { SEMI }
@@ -46,7 +44,6 @@ rule token = parse
 | "then"   { THEN }
 | "else"   { ELSE }
 | "for"    { FOR }
-| "while"  { WHILE }
 | "return" { RETURN }
 | "int"    { INT }
 | "bool"   { BOOL }
@@ -63,7 +60,9 @@ rule token = parse
 | 'e'      { FLITERAL(0.5) }
 | 's'      { FLITERAL(0.25) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ['a'-'d' 'f' 'g' 'i'-'n' 'p' 'r' 'u' 'v' 'x'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ['A'-'D' 'F' 'G' 'I'-'N' 'P' 'R' 'U' 'V' 'X'-'Z']['a'-'z' 'A'-'Z' '0'-'9'
+'_']* as lxm { FID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
