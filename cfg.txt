@@ -1,6 +1,8 @@
 
 //need to define scoping to finish this stuff
 //block of code: decls
+//I don't remember how we defined pitch so someone else do it
+//need: list concatination and list element fetching
 
 
  
