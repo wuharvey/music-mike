@@ -4,18 +4,16 @@
 open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET LINDEX RINDEX PLBRACKET RLBRACKET LTUPLE RTUPLE 
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
 %token OUP ODOWN FLAT OCTOTHORPE
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
-%token RETURN IF THEN ELSE FOR WHILE INT BOOL VOID FUN 
+%token IF THEN ELSE FOR WHILE INT BOOL VOID FUN 
 %token <int> LITERAL
 %token <float> FLITERAL
-%token <string> ID
+%token <string> ID FID
 %token EOF
 
-%nonassoc NOELSE
-%nonassoc ELSE
 %right ASSIGN
 %left OR
 %left AND
@@ -35,26 +33,16 @@ open Ast
 program:
   decls EOF { $1 }
 
-decls:
-   /* nothing */ { [], [] }
- | decls vdecl { ($2 :: fst $1), snd $1 }
- | decls fdecl { fst $1, ($2 :: snd $1) }
-
-fdecl:
-   typ ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { typ = $1;
-	 fname = $2;
-	 formals = $4;
-	 locals = List.rev $7;
-	 body = List.rev $8 } }
-
-formals_opt:
-    /* nothing */ { [] }
-  | formal_list   { List.rev $1 }
+fdecl: /* formals are not optional */
+   FID formal_list ASSIGN expr_list
+     { { ident = $1;
+	 formals = $2;
+	 body = List.rev $4 } }
+	/* Syntax question: why are there two braces? */
 
 formal_list:
-    typ ID                   { [($1,$2)] }
-  | formal_list COMMA typ ID { ($3,$4) :: $1 }
+    ID                   { $1 }
+  | formal_list ID { ($2) :: $1 }
 
 typ:
     INT { Int }
@@ -76,12 +64,6 @@ stmt:
     expr SEMI { Expr $1 }
   | RETURN SEMI { Return Noexpr }
   | RETURN expr SEMI { Return $2 }
-  | LBRACE stmt_list RBRACE { Block(List.rev $2) }
-  | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
-  | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
-  | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt
-     { For($3, $5, $7, $9) }
-  | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 
 expr_opt:
     /* nothing */ { Noexpr }
@@ -114,6 +96,7 @@ expr:
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
+  | IF expr THEN expr ELSE expr { If($2, $4, $6) }
 
 actuals_opt:
     /* nothing */ { [] }
