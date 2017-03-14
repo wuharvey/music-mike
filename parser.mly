@@ -9,6 +9,7 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token IF THEN ELSE FOR WHILE INT BOOL VOID FUN 
+%token FOR TYP
 %token <int> LITERAL
 %token <float> FLITERAL
 %token <string> ID FID
@@ -31,7 +32,19 @@ open Ast
 %%
 
 program:
-  decls EOF { $1 }
+  decls EOF { List.rev $1 }
+
+dcls: 										   /* semicolon delimmited list of sections */
+    /* nothing */ { [] }
+ | section        { $1 }
+ | section SEMI decls  { $3 :: $1 }
+ 
+ section:							   /* expression, type declaration, or function declaration */
+    expr   { $1 }
+  | fdecl  { $1 }
+  | typedecl { $1 }
+  
+  
 
 fdecl: /* formals are not optional */
    FID whitesp_list ASSIGN expr  /* expr can go to expr_list */
@@ -40,19 +53,6 @@ fdecl: /* formals are not optional */
 	 body = $4 } }
 	/* Syntax question: why are there two braces? */
 
-
-
-typ:
-    INT { Int }
-  | BOOL { Bool }
-  | VOID { Void }
-
-vdecl_list:
-    /* nothing */    { [] }
-  | vdecl_list vdecl { $2 :: $1 }
-
-vdecl:
-   typ ID SEMI { ($1, $2) }
 
 expr_opt:
     /* nothing */ { Noexpr }
@@ -99,16 +99,13 @@ expr:
 /* miscelaneous */  
   | ID ASSIGN expr   { Assign($1, $3) }
   | FID actuals_opt {Call($1, $2) }                       /* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } */
-  | expr_opt   {$1}                                                                     /* replaced from LBRACE expr RBRACE */
+  | LBRACE expr_list RBRACE  { List.rev $2}                                             /* replaced from LBRACE expr RBRACE */
   | IF expr THEN expr ELSE expr { If($2, $4, $6) }
   | ID DOT ID   { Get($1, $3) }							  /* getting thing within user-defined type */
  
 
 
-/* block of expressions flanked by braces */
-expr_opt:
-   LBRACE RBRACE { [] }
-  |LBRACE expr_list RBRACE { List.rev $2 }
+/* block of expressions */
    
 expr_list: 
     expr    { $1}
@@ -124,3 +121,5 @@ whitesp_list:
   | whitesp_list expr          { $3 :: $1 }   /* deleted comma delimiter */
   
 
+typedecl: 
+   TYP ID LBRACE expr_list RBRACE { Typedef($2, List.rev $4) }
