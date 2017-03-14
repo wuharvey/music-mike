@@ -12,7 +12,6 @@ rule token = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
-| "r:["    { RLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
 | '+'      { PLUS }
@@ -27,6 +26,7 @@ rule token = parse
 | 'v'      { ODOWN }
 | 'b'      { FLAT }
 | '#'      { OCTOTHORPE }
+| 'o'      { RHYTHMDOT }
 | '@'      { CONCAT }
 | '='      { ASSIGN }
 | "=="     { EQ }
