@@ -39,20 +39,17 @@ dcls: 										   (* semicolon delimmited list of sections *)
  | section        { $1 }
  | section SEMI decls  { $3 :: $1 }
  
- section:							   (* expression, type declaration, or function declaration *)
+section:							   (* expression, type declaration, or function declaration *)
     expr   { $1 }
   | fdecl  { $1 }
   | typedecl { $1 }
-  
-  
 
 fdecl: /* formals are not optional */
-   FID whitesp_list ASSIGN expr  /* expr can go to expr_list */
+   FID formals_list ASSIGN expr  /* expr can go to expr_list */
      { { ident = $1;
 	 formals = $2;
 	 body = $4 } }
 	/* Syntax question: why are there two braces? */
-
 
 expr_opt:
     /* nothing */ { Noexpr }
@@ -60,15 +57,15 @@ expr_opt:
 
 expr:
     LITERAL          { Literal($1) }
-  | FLITERAL         { Fliteral($1) }          
+  | FLITERAL         { FLiteral($1) }          
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
 /* braced stuff*/  
-  | LBRACKET whitesp_list RBRACKET { $2  }
-  | PBRACKET whitesp_list RBRACKET { $2  }
-  | LTUPLE whitesp_list RTUPLE     { $2  }
-  | LPAREN expr RPAREN {$2}                          (* explicitly make parenthesis enclosed stuff higher than +, -, etc. *)
+  | LBRACKET whitesp_list RBRACKET { $2 }
+  | PBRACKET whitesp_list RBRACKET { $2 }
+  | LTUPLE whitesp_list RTUPLE     { $2 }
+  | LPAREN expr RPAREN { $2 }                          (* explicitly make parenthesis enclosed stuff higher than +, -, etc. *)
   | expr LBRACK LITERAL RBRACK { Sub($1, $3) }		   (* subsetting  e.g. list[4], MAY NEED TO MESS WITH PRECEDENCE  *)
 /* binary operations */
   | expr PLUS   expr { Binop($1, Add,   $3) }
@@ -92,35 +89,27 @@ expr:
   | FMINUS expr %prec NEG { Preop(FNeg, $2) }
   | NOT expr         { Preop(Not, $2) }
 /* music operators */
-  | expr RHYTHMDOT   { Postop( $1, Rhythmdot)}
-  | expr OCTOTHORPE  { Postop( $1, Hashtag) }
-  | expr FLAT        { Postop( $1, Flat)    }
-  | OUP  expr        { Preop ( OctaveUp, $2) }
-  | ODOWN expr       { Preop (OctaveDown, $2}
+  | expr RHYTHMDOT   { Postop($1, Rhythmdot)}
+  | expr OCTOTHORPE  { Postop($1, Hashtag) }
+  | expr FLAT        { Postop($1, Flat) }
+  | OUP  expr        { Preop (OctaveUp, $2) }
+  | ODOWN expr       { Preop (OctaveDown, $2) }
 /* miscelaneous */  
   | ID ASSIGN expr   { Assign($1, $3) }
-  | FID actuals_opt {Call($1, $2) }                       (* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } *)
+  | FID actuals_opt { Call($1, $2) }                       (* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } *)
   | LBRACE expr_list RBRACE  { List.rev $2}                                             /* replaced from LBRACE expr RBRACE */
   | IF expr THEN expr ELSE expr { If($2, $4, $6) }
   | ID DOT ID   { Get($1, $3) }							  /* getting thing within user-defined type */
  
-
-
 /* block of expressions */
    
 expr_list: 
-    expr    { $1}
+    expr    { $1 }
   | expr_list SEMI expr {$3 :: $1} 
-  
-  
-  
- 
-/* whitespace delimmited list of expressions- must be reversed before use*/
-whitesp_list:
-   /* nothing */             { []   }
-  |  expr                    { [$1] }
-  | whitesp_list expr          { $3 :: $1 }   /* deleted comma delimiter */
-  
+   
+formals_list:
+  | expr                    { [$1] }
+  | formals_list expr       { $3 :: $1 }   /* deleted comma delimiter */
 
 typedecl: 
    TYP ID LBRACE expr_list RBRACE { Typedef($2, List.rev $4) }

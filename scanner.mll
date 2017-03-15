@@ -48,11 +48,11 @@ rule token = parse
 | "int"    { INT }
 | "bool"   { BOOL }
 | "float"  { FLOAT }
-| "void"   { VOID }
+| "unit"   { UNIT }
 | "true"   { TRUE }
 | "false"  { FALSE }
 | "fun"    { FUN }
-| ['0'-'9']+'.'['0'-'9']+ as lxm { FLITERAL(float_of_string lxm) }
+| ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
 | 'q'      { FLITERAL(1.0) }
 | 'w'      { FLITERAL(4.0) }
 | 'h'      { FLITERAL(2.0) }
@@ -60,8 +60,8 @@ rule token = parse
 | 'e'      { FLITERAL(0.5) }
 | 's'      { FLITERAL(0.25) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
-| ['a'-'d' 'f' 'g' 'i'-'n' 'p' 'r' 'u' 'v' 'x'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
-| ['A'-'D' 'F' 'G' 'I'-'N' 'P' 'R' 'U' 'V' 'X'-'Z']['a'-'z' 'A'-'Z' '0'-'9'
+| ['a'-'d' 'f' 'g' 'i'-'n' 'p' 'r' 'u' 'v' 'x'-'z'] | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ['A'-'D' 'F' 'G' 'I'-'N' 'P' 'R' 'U' 'V' 'X'-'Z'] | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9'
 '_']* as lxm { FID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
