@@ -1,7 +1,7 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
 /* binary operator */
-type op = Add | FAdd| Sub |FSub | Mult |FMult| Div |FDiv| Equal | Neq | Less | Leq | Greater | Geq |
+type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq |
           And | Or 
 
 type preop = Neg | Not | FNeg | Rhythmdot | OctaveUp | OctaveDown
@@ -19,11 +19,11 @@ type expr =
   | Id of string
   | Binop of expr * op * expr
   | Preop of preop * expr
-  | Postop of expr *postop
+  | Postop of expr * postop
   | Assign of string * expr
   | Call of string * expr list    (* what is list constuct? *)
-  | If of 
-  | Sub of 
+  | If of expr * expr * expr
+  | Sub of expr * int
   | Noexpr
 
 type stmt =
