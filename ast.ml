@@ -1,9 +1,10 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
+/* binary operator */
 type op = Add | FAdd| Sub |FSub | Mult |FMult| Div |FDiv| Equal | Neq | Less | Leq | Greater | Geq |
-          And | Or
+          And | Or 
 
-type uop = Neg | Not
+type uop = Neg | Not | FNeg | Rhythmdot | Hashtag | Flat | OctaveUp | OctaveDown
 
 type typ = Int | Bool | Void
 
