@@ -4,7 +4,9 @@
 type op = Add | FAdd| Sub |FSub | Mult |FMult| Div |FDiv| Equal | Neq | Less | Leq | Greater | Geq |
           And | Or 
 
-type uop = Neg | Not | FNeg | Rhythmdot | Hashtag | Flat | OctaveUp | OctaveDown
+type preop = Neg | Not | FNeg | Rhythmdot | OctaveUp | OctaveDown
+
+type postop= Hashtag | Flat 
 
 type typ = Int | Bool | Void
 
@@ -12,12 +14,16 @@ type bind = typ * string
 
 type expr =
     Literal of int
+  | Fliteral of float  
   | BoolLit of bool
   | Id of string
   | Binop of expr * op * expr
-  | Unop of uop * expr
+  | Preop of preop * expr
+  | Postop of expr *postop
   | Assign of string * expr
-  | Call of string * expr list
+  | Call of string * expr list    (* what is list constuct? *)
+  | If of 
+  | Sub of 
   | Noexpr
 
 type stmt =
