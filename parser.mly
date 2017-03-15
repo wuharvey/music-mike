@@ -60,6 +60,7 @@ expr_opt:
 
 expr:
     LITERAL          { Literal($1) }
+  | FLITERAL         { Fliteral($1) }          
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
@@ -87,15 +88,15 @@ expr:
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
 /* general unary operators */
-  | MINUS expr %prec NEG { Unop(Neg, $2) }
-  | FMINUS expr %prec NEG { Unop(FNeg, $2) }
-  | NOT expr         { Unop(Not, $2) }
+  | MINUS expr %prec NEG { Preop(Neg, $2) }
+  | FMINUS expr %prec NEG { Preop(FNeg, $2) }
+  | NOT expr         { Preop(Not, $2) }
 /* music operators */
-  | expr RHYTHMDOT   { Unop( $1, Rhythmdot)}
-  | expr OCTOTHORPE  { Unop( $1, Hashtag) }
-  | expr FLAT        { Unop( $1, Flat)    }
-  | OUP  expr        { Unop ( OctaveUp, $2) }
-  | ODOWN expr       { Unop (OctaveDown, $2}
+  | expr RHYTHMDOT   { Postop( $1, Rhythmdot)}
+  | expr OCTOTHORPE  { Postop( $1, Hashtag) }
+  | expr FLAT        { Postop( $1, Flat)    }
+  | OUP  expr        { Preop ( OctaveUp, $2) }
+  | ODOWN expr       { Preop (OctaveDown, $2}
 /* miscelaneous */  
   | ID ASSIGN expr   { Assign($1, $3) }
   | FID actuals_opt {Call($1, $2) }                       /* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } */
