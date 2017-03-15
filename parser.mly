@@ -67,6 +67,8 @@ expr:
   | LTUPLE whitesp_list RTUPLE     { $2 }
   | LPAREN expr RPAREN { $2 }                          (* explicitly make parenthesis enclosed stuff higher than +, -, etc. *)
   | expr LBRACK LITERAL RBRACK { Sub($1, $3) }		   (* subsetting  e.g. list[4], MAY NEED TO MESS WITH PRECEDENCE  *)
+  | LBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
+  | PBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
 /* binary operations */
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
