@@ -71,7 +71,7 @@ expr_opt:
 
 expr:
     LITERAL          { Literal($1) }
-  | FLITERAL         { FLiteral($1) }          
+  | FLITERAL         { FLiteral($1) }
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
@@ -118,7 +118,7 @@ expr:
         /* miscelaneous */  
   | ID ASSIGN expr   { Assign($1, $3) }
   | FID actuals_opt { Call($1, $2) }                       /* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } */
-  | LBRACE expr_list RBRACE  { List.rev $2}                                             /* replaced from LBRACE expr RBRACE */
+  | LBRACE expr_list RBRACE  { List.rev $2}                /* replaced from LBRACE expr RBRACE */
   | IF expr THEN expr ELSE expr { If($2, $4, $6) }
   | ID DOT ID   { Get($1, $3) }							  /* getting thing within user-defined type */
   | expr CONCAT expr  { Concat($1, $3) }
