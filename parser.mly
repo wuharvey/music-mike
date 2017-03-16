@@ -75,14 +75,16 @@ expr:
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
+
         /* braced stuff*/  
   | LBRACKET whitesp_list RBRACKET { $2 }
   | PBRACKET whitesp_list RBRACKET { $2 }
   | LTUPLE whitesp_list RTUPLE     { $2 }
-  | LPAREN expr RPAREN { $2 }                          /* explicitly make parenthesis enclosed stuff higher than +, -, etc. */
+  | LPAREN expr RPAREN { $2 }                        /* explicitly make parenthesis enclosed stuff higher than +, -, etc. */
   | expr LBRACK LITERAL RBRACK { Sub($1, $3) }		   /* subsetting  e.g. list[4], MAY NEED TO MESS WITH PRECEDENCE  */
   | LBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
   | PBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
+
         /* binary operations */
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
@@ -100,25 +102,36 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
-/* general unary operators */
+
+        /* general unary operators */
   | MINUS expr %prec NEG { Preop(Neg, $2) }
   | FMINUS expr %prec NEG { Preop(FNeg, $2) }
   | NOT expr         { Preop(Not, $2) }
-/* music operators */
+
+        /* music operators */
   | expr RHYTHMDOT   { Postop($1, Rhythmdot)}
   | expr OCTOTHORPE  { Postop($1, Hashtag) }
   | expr FLAT        { Postop($1, Flat) }
   | OUP  expr        { Preop (OctaveUp, $2) }
   | ODOWN expr       { Preop (OctaveDown, $2) }
-/* miscelaneous */  
+
+        /* miscelaneous */  
   | ID ASSIGN expr   { Assign($1, $3) }
   | FID actuals_opt { Call($1, $2) }                       /* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } */
   | LBRACE expr_list RBRACE  { List.rev $2}                                             /* replaced from LBRACE expr RBRACE */
   | IF expr THEN expr ELSE expr { If($2, $4, $6) }
   | ID DOT ID   { Get($1, $3) }							  /* getting thing within user-defined type */
+  | expr CONCAT expr  { Concat($1, $3) }
  
 /* block of expressions */
    
+
+/* SUGGESTED REPLACEMENT FOR whitesp_list:
+    expr { $1 }
+  | expr COMMA expr { $3 || $1 }
+ */
+
+
 expr_list: 
     expr    { $1 }
   | expr_list SEMI expr {$3 :: $1} 
