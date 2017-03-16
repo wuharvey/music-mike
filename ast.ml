@@ -8,7 +8,7 @@ type preop = Neg | Not | FNeg | Rhythmdot | OctaveUp | OctaveDown
 
 type postop= Hashtag | Flat 
 
-type typ = Int | Bool | Void
+type typ = Int | Bool | Void | Float
 
 type bind = typ * string
 
