@@ -19,7 +19,7 @@ open Ast
 %left OR
 %left AND
 %left EQ NEQ
-%left LT GT LEQ GEQ
+%nonassoc LT GT LEQ GEQ
 %left PLUS MINUS FPLUS FMINUS
 %left TIMES DIVIDE FTIMES FDIVIDE
 %left OUP ODOWN FLAT OCTOTHORPE
@@ -38,36 +38,36 @@ program:
 
 /* "decls consists of a `section` or a 
   `section` followed by a semicolon followed by more decls" */
-decls:                       /* semicolon delimited list of sections */
+decls:                  /* semicolon delimited list of sections */
     /* nothing */ { [] }
  | section        { $1 }
  | section SEMI decls  { $3 :: $1 }
 
 /* "A section consists of either an Expression `expr`
     Function Declaration `fdecl` or 
-    Type Declaration `typedecl`" */
-section:							   /* expression, type declaration, or function declaration */
+    Type Declaration `tdecl`" */
+section:				/* expression, type declaration, or function declaration */
     expr   { $1 }
   | fdecl  { $1 }
-  | typedecl { $1 }
-
+  | tdecl { $1 }
 
 /* "A function declaration `fdecl` consists of 
     a Function Identifier `FID` - string w/ first letter capitalized
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
-fdecl: /* formals are not optional */
-   FID formals_list ASSIGN expr  /* expr can go to expr_list */
+fdecl: 
+   FID formals_list ASSIGN expr  
      { { ident = $1;
-	       formals = $2;
+	       formals = List.rev($2);
 	       body = $4 } }
-	/* Syntax question: why are there two braces? */
+
+tdecl: 
+   TYP ID ASSIGN LBRACE expr_list RBRACE { Typedef($2, List.rev $4) }
 
 /* "A `expr_opt` consists of either 0 or 1 expressions  "*/
 expr_opt:
     /* nothing */ { Noexpr }
   | expr          { $1 }
-
 
 expr:
     LITERAL          { Literal($1) }
@@ -77,13 +77,11 @@ expr:
   | ID               { Id($1) }
 
         /* braced stuff*/  
-  | LBRACKET whitesp_list RBRACKET { $2 }
-  | PBRACKET whitesp_list RBRACKET { $2 }
-  | LTUPLE whitesp_list RTUPLE     { $2 }
-  | LPAREN expr RPAREN { $2 }                        /* explicitly make parenthesis enclosed stuff higher than +, -, etc. */
-  | expr LBRACK LITERAL RBRACK { Sub($1, $3) }		   /* subsetting  e.g. list[4], MAY NEED TO MESS WITH PRECEDENCE  */
-  | LBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
-  | PBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
+  | LBRACKET expr_list RBRACKET { List($2) }
+  | PBRACKET expr_list RBRACKET { PList($2) }
+  | LTUPLE expr_list RTUPLE     { Tuple($2) }
+  | LPAREN expr RPAREN { $2 }                   
+  | expr LBRACK LITERAL RBRACK { Sub($1, $3) }		   
 
         /* binary operations */
   | expr PLUS   expr { Binop($1, Add,   $3) }
@@ -115,30 +113,25 @@ expr:
   | OUP  expr        { Preop (OctaveUp, $2) }
   | ODOWN expr       { Preop (OctaveDown, $2) }
 
-        /* miscelaneous */  
+        /* misc. */  
   | ID ASSIGN expr   { Assign($1, $3) }
-  | FID actuals_opt { Call($1, $2) }                       /* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } */
-  | LBRACE expr_list RBRACE  { List.rev $2}                /* replaced from LBRACE expr RBRACE */
+  | FID actuals_opt { Call($1, $2) }                      
+  | LBRACE expr_list RBRACE  { List.rev $2}               
   | IF expr THEN expr ELSE expr { If($2, $4, $6) }
-  | ID DOT ID   { Get($1, $3) }							  /* getting thing within user-defined type */
+  | ID DOT ID   { Get($1, $3) }							 
   | expr CONCAT expr  { Concat($1, $3) }
- 
-/* block of expressions */
    
-
-/* SUGGESTED REPLACEMENT FOR whitesp_list:
-    expr { $1 }
-  | expr COMMA expr { $3 || $1 }
- */
-
-
-expr_list: 
+/* exp_list for list constructor */
+exp_list:
     expr    { $1 }
-  | expr_list SEMI expr {$3 :: $1} 
+  | exp_list expr {$2 :: $1}
+
+/* exp_list for functions */
+func_list: 
+    expr    { $1 }
+  | func_list SEMI expr {$3 :: $1} 
    
 formals_list:
-  | expr                    { [$1] }
-  | formals_list expr       { $3 :: $1 }   /* deleted comma delimiter */
+  | ID                    { [$1] }
+  | formals_list ID       { $3 :: $1 }   
 
-typedecl: 
-   TYP ID LBRACE expr_list RBRACE { Typedef($2, List.rev $4) }

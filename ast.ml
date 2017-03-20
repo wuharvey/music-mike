@@ -1,14 +1,13 @@
 (* Abstract Syntax Tree and functions for printing it *)
 
 /* binary operator */
-type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq |
-          And | Or 
+type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq | And | Or 
 
 type preop = Neg | Not | FNeg | Rhythmdot | OctaveUp | OctaveDown
 
-type postop= Hashtag | Flat 
+type postop = Sharp | Flat 
 
-type typ = Int | Bool | Void | Float
+type typ = Int | Bool | Void | Float | String | Pitch
 
 type bind = typ * string
 
@@ -21,9 +20,10 @@ type expr =
   | Preop of preop * expr
   | Postop of expr * postop
   | Assign of string * expr
-  | Call of string * expr list    (* what is list constuct? *)
+  | Call of string * expr list      
   | If of expr * expr * expr
   | Sub of expr * int
+  | List of expr 
   | Noexpr
 
 type stmt =
@@ -32,11 +32,10 @@ type stmt =
   | Return of expr
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt
-  | While of expr * stmt
 
 type func_decl = {
     typ : typ;
-    fname : string;
+    ident : string;
     formals : bind list;
     locals : bind list;
     body : stmt list;
