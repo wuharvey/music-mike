@@ -14,6 +14,7 @@ open Ast
 %token EOF
 
 %right ASSIGN
+%right FID
 %right IF
 %left OR
 %left AND
@@ -26,6 +27,7 @@ open Ast
 %left LBRACKET
 %left CONCAT
 %right NOT NEG
+
 
 %start program
 %type <Ast.program> program
@@ -122,7 +124,7 @@ expr:
 
 primaries:
     expr { $1 }
-  | FID expr_list { Call($1, $2) }             
+  | FID expr_list %prec FID { Call($1, $2) }             
   | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } 
 
 
