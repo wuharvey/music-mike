@@ -95,8 +95,7 @@ expr:
   | expr OR     expr { Binop($1, Or,    $3) }
 
         /* general unary operators */
-  | MINUS expr %prec NEG { Preop(Neg, $2) }
-  | FMINUS expr %prec NEG { Preop(FNeg, $2) }
+  | MINUS expr %prec NEG { Preop(Neg, $2) } 
   | NOT expr         { Preop(Not, $2) }
 
         /* music operators */
