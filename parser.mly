@@ -1,11 +1,9 @@
-/* Ocamlyacc parser for Music-Mike*/
-
 %{
 open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
-%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT
+%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token IF THEN ELSE FOR WHILE INT BOOL VOID FUN 
@@ -23,6 +21,8 @@ open Ast
 %left PLUS MINUS FPLUS FMINUS
 %left TIMES DIVIDE FTIMES FDIVIDE
 %left OUP ODOWN FLAT OCTOTHORPE
+%right RBRACKET
+%left LBRACKET
 %left CONCAT
 %right NOT NEG
 
@@ -40,8 +40,8 @@ program:
   `section` followed by a semicolon followed by more decls" */
 decls:                  /* semicolon delimited list of sections */
     /* nothing */ { [] }
- | section        { $1 }
- | section SEMI decls  { $3 :: $1 }
+ | section        { [$1] }
+ | section SEMI decls  { $1 :: $3 }
 
 /* "A section consists of either an Expression `expr`
     Function Declaration `fdecl` or 
@@ -49,7 +49,7 @@ decls:                  /* semicolon delimited list of sections */
 section:				/* expression, type declaration, or function declaration */
     expr   { $1 }
   | fdecl  { $1 }
-  | tdecl { $1 }
+  | tdecl  { $1 }
 
 /* "A function declaration `fdecl` consists of 
     a Function Identifier `FID` - string w/ first letter capitalized
@@ -62,27 +62,18 @@ fdecl:
 	       body = $4 } }
 
 tdecl: 
-   TYP ID ASSIGN LBRACE expr_list RBRACE { Typedef($2, List.rev $4) }
+   TYP ID ASSIGN LBRACE expr_list RBRACE { Typedef($2, List.rev $5) }
 
-/* "A `expr_opt` consists of either 0 or 1 expressions  "*/
-expr_opt:
-    /* nothing */ { Noexpr }
-  | expr          { $1 }
 
-expr:
+literals:
     LITERAL          { Literal($1) }
-  | FLITERAL         { FLiteral($1) }
+  | FLITERAL         { FloatLit($1) }
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
 
-        /* braced stuff*/  
-  | LBRACKET expr_list RBRACKET { List($2) }
-  | PBRACKET expr_list RBRACKET { PList($2) }
-  | LTUPLE expr_list RTUPLE     { Tuple($2) }
-  | LPAREN expr RPAREN { $2 }                   
-  | expr LBRACK LITERAL RBRACK { Sub($1, $3) }		   
-
+expr:
+    literals { $1 }
         /* binary operations */
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
@@ -107,31 +98,40 @@ expr:
   | NOT expr         { Preop(Not, $2) }
 
         /* music operators */
-  | expr RHYTHMDOT   { Postop($1, Rhythmdot)}
+  | expr RHYTHMDOT   { Postop($1, Rhythmdot) }
   | expr OCTOTHORPE  { Postop($1, Hashtag) }
   | expr FLAT        { Postop($1, Flat) }
   | OUP  expr        { Preop (OctaveUp, $2) }
   | ODOWN expr       { Preop (OctaveDown, $2) }
 
+        /* lists */  
+  | LBRACKET expr_list RBRACKET { List($2) }
+  | PLBRACKET expr_list RBRACKET { PList($2) }  
+  | LTUPLE expr_list RTUPLE     { Tuple($2) }
+  | LPAREN expr RPAREN { $2 }                  
+/*  | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } */ 
+       
         /* misc. */  
   | ID ASSIGN expr   { Assign($1, $3) }
-  | FID actuals_opt { Call($1, $2) }                      
-  | LBRACE expr_list RBRACE  { List.rev $2}               
-  | IF expr THEN expr ELSE expr { If($2, $4, $6) }
+  | LBRACE expr_list RBRACE  { List.rev $2 }              
   | ID DOT ID   { Get($1, $3) }							 
   | expr CONCAT expr  { Concat($1, $3) }
-   
-/* exp_list for list constructor */
-exp_list:
-    expr    { $1 }
-  | exp_list expr {$2 :: $1}
 
-/* exp_list for functions */
+complex_expr:
+  | IF expr THEN expr ELSE expr { If($2, $4, $6) } 
+  | FID expr_list { Call($1, $2) }                
+
+/* expr_list for list constructor */
+expr_list:
+    expr    { [$1] }
+  | expr_list expr {$2 :: $1}
+
+/* expr_list for functions */
 func_list: 
-    expr    { $1 }
+    expr    { [$1] }
   | func_list SEMI expr {$3 :: $1} 
    
 formals_list:
   | ID                    { [$1] }
-  | formals_list ID       { $3 :: $1 }   
+  | formals_list ID       { $2 :: $1 }   
 
