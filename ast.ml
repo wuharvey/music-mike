@@ -13,7 +13,7 @@ type bind = typ * string
 
 type expr =
     Literal of int
-  | Fliteral of float  
+  | FloatLit of float  
   | BoolLit of bool
   | Id of string
   | Binop of expr * op * expr

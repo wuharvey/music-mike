@@ -109,7 +109,6 @@ expr:
   | PLBRACKET expr_list RBRACKET { PList($2) }  
   | LTUPLE expr_list RTUPLE     { Tuple($2) }
   | LPAREN expr RPAREN { $2 }                  
-/*  | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } */ 
        
         /* misc. */  
   | ID ASSIGN expr   { Assign($1, $3) }
@@ -117,9 +116,11 @@ expr:
   | ID DOT ID   { Get($1, $3) }							 
   | expr CONCAT expr  { Concat($1, $3) }
 
-complex_expr:
+primaries:
+    expr { $1 }
   | IF expr THEN expr ELSE expr { If($2, $4, $6) } 
-  | FID expr_list { Call($1, $2) }                
+  | FID expr_list { Call($1, $2) }             
+  | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } 
 
 /* expr_list for list constructor */
 expr_list:
