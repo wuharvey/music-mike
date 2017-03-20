@@ -14,13 +14,14 @@ open Ast
 %token EOF
 
 %right ASSIGN
+%right IF
 %left OR
 %left AND
 %left EQ NEQ
 %nonassoc LT GT LEQ GEQ
 %left PLUS MINUS FPLUS FMINUS
 %left TIMES DIVIDE FTIMES FDIVIDE
-%left OUP ODOWN FLAT OCTOTHORPE
+%left OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT
 %right RBRACKET
 %left LBRACKET
 %left CONCAT
@@ -47,7 +48,7 @@ decls:                  /* semicolon delimited list of sections */
     Function Declaration `fdecl` or 
     Type Declaration `tdecl`" */
 section:				/* expression, type declaration, or function declaration */
-    expr   { $1 }
+    primaries   { $1 }
   | fdecl  { $1 }
   | tdecl  { $1 }
 
@@ -71,6 +72,7 @@ literals:
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
+  | LPAREN RPAREN    { Unit }
 
 expr:
     literals { $1 }
@@ -101,8 +103,8 @@ expr:
   | expr RHYTHMDOT   { Postop($1, Rhythmdot) }
   | expr OCTOTHORPE  { Postop($1, Hashtag) }
   | expr FLAT        { Postop($1, Flat) }
-  | OUP  expr        { Preop (OctaveUp, $2) }
-  | ODOWN expr       { Preop (OctaveDown, $2) }
+  | OUP  expr        { Preop(OctaveUp, $2) }
+  | ODOWN expr       { Preop(OctaveDown, $2) }
 
         /* lists */  
   | LBRACKET expr_list RBRACKET { List($2) }
@@ -115,12 +117,15 @@ expr:
   | LBRACE expr_list RBRACE  { List.rev $2 }              
   | ID DOT ID   { Get($1, $3) }							 
   | expr CONCAT expr  { Concat($1, $3) }
+  | IF expr THEN expr ELSE expr  
+      %prec IF
+      { If($2, $4, $6) }
 
 primaries:
     expr { $1 }
-  | IF expr THEN expr ELSE expr { If($2, $4, $6) } 
   | FID expr_list { Call($1, $2) }             
   | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } 
+
 
 /* expr_list for list constructor */
 expr_list:
