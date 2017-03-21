@@ -114,18 +114,18 @@ expr:
   | LPAREN expr RPAREN { $2 }                  
        
         /* misc. */  
-  | ID ASSIGN expr   { Assign($1, $3) }
   | LBRACE expr_list RBRACE  { List.rev $2 }              
   | ID DOT ID   { Get($1, $3) }							 
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr  
       %prec IF
       { If($2, $4, $6) }
+  | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) }
 
 primaries:
     expr { $1 }
   | FID actuals_list %prec FID { Call($1, $2) }             
-  | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } 
+  | ID ASSIGN expr   { Assign($1, $3) }
 
 
 /* expr_list for list constructor */
