@@ -73,7 +73,6 @@ literals:
   | FLITERAL         { FloatLit($1) }
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
-  | ID               { Id($1) }
   | LPAREN RPAREN    { Unit }
 
 expr:
@@ -111,7 +110,7 @@ expr:
   | LBRACKET expr_list RBRACKET { List($2) }
   | PLBRACKET expr_list RBRACKET { PList($2) }  
   | LTUPLE expr_list RTUPLE     { Tuple($2) }
-  | LPAREN expr RPAREN { $2 }                  
+  | enclosed_expr { $1 }                  
        
         /* misc. */  
   | LBRACE expr_list RBRACE  { List.rev $2 }              
@@ -120,7 +119,7 @@ expr:
   | IF expr THEN expr ELSE expr  
       %prec IF
       { If($2, $4, $6) }
-  | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) }
+  | enclosed_expr LBRACKET LITERAL RBRACKET { Sub($1, $3) }
 
 primaries:
     expr { $1 }
@@ -146,4 +145,12 @@ formals_list:
 actuals_list:
    expr                     { [$1] }
  | actuals_list expr        { $2::$1 }
+
+
+/* expression in parenthesis or ID. Used for subsetting and defining precedence*/
+
+enclosed_expr:
+   ID       { ID ($1) }
+ | LPAREN expr RPAREN  { $2 } 
+
 
