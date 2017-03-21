@@ -7,7 +7,7 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token IF THEN ELSE FOR WHILE INT BOOL VOID FUN 
-%token FOR TYP
+%token FOR TYP SET
 %token <int> LITERAL
 %token <float> FLITERAL
 %token <string> ID FID
@@ -59,10 +59,10 @@ section:				/* expression, type declaration, or function declaration */
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
 fdecl: 
-   FID formals_list ASSIGN func_list  
-     { { ident = $1;
-	       formals = List.rev($2);
-	       body = $4 } }
+   SET FID formals_list ASSIGN func_list  
+     { { ident = $2;
+	       formals = List.rev($3);
+	       body = $5 } }
 
 tdecl: 
    TYP ID ASSIGN LBRACE expr_list RBRACE { Typedef($2, List.rev $5) }
