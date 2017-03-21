@@ -122,13 +122,14 @@ expr:
       { If($2, $4, $6) }
 /*  | enclosed_expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } */
 
+    /* stuff that should be on same level as expressions */
 primaries:
     expr { $1 }
   | FID actuals_list { Call($1, $2) }             
   | ID ASSIGN expr   { Assign($1, $3) }
 
 
-/* expr_list for list constructor */
+   /* expr_list for list constructor */
 expr_list:
     /*nothing*/   { [] }
   | expr_list expr {$2 :: $1}
@@ -151,8 +152,8 @@ actuals_list:
  | actuals_list expr        { $2::$1 }
 
 
-/* expression in parenthesis or ID. Used for subsetting and defining precedence*/
-/* legacy from subsetting stuff so just keep for now */
+    /* expression in parenthesis or ID. Used for subsetting and defining precedence*/
+    /* legacy from subsetting stuff so just keep for now */
 
 enclosed_expr:
   LPAREN expr RPAREN  { $2 } 
