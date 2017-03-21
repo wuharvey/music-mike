@@ -46,7 +46,7 @@ decls:                  /* semicolon delimited list of sections */
  | section        { [$1] }
  | section SEMI decls  { $1 :: $3 }
 
-/* "A section consists of either an Expression `expr`
+/* "A section consists of either primaries
     Function Declaration `fdecl` or 
     Type Declaration `tdecl`" */
 section:				/* expression, type declaration, or function declaration */
@@ -59,7 +59,7 @@ section:				/* expression, type declaration, or function declaration */
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
 fdecl: 
-   FID formals_list ASSIGN expr  
+   FID formals_list ASSIGN func_list  
      { { ident = $1;
 	       formals = List.rev($2);
 	       body = $4 } }
@@ -97,8 +97,8 @@ expr:
   | expr OR     expr { Binop($1, Or,    $3) }
 
         /* general unary operators */
-  | MINUS expr %prec NEG { Preop(Neg, $2) } 
-  | NOT expr         { Preop(Not, $2) }
+  | MINUS expr %prec NEG { Preop(Neg, $2) }  
+  | NOT expr             { Preop(Not, $2) }
 
         /* music operators */
   | expr RHYTHMDOT   { Postop($1, Rhythmdot) }
@@ -124,21 +124,26 @@ expr:
 
 primaries:
     expr { $1 }
-  | FID expr_list %prec FID { Call($1, $2) }             
+  | FID actuals_list %prec FID { Call($1, $2) }             
   | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } 
 
 
 /* expr_list for list constructor */
 expr_list:
-    expr    { [$1] }
+    /*nothing*/   { [] }
   | expr_list expr {$2 :: $1}
 
-/* expr_list for functions */
+  /* expr_list for functions- for purposes of sequencing added double semicolon*/
 func_list: 
     expr    { [$1] }
-  | func_list SEMI expr {$3 :: $1} 
+  | func_list SEMI SEMI expr {$4 :: $1} 
    
 formals_list:
-  | ID                    { [$1] }
+    ID                    { [$1] }
   | formals_list ID       { $2 :: $1 }   
+
+
+actuals_list:
+   expr                     { [$1] }
+ | actuals_list expr        { $2::$1 }
 
