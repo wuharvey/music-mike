@@ -74,6 +74,7 @@ literals:
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | LPAREN RPAREN    { Unit }
+  | ID               { ID($1) }
 
 expr:
     literals { $1 }
@@ -119,11 +120,11 @@ expr:
   | IF expr THEN expr ELSE expr  
       %prec IF
       { If($2, $4, $6) }
-  | enclosed_expr LBRACKET LITERAL RBRACKET { Sub($1, $3) }
+/*  | enclosed_expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } */
 
 primaries:
     expr { $1 }
-  | FID actuals_list %prec FID { Call($1, $2) }             
+  | FID actuals_list { Call($1, $2) }             
   | ID ASSIGN expr   { Assign($1, $3) }
 
 
@@ -132,10 +133,13 @@ expr_list:
     /*nothing*/   { [] }
   | expr_list expr {$2 :: $1}
 
+
+
   /* expr_list for functions- for purposes of sequencing added double semicolon*/
+  /* at the end of each statement in function declaration */
 func_list: 
-    expr    { [$1] }
-  | func_list SEMI SEMI expr {$4 :: $1} 
+    expr SEMI SEMI           { $1 }  
+  | func_list  expr SEMI SEMI { $2 :: $1} 
    
 formals_list:
     ID                    { [$1] }
@@ -148,9 +152,9 @@ actuals_list:
 
 
 /* expression in parenthesis or ID. Used for subsetting and defining precedence*/
+/* legacy from subsetting stuff so just keep for now */
 
 enclosed_expr:
-   ID       { ID ($1) }
- | LPAREN expr RPAREN  { $2 } 
+  LPAREN expr RPAREN  { $2 } 
 
 
