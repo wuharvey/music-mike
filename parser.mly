@@ -7,7 +7,7 @@ open Ast
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token IF THEN ELSE FOR WHILE INT BOOL VOID FUN 
-%token FOR TYP
+%token FOR TYP SET
 %token <int> LITERAL
 %token <float> FLITERAL
 %token <string> ID FID
@@ -58,11 +58,13 @@ section:				/* expression, type declaration, or function declaration */
     a Function Identifier `FID` - string w/ first letter capitalized
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
-fdecl: 
-   FID formals_list ASSIGN expr  
-     { { ident = $1;
-	       formals = List.rev($2);
-	       body = $4 } }
+
+fdecl: /* formals are not optional */
+   SET FID formals_list ASSIGN expr  /* expr can go to expr_list */
+     { { ident = $2;
+	       formals = List.rev($3);
+	       body = $5 } }
+	/* Syntax question: why are there two braces? */
 
 tdecl: 
    TYP ID ASSIGN LBRACE expr_list RBRACE { Typedef($2, List.rev $5) }
