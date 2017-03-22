@@ -20,17 +20,20 @@ module StringMap = Map.Make(String)
 let translate (globals, functions) =
   let context = L.global_context () in
   let the_module = L.create_module context "MicroC"
-  and i32_t  = L.i32_type          context
-  and i8_t   = L.i8_type           context
-  and i1_t   = L.i1_type           context
-  and float_t = L.float_type       context 
-  and void_t = L.void_type         context in
+  and i32_t   = L.i32_type          context
+  and i8_t    = L.i8_type           context
+  and i1_t    = L.i1_type           context
+  and float_t = L.float_type        context 
+  and void_t  = L.void_type         context in 
+  let i8p_t   = L.pointer_type i8_t   in
+
 
   let ltype_of_typ = function
-      A.Int -> i32_t
-    | A.Bool -> i1_t
-    | A.Void -> void_t 
-    | A.Flloat -> float_t in
+      A.Int     -> i32_t
+    | A.Bool    -> i1_t
+    | A.Void    -> void_t 
+    | A.Float   -> float_t 
+    | A.String  -> i8p_t in
 
   (* Declare each global variable; remember its value in a map *)
   let global_vars =
@@ -85,6 +88,7 @@ let translate (globals, functions) =
     (* Construct code for an expression; return its value *)
     let rec expr builder = function
 	A.Literal i -> L.const_int i32_t i
+      | A.FloatLit f -> L.const_float float_t f 
       | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
       | A.Noexpr -> L.const_int i32_t 0
       | A.Id s -> L.build_load (lookup s) s builder
@@ -95,7 +99,11 @@ let translate (globals, functions) =
 	    A.Add     -> L.build_add
 	  | A.Sub     -> L.build_sub
 	  | A.Mult    -> L.build_mul
-          | A.Div     -> L.build_sdiv
+      | A.Div     -> L.build_sdiv
+      | A.FAdd    -> L.build_fadd
+      | A.FSub    -> L.build_fsub
+      | A.FMult   -> L.build_fmul
+      | A.FDiv    -> L.build_fdiv
 	  | A.And     -> L.build_and
 	  | A.Or      -> L.build_or
 	  | A.Equal   -> L.build_icmp L.Icmp.Eq
