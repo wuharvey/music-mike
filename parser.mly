@@ -58,11 +58,13 @@ section:				/* expression, type declaration, or function declaration */
     a Function Identifier `FID` - string w/ first letter capitalized
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
+
 fdecl: 
    SET FID formals_list ASSIGN func_list  
      { { ident = $2;
 	       formals = List.rev($3);
 	       body = $5 } }
+
 
 tdecl: 
    TYP ID ASSIGN LBRACE expr_list RBRACE { Typedef($2, List.rev $5) }
@@ -133,7 +135,6 @@ primaries:
 expr_list:
     /*nothing*/   { [] }
   | expr_list expr {$2 :: $1}
-
 
 
   /* expr_list for functions- for purposes of sequencing added double semicolon*/
