@@ -1,11 +1,9 @@
-/* Ocamlyacc parser for Music-Mike*/
-
 %{
 open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
-%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT
+%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token IF THEN ELSE FOR WHILE INT BOOL VOID FUN 
@@ -16,15 +14,20 @@ open Ast
 %token EOF
 
 %right ASSIGN
+%right FID
+%right IF
 %left OR
 %left AND
 %left EQ NEQ
-%left LT GT LEQ GEQ
+%nonassoc LT GT LEQ GEQ
 %left PLUS MINUS FPLUS FMINUS
 %left TIMES DIVIDE FTIMES FDIVIDE
-%left OUP ODOWN FLAT OCTOTHORPE
+%left OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT
+%right RBRACKET
+%left LBRACKET
 %left CONCAT
 %right NOT NEG
+
 
 %start program
 %type <Ast.program> program
@@ -38,53 +41,45 @@ program:
 
 /* "decls consists of a `section` or a 
   `section` followed by a semicolon followed by more decls" */
-decls:                       /* semicolon delimited list of sections */
+decls:                  /* semicolon delimited list of sections */
     /* nothing */ { [] }
- | section        { $1 }
- | section SEMI decls  { $3 :: $1 }
+ | section        { [$1] }
+ | section SEMI decls  { $1 :: $3 }
 
 /* "A section consists of either an Expression `expr`
     Function Declaration `fdecl` or 
-    Type Declaration `typedecl`" */
-section:							   /* expression, type declaration, or function declaration */
-    expr   { $1 }
+    Type Declaration `tdecl`" */
+section:				/* expression, type declaration, or function declaration */
+    primaries   { $1 }
   | fdecl  { $1 }
-  | typedecl { $1 }
-
+  | tdecl  { $1 }
 
 /* "A function declaration `fdecl` consists of 
     a Function Identifier `FID` - string w/ first letter capitalized
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
+
 fdecl: /* formals are not optional */
    SET FID formals_list ASSIGN expr  /* expr can go to expr_list */
      { { ident = $2;
-	       formals = $3;
+	       formals = List.rev($3);
 	       body = $5 } }
 	/* Syntax question: why are there two braces? */
 
-/* "A `expr_opt` consists of either 0 or 1 expressions  "*/
-expr_opt:
-    /* nothing */ { Noexpr }
-  | expr          { $1 }
+tdecl: 
+   TYP ID ASSIGN LBRACE expr_list RBRACE { Typedef($2, List.rev $5) }
 
 
-expr:
+literals:
     LITERAL          { Literal($1) }
-  | FLITERAL         { FLiteral($1) }
+  | FLITERAL         { FloatLit($1) }
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | ID               { Id($1) }
+  | LPAREN RPAREN    { Unit }
 
-        /* braced stuff*/  
-  | LBRACKET whitesp_list RBRACKET { $2 }
-  | PBRACKET whitesp_list RBRACKET { $2 }
-  | LTUPLE whitesp_list RTUPLE     { $2 }
-  | LPAREN expr RPAREN { $2 }                        /* explicitly make parenthesis enclosed stuff higher than +, -, etc. */
-  | expr LBRACK LITERAL RBRACK { Sub($1, $3) }		   /* subsetting  e.g. list[4], MAY NEED TO MESS WITH PRECEDENCE  */
-  | LBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
-  | PBRACKET whitesp_list RBRACKET CONCAT LBRACKET whitesp_list RBRACKET {  Concat($2, $6) }
-
+expr:
+    literals { $1 }
         /* binary operations */
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
@@ -104,41 +99,48 @@ expr:
   | expr OR     expr { Binop($1, Or,    $3) }
 
         /* general unary operators */
-  | MINUS expr %prec NEG { Preop(Neg, $2) }
-  | FMINUS expr %prec NEG { Preop(FNeg, $2) }
+  | MINUS expr %prec NEG { Preop(Neg, $2) } 
   | NOT expr         { Preop(Not, $2) }
 
         /* music operators */
-  | expr RHYTHMDOT   { Postop($1, Rhythmdot)}
+  | expr RHYTHMDOT   { Postop($1, Rhythmdot) }
   | expr OCTOTHORPE  { Postop($1, Hashtag) }
   | expr FLAT        { Postop($1, Flat) }
-  | OUP  expr        { Preop (OctaveUp, $2) }
-  | ODOWN expr       { Preop (OctaveDown, $2) }
+  | OUP  expr        { Preop(OctaveUp, $2) }
+  | ODOWN expr       { Preop(OctaveDown, $2) }
 
-        /* miscelaneous */  
+        /* lists */  
+  | LBRACKET expr_list RBRACKET { List($2) }
+  | PLBRACKET expr_list RBRACKET { PList($2) }  
+  | LTUPLE expr_list RTUPLE     { Tuple($2) }
+  | LPAREN expr RPAREN { $2 }                  
+       
+        /* misc. */  
   | ID ASSIGN expr   { Assign($1, $3) }
-  | FID actuals_opt { Call($1, $2) }                       /* replaced from  | ID LPAREN actuals_opt RPAREN { Call($1, $3) } */
-  | LBRACE expr_list RBRACE  { List.rev $2}                /* replaced from LBRACE expr RBRACE */
-  | IF expr THEN expr ELSE expr { If($2, $4, $6) }
-  | ID DOT ID   { Get($1, $3) }							  /* getting thing within user-defined type */
+  | LBRACE expr_list RBRACE  { List.rev $2 }              
+  | ID DOT ID   { Get($1, $3) }							 
   | expr CONCAT expr  { Concat($1, $3) }
- 
-/* block of expressions */
-   
+  | IF expr THEN expr ELSE expr  
+      %prec IF
+      { If($2, $4, $6) }
 
-/* SUGGESTED REPLACEMENT FOR whitesp_list:
+primaries:
     expr { $1 }
-  | expr COMMA expr { $3 || $1 }
- */
+  | FID expr_list %prec FID { Call($1, $2) }             
+  | expr LBRACKET LITERAL RBRACKET { Sub($1, $3) } 
 
 
-expr_list: 
-    expr    { $1 }
-  | expr_list SEMI expr {$3 :: $1} 
+/* expr_list for list constructor */
+expr_list:
+    expr    { [$1] }
+  | expr_list expr {$2 :: $1}
+
+/* expr_list for functions */
+func_list: 
+    expr    { [$1] }
+  | func_list SEMI expr {$3 :: $1} 
    
 formals_list:
-  | expr                    { [$1] }
-  | formals_list expr       { $3 :: $1 }   /* deleted comma delimiter */
+  | ID                    { [$1] }
+  | formals_list ID       { $2 :: $1 }   
 
-typedecl: 
-   TYP ID LBRACE expr_list RBRACE { Typedef($2, List.rev $4) }
