@@ -1,0 +1,10 @@
+//test if synth function works for music mike
+
+
+pitch_list= p:[ 1 2 3 4 5]
+mode=[1 3 5 6 8 10 12]
+rhythm_list=[ 1. 1. 1. 1. 1.]
+start_note=150
+
+tune=<< start_note pitch_list rhythm_list mode >>
+syth( [<< tune 0. >>] ) 
