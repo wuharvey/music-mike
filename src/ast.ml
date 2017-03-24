@@ -15,6 +15,7 @@ type expr =
     Literal of int
   | FloatLit of float  
   | BoolLit of bool
+  | Fid of string
   | Id of string
   | Binop of expr * op * expr
   | Preop of preop * expr

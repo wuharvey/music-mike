@@ -10,6 +10,7 @@ open Ast
 %token FOR TYP SET
 %token <int> LITERAL
 %token <float> FLITERAL
+%token <string> STRING
 %token <string> ID FID
 %token EOF
 
@@ -77,6 +78,7 @@ literals:
   | FALSE            { BoolLit(false) }
   | LPAREN RPAREN    { Unit }
   | ID               { ID($1) }
+  | STRING           { String($1) }
 
 expr:
     literals { $1 }
