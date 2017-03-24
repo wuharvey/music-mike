@@ -52,7 +52,9 @@ rule token = parse
 | "true"   { TRUE }
 | "false"  { FALSE }
 | "fun"    { FUN }
+| "set"    { SET }
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
+| "\""['a'-'z' 'A'-'Z']*"\""    as lxm { STRING(lxm) } 
 | 'q'      { FLITERAL(1.0) }
 | 'w'      { FLITERAL(4.0) }
 | 'h'      { FLITERAL(2.0) }
