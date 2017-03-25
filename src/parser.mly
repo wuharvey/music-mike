@@ -49,7 +49,7 @@ decls:
     Function Declaration `fdecl` or 
     Type Declaration `tdecl`" */
 section:				
-    primaries           { $1 }
+    expr                { $1 }
   | fdecl               { $1 }
   | tdecl               { $1 }
 
@@ -76,14 +76,14 @@ literals:
   | STRING           { String($1) }
 
 expr:
-    literals { $1 }
-  | binop    { $1 }
-  | unop     { $1 }
-  | primaries{ $1 }
+    literals  { $1 }
+  | binop     { $1 }
+  | unop      { $1 }
+  | primaries { $1 }
   | LBRACKET expr_list RBRACKET  { List($2) }
   | PLBRACKET expr_list RBRACKET { PList($2) }  
   | LTUPLE expr_list RTUPLE      { Tuple($2) }
-  | ID DOT ID                { Get($1, $3) }							 
+  | ID DOT ID                { Get($1, $3) }				 
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr  
       %prec IF
@@ -119,25 +119,25 @@ unop:
     /* stuff that should be on same level as expressions */
 primaries:
     block { $1 }
-  | FID actuals_list SEMI     { Call($1, $2) }             
-  | ID ASSIGN expr SEMI       { Assign($1, $3) }
+  | FID actuals_list SEMI   { Call($1, $2) }             
+  | ID ASSIGN expr SEMI     { Assign($1, $3) }
 
 expr_list:
-   /*nothing*/           { [] }
-  | expr_list expr       { $2 :: $1 }
+   /*nothing*/              { [] }
+  | expr_list expr          { $2 :: $1 }
 
 block:
     LBRACE semi_list RBRACE { Block($2) } 
 
 semi_list: 
-    expr SEMI            { [$1] }  
-  | semi_list expr SEMI  { $2 :: $1 } 
+    expr SEMI               { [$1] }  
+  | semi_list expr SEMI     { $2 :: $1 } 
    
 formals_list:
-    ID                   { [$1] }
-  | formals_list ID      { $2 :: $1 }   
+    ID                      { [$1] }
+  | formals_list ID         { $2 :: $1 }   
 
 actuals_list:
-    expr                 { [$1] }
-  | actuals_list expr    { $2 :: $1 }
+    expr                    { [$1] }
+  | actuals_list expr       { $2 :: $1 }
 
