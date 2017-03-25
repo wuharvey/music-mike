@@ -12,6 +12,7 @@ rule token = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
+| "r:["    { RLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
 | '+'      { PLUS }
@@ -51,8 +52,7 @@ rule token = parse
 | "unit"   { UNIT }
 | "true"   { TRUE }
 | "false"  { FALSE }
-| "fun"    { FUN }
-| "set"    { SET }
+| "def"    { DEF }
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
 | "\""['a'-'z' 'A'-'Z']*"\""    as lxm { STRING(lxm) } 
 | 'q'      { FLITERAL(1.0) }

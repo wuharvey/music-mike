@@ -15,8 +15,8 @@ type expr =
     Literal of int
   | FloatLit of float  
   | BoolLit of bool
-  | Fid of string
   | Id of string
+  | String of string
   | Binop of expr * op * expr
   | Preop of preop * expr
   | Postop of expr * postop
@@ -29,9 +29,9 @@ type expr =
   | Unit
 
 type stmt =
-    Block of stmt list
+    Block of expr list
   | Expr of expr
-  | If of expr * stmt * stmt
+  | If of expr * expr * expr
   | For of expr * expr * expr * stmt
 
 type func_decl = {
