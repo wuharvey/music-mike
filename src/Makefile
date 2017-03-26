@@ -16,8 +16,18 @@ microc.native :
 clean :
 	ocamlbuild -clean
 	rm -rf testall.log *.diff microc scanner.ml parser.ml parser.mli
-	rm -rf printbig
 	rm -rf *.cmx *.cmi *.cmo *.cmx *.o *.s *.ll *.out *.exe *.output
+
+parser: 
+	ocamlyacc -v parser.mly
+
+scanner:
+	ocamllex scanner.mll
+
+ap:
+	ocamlc -c ast.ml
+	ocamlyacc -v parser.mly
+	ocaml parser.ml
 
 # More detailed: build using ocamlc/ocamlopt + ocamlfind to locate LLVM
 
