@@ -2,9 +2,9 @@
 
 type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq | And | Or 
 
-type preop = Neg | Not | FNeg | Rhythmdot | OctaveUp | OctaveDown
+type preop = Neg | Not | FNeg | OctaveUp | OctaveDown
 
-type postop = Sharp | Flat 
+type postop = Sharp | Flat | Rhythmdot 
 
 type typ = Int | Bool | Void | Float | String | Pitch
 
@@ -14,7 +14,7 @@ type expr =
     Literal of int
   | FloatLit of float  
   | BoolLit of bool
-  | Id of string
+  | ID of string
   | String of string
   | Binop of expr * op * expr
   | Preop of preop * expr
@@ -23,21 +23,25 @@ type expr =
   | Call of string * expr list      
   | If of expr * expr * expr
   | Sub of expr * int
-  | List of expr
+  | List of expr list
+  | PList of expr list
   | Block of expr list
-  | If of expr * expr * expr
+  | Concat of expr * expr
   | Noexpr
   | Unit
 
 type func_decl = {
-    typ : typ;
     ident : string;
-    formals : bind list;
-    locals : bind list;
-    body : expr list;
+    formals : string list;
+    body : expr;
   }
 
-type program = bind list * func_decl list
+type type_decl = {
+    typename : string;
+    members  : expr list;
+  }
+
+type program = expr list * func_decl list * type_decl list
 
 (* Pretty-printing functions *)
 (*
