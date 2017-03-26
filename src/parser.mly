@@ -1,5 +1,8 @@
 %{
-open Ast
+    open Ast
+    let first  (a,_,_) = a;;
+    let second (_,a,_) = a;;
+    let third  (_,_,a) = a;;
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
@@ -15,7 +18,7 @@ open Ast
 %token EOF
 
 %right ASSIGN
-%right FID
+%right call
 %right IF
 %left OR
 %left AND
@@ -37,21 +40,14 @@ open Ast
 
 /* "A program consists of a list of declarations, aka `decls`"*/
 program:        
-  decls EOF             { List.rev $1 }
+  stmts EOF             { $1 }
 
-/* "decls consists of a `section` or a 
-  `section` followed by a semicolon followed by more decls" */
-decls:                  
-    /* nothing */       { [] }
-  | section decls       { $1 :: $2 }
-
-/* "A section consists of either primaries
-    Function Declaration `fdecl` or 
-    Type Declaration `tdecl`" */
-section:				
-    expr                { $1 }
-  | fdecl               { $1 }
-  | tdecl               { $1 }
+stmts:
+                        { [], [] ,[] }
+  | stmts expr          { ($2 :: first $1), second $1, third $1 }
+  | stmts fdecl         { first $1, ($2 :: second $1), third $1 }
+  | stmts tdecl         { first $1, second $1, ($2 :: third $1) }
+                            
 
 /* "A function declaration `fdecl` consists of 
     a Function Identifier `FID` - string w/ first letter capitalized
@@ -64,7 +60,8 @@ fdecl:
 	       body = $5 } }
 
 tdecl: 
-   TYP ID ASSIGN LBRACE expr RBRACE  { Typedef($2, List.rev $5) }
+   TYP ID ASSIGN LBRACE assign_list RBRACE  
+     { { typename = $2; members = $5 } }
 
 literals:
     LITERAL          { Literal($1) }
@@ -82,8 +79,7 @@ expr:
   | primaries { $1 }
   | LBRACKET expr_list RBRACKET  { List($2) }
   | PLBRACKET expr_list RBRACKET { PList($2) }  
-  | LTUPLE expr_list RTUPLE      { Tuple($2) }
-  | ID DOT ID                { Get($1, $3) }				 
+/*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr  
       %prec IF
@@ -111,7 +107,7 @@ unop:
 /*| MINUS expr %prec NEG { Preop(Neg, $2) }  */
   | NOT expr             { Preop(Not, $2) }
   | expr RHYTHMDOT       { Postop($1, Rhythmdot) }
-  | expr OCTOTHORPE      { Postop($1, Hashtag) }
+  | expr OCTOTHORPE      { Postop($1, Sharp) }
   | expr FLAT            { Postop($1, Flat) }
   | OUP  expr            { Preop(OctaveUp, $2) }
   | ODOWN expr           { Preop(OctaveDown, $2) }
@@ -120,7 +116,14 @@ unop:
 primaries:
     block { $1 }
   | FID actuals_list SEMI   { Call($1, $2) }             
-  | ID ASSIGN expr SEMI     { Assign($1, $3) }
+  | assign { $1 }
+
+assign:
+  | ID ASSIGN expr          { Assign($1, $3) }
+   
+assign_list: 
+    assign                  { [$1] }
+  | assign_list assign      { $2 :: $1 }
 
 expr_list:
    /*nothing*/              { [] }
