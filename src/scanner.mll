@@ -45,11 +45,11 @@ rule token = parse
 | "then"   { THEN }
 | "else"   { ELSE }
 | "for"    { FOR }
-| "return" { RETURN }
+(*| "return" { RETURN }*)
 | "int"    { INT }
 | "bool"   { BOOL }
-| "float"  { FLOAT }
-| "unit"   { UNIT }
+(*| "float"  { FLOAT }*)
+(*| "unit"   { UNIT }*)
 | "true"   { TRUE }
 | "false"  { FALSE }
 | "def"    { DEF }
