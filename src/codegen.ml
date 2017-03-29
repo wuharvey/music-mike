@@ -29,7 +29,6 @@ let translate (exprs, functions, structs) =
   and void_t  = L.void_type         context in 
   let i8p_t   = L.pointer_type i8_t   in
 
- 
   let ltype_of_typ = function
       A.Int     -> i32_t
     | A.Bool    -> i1_t
@@ -43,7 +42,8 @@ let translate (exprs, functions, structs) =
 
   let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.Void) [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block default_fun) in
-  
+ 
+  let flt_format_str = L.build_global_stringptr "%f\n" "flt" builder in
   let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
 
@@ -82,25 +82,23 @@ let translate (exprs, functions, structs) =
         | A.Not     -> L.build_not) e' "tmp" builder
     | A.Assign (s, e) -> let e' = expr builder e in
     ignore (L.build_store e' (lookup s) builder); e' *)
-    | A.Call ("Printint", [e]) ->
-       L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
-    | A.Call ("Printstr", [e]) ->
-       L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
-           (* | A.Call (f, act) ->
-               let (fdef, fdecl) = StringMap.find f function_decls in
-  let actuals = List.rev (List.map (expr builder) (List.rev act)) in
-  let result = (match fdecl.A.typ with A.Void -> ""
-            | _ -> f ^ "_result") in
-  L.build_call fdef (Array.of_list actuals) result builder *)
+    | A.Call ("PrintInt", [e]) ->
+      L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
+    | A.Call ("PrintStr", [e]) ->
+      L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
+    | A.Call ("PrintFlt", [e]) ->
+      L.build_call printf_func [| flt_format_str ; (expr builder e) |] "printf" builder
+(*  | A.Call (f, act) ->
+      let (fdef, fdecl) = StringMap.find f function_decls in
+      let actuals = List.rev (List.map (expr builder) (List.rev act)) in
+      let result = (match fdecl.A.typ with A.Void -> ""
+        | _ -> f ^ "_result") in
+      L.build_call fdef (Array.of_list actuals) result builder *)
     | _ -> L.const_int i32_t 1
   in 
     let exprbuilder builder e = ignore(expr builder e); builder
   in
     let builder = List.fold_left exprbuilder builder exprs
-
-
-
-
 
   in
   ignore (L.build_ret_void builder);
