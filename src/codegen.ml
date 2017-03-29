@@ -29,7 +29,6 @@ let translate (exprs, functions, structs) =
   and void_t  = L.void_type         context in 
   let i8p_t   = L.pointer_type i8_t   in
 
- 
   let ltype_of_typ = function
       A.Int     -> i32_t
     | A.Bool    -> i1_t
@@ -43,7 +42,7 @@ let translate (exprs, functions, structs) =
 
   let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.Int) [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block default_fun) in
-  
+ 
   let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
   let float_format = L.build_global_stringptr "%f\n" "flt" builder in 
@@ -99,10 +98,6 @@ let translate (exprs, functions, structs) =
     let exprbuilder builder e = ignore(expr builder e); builder
   in
     let builder = List.fold_left exprbuilder builder exprs
-
-
-
-
 
   in
   ignore (L.build_ret (L.const_int i32_t 0) builder);
