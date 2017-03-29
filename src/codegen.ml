@@ -25,7 +25,7 @@ let translate (exprs, functions, structs) =
   and i32_t   = L.i32_type          context
   and i8_t    = L.i8_type           context
   and i1_t    = L.i1_type           context
-  and float_t = L.float_type        context 
+  and float_t = L.double_type       context 
   and void_t  = L.void_type         context in 
   let i8p_t   = L.pointer_type i8_t   in
 
@@ -46,7 +46,7 @@ let translate (exprs, functions, structs) =
   
   let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
-
+  let float_format = L.build_global_stringptr "%f\n" "flt" builder in 
   let rec expr builder = function
       A.Literal i ->  L.const_int i32_t i
     | A.FloatLit f -> L.const_float float_t f 
@@ -79,13 +79,15 @@ let translate (exprs, functions, structs) =
        let e' = expr builder e in
        (match op with
           A.Neg     -> L.build_neg
-        | A.Not     -> L.build_not) e' "tmp" builder
-    | A.Assign (s, e) -> let e' = expr builder e in
-    ignore (L.build_store e' (lookup s) builder); e' *)
+        | A.Not     -> L.build_not) e' "tmp" builder *)
+    | A.Assign (s, e) -> let e' = expr builder e and local_var = L.build_alloca i32_t s builder in
+    ignore (L.build_store e' local_var builder); e' 
     | A.Call ("Printint", [e]) ->
        L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
     | A.Call ("Printstr", [e]) ->
        L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
+    | A.Call ("Printfloat", [e]) ->
+       L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
            (* | A.Call (f, act) ->
                let (fdef, fdecl) = StringMap.find f function_decls in
   let actuals = List.rev (List.map (expr builder) (List.rev act)) in
