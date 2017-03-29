@@ -24,7 +24,8 @@ parser:
 scanner:
 	ocamllex scanner.mll
 
-ap:
+frontend:
+	ocamllex scanner.mll
 	ocamlc -c ast.ml
 	ocamlyacc -v parser.mly
 	ocamlc -c parser.mli
