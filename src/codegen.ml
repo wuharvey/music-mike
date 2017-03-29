@@ -41,7 +41,7 @@ let translate (exprs, functions, structs) =
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func = L.declare_function "printf" printf_t the_module in
 
-  let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.Void) [||]) the_module in
+  let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.Int) [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block default_fun) in
   
   let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
@@ -103,5 +103,5 @@ let translate (exprs, functions, structs) =
 
 
   in
-  ignore (L.build_ret_void builder);
+  ignore (L.build_ret (L.const_int i32_t 0) builder);
   the_module
