@@ -74,7 +74,19 @@ let translate (exprs, functions, structs) =
     | A.Greater -> L.build_icmp L.Icmp.Sgt
     | A.Geq     -> L.build_icmp L.Icmp.Sge
     ) e1' e2' "tmp" builder
- (* | A.Unop(op, e) ->
+    | A.List(es)    -> 
+          let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
+          in 
+            let deal_with_element index e =  
+              let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "elem" builder in 
+              let e' = expr builder e in 
+                ignore(L.build_store e' pointer builder)
+            in
+              List.iteri deal_with_element es; arr_malloc
+
+
+(*           L.build_array_alloca  (L.array_type i32_t 0) (L.const_int i32_t 0) "a" builder
+ *) (* | A.Unop(op, e) ->
        let e' = expr builder e in
        (match op with
           A.Neg     -> L.build_neg
