@@ -114,9 +114,10 @@ unop:
 
     /* stuff that should be on same level as expressions */
 primaries:
-    block { $1 }
+    /*block { $1 }*/
+    LBRACE semi_list RBRACE { Block($2) }
   | FID actuals_list SEMI   { Call($1, $2) }             
-  | assign { $1 }
+  | assign SEMI { $1 }
 
 assign:
   | ID ASSIGN expr          { Assign($1, $3) }
@@ -129,8 +130,8 @@ expr_list:
    /*nothing*/              { [] }
   | expr_list expr          { $2 :: $1 }
 
-block:
-    LBRACE semi_list RBRACE { Block($2) } 
+/*block:
+    LBRACE semi_list RBRACE { Block($2) } */
 
 semi_list: 
     expr SEMI               { [$1] }  
