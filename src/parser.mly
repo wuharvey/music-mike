@@ -6,7 +6,7 @@
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
-%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOT
+%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOTLBRACKET
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token IF THEN ELSE WHILE INT BOOL VOID  
@@ -77,7 +77,8 @@ expr:
   | binop     { $1 }
   | unop      { $1 }
   | primaries { $1 }
-  | LBRACKET expr_list RBRACKET  { List($2) }
+  | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
+  | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
   | PLBRACKET expr_list RBRACKET { PList($2) }  
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
