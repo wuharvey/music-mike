@@ -17,6 +17,9 @@ module A = Ast
 
 module StringMap = Map.Make(String)
 
+let main_vars:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
+
+
 let translate (exprs, functions, structs) =
   let context = L.global_context () in
   
@@ -42,7 +45,10 @@ let translate (exprs, functions, structs) =
 
   let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.Int) [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block default_fun) in
- 
+(* 
+  let local_main_vars = StringMap.empty in 
+  let print_var s llv = print_string(s ^ ": " ^ L.string_of_llvalue llv ^ "\n") in *)
+
   let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
   let float_format = L.build_global_stringptr "%f\n" "flt" builder in 
@@ -51,7 +57,7 @@ let translate (exprs, functions, structs) =
     | A.FloatLit f -> L.const_float float_t f 
     | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
     | A.Noexpr -> L.const_int i32_t 0
-    (* | A.ID s -> L.build_load (lookup s) s builder *)
+    | A.ID s -> L.build_load (Hashtbl.find main_vars s) s builder
     | A.String s -> L.build_global_stringptr s "" builder
     | A.Binop (e1, op, e2) ->
             let e1' = expr builder e1
@@ -82,7 +88,7 @@ let translate (exprs, functions, structs) =
               let e' = expr builder e in 
                 ignore(L.build_store e' pointer builder)
             in
-              List.iteri deal_with_element es; arr_malloc
+              (* (print_string ("HEREEEEE" ^ (L.string_of_lltype (L.type_of arr_malloc)))); *) List.iteri deal_with_element es; arr_malloc
 
 
 (*           L.build_array_alloca  (L.array_type i32_t 0) (L.const_int i32_t 0) "a" builder
@@ -91,8 +97,13 @@ let translate (exprs, functions, structs) =
        (match op with
           A.Neg     -> L.build_neg
         | A.Not     -> L.build_not) e' "tmp" builder *)
-    | A.Assign (s, e) -> let e' = expr builder e and local_var = L.build_alloca i32_t s builder in
-    ignore (L.build_store e' local_var builder); e' 
+    | A.Assign (s, e) -> let e' = (* (print_string "HEREERERE\n"); *) expr builder e in 
+          let var = try Hashtbl.find main_vars s 
+                    with Not_found ->  let local_var = L.build_alloca i32_t s builder in 
+                        Hashtbl.add main_vars s local_var;local_var in
+                (* print_string (string_of_bool (StringMap.is_empty local_main_vars)); *) 
+                ignore (L.build_store e' var builder); e' 
+
     | A.Call ("Printint", [e]) ->
        L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
     | A.Call ("Printstr", [e]) ->
