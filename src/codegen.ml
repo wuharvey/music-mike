@@ -31,6 +31,7 @@ let translate (exprs, functions, structs) =
   and float_t = L.double_type       context 
   and void_t  = L.void_type         context in 
   let i8p_t   = L.pointer_type i8_t   in
+  let i32p_t  = L.pointer_type i32_t in
 
   let ltype_of_typ = function
       A.Int     -> i32_t
@@ -90,19 +91,20 @@ let translate (exprs, functions, structs) =
             in
               (* (print_string ("HEREEEEE" ^ (L.string_of_lltype (L.type_of arr_malloc)))); *) List.iteri deal_with_element es; arr_malloc
 
-
-(*           L.build_array_alloca  (L.array_type i32_t 0) (L.const_int i32_t 0) "a" builder
- *) (* | A.Unop(op, e) ->
+ (* | A.Unop(op, e) ->
        let e' = expr builder e in
        (match op with
           A.Neg     -> L.build_neg
         | A.Not     -> L.build_not) e' "tmp" builder *)
-    | A.Assign (s, e) -> let e' = (* (print_string "HEREERERE\n"); *) expr builder e in 
+    | A.Assign (s, e) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
-                    with Not_found ->  let local_var = L.build_alloca i32_t s builder in 
+                    with Not_found ->  
+                    let local_var = L.build_alloca (match e with 
+                         A.List(_) -> i32p_t 
+                        | _ -> i32_t) s builder in 
                         Hashtbl.add main_vars s local_var;local_var in
-                (* print_string (string_of_bool (StringMap.is_empty local_main_vars)); *) 
                 ignore (L.build_store e' var builder); e' 
+
 
     | A.Call ("Printint", [e]) ->
        L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
