@@ -90,6 +90,13 @@ let translate (exprs, functions, structs) =
                 ignore(L.build_store e' pointer builder)
             in
               (* (print_string ("HEREEEEE" ^ (L.string_of_lltype (L.type_of arr_malloc)))); *) List.iteri deal_with_element es; arr_malloc
+    | A.Subset(s, index)  ->
+          let var = try Hashtbl.find main_vars s
+                    with Not_found -> raise (Failure (s ^ " Not Found!"))
+            in 
+              let head = (* print_string (L.string_of_llvalue var); *) L.build_load var "head" builder (* L.build_gep var [| (L.const_int i32_t index) |] "pointer" builder  *)in 
+              let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
+              (*print_string  ("HELLO " ^(L.string_of_llvalue pointer)); *) L.build_load pointer "tmp" builder
 
  (* | A.Unop(op, e) ->
        let e' = expr builder e in
