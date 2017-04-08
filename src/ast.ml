@@ -22,7 +22,7 @@ type expr =
   | Assign of string * expr
   | Call of string * expr list      
   | If of expr * expr * expr
-  | Sub of expr * int
+  | Subset of string * int
   | List of expr list
   | PList of expr list
   | Block of expr list
@@ -90,7 +90,7 @@ let rec string_of_expr = function
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
-  | Sub(e, i) -> string_of_expr e ^ "[" ^ string_of_int i ^ "]"
+  | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | PList(es) -> "p:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"
