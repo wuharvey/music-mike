@@ -22,7 +22,7 @@ type expr =
   | Assign of string * expr
   | Call of string * expr list      
   | If of expr * expr * expr
-  | Sub of expr * int
+  | Subset of string * int
   | List of expr list
   | PList of expr list
   | Block of expr list
@@ -86,11 +86,11 @@ let rec string_of_expr = function
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Preop(o, e) -> string_of_preop o ^ string_of_expr e
   | Postop(e, o) -> string_of_expr e ^ string_of_postop o
-  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Assign(v, e) -> "Assign(" ^ v ^ " = " ^ (string_of_expr e) ^ ")"
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
-  | Sub(e, i) -> string_of_expr e ^ "[" ^ string_of_int i ^ "]"
+  | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | PList(es) -> "p:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"
@@ -115,8 +115,8 @@ let string_of_type_decl tdecl =
 
 
 let string_of_program (exprs, functions, structs) =
-  String.concat "" (List.map string_of_type_decl structs) ^ "\n" ^ 
-  String.concat "" (List.map string_of_func_decl functions) ^ "\n" ^
-  String.concat "\n" (List.map string_of_expr exprs)
+  "TYPE DECLS: " ^ String.concat "" (List.map string_of_type_decl structs) ^ "\n" ^ 
+  "FUN DECLS: " ^ String.concat "" (List.map string_of_func_decl functions) ^ "\n" ^
+  "EXPRESSIONS: " ^ String.concat "\n" (List.map string_of_expr exprs) ^ "\n"
 
 

@@ -13,6 +13,7 @@ rule token = parse
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
 | "r:["    { RLBRACKET }
+| ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
 | '+'      { PLUS }

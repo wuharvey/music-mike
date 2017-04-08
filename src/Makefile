@@ -7,7 +7,7 @@
 all : musicmike.native 
 
 musicmike.native :
-	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis -cflags -w,+a-4 \
+	ocamlbuild -ocamlyacc "ocamlyacc -v" -use-ocamlfind -pkgs llvm,llvm.analysis -cflags -w,+a-4 \
 		musicmike.native
 
 # "make clean" removes all generated files
