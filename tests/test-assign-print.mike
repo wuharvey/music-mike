@@ -1,6 +1,3 @@
-/* SHOULD BE THIS:
+
 
 a = 5; Printint a;
-*/
-
-Printint a; a = 5;

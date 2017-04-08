@@ -129,7 +129,7 @@ let translate (exprs, functions, structs) =
   in 
     let exprbuilder builder e = ignore(expr builder e); builder
   in
-    let builder = List.fold_left exprbuilder builder exprs
+    let builder = List.fold_left exprbuilder builder (List.rev(exprs))
 
   in
   ignore (L.build_ret (L.const_int i32_t 0) builder);
