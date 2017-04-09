@@ -115,7 +115,7 @@ unop:
     /* stuff that should be on same level as expressions */
 primaries:
     block { $1 }
-  | FID LPAREN actuals_list RPAREN SEMI   { Call($1, $2) }             
+  | FID LPAREN actuals_list RPAREN SEMI   { Call($1, $3) }             
   | assign { $1 }
 
 assign:
