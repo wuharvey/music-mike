@@ -80,6 +80,7 @@ expr:
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
   | PLBRACKET expr_list RBRACKET { PList($2) }
+  | RLBRACKET expr_list RBRACKET {Rlist($2)}
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr
@@ -117,7 +118,7 @@ unop:
 primaries:
     /*block { $1 }*/
     LBRACE semi_list RBRACE { Block($2) }
-  | FID LPAREN actuals_list RPAREN SEMI   { Call($1, $3) }             
+  | FID LPAREN actuals_list RPAREN SEMI   { Call($1, $3) }
   | assign SEMI { $1 }
 
 assign:

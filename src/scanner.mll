@@ -84,3 +84,4 @@ and listl = parse
 | 'e'      { FLITERAL(0.5); listl lexbuf}
 | 's'      { FLITERAL(0.25); listl lexbuf}
 | ']'      { RBRACKET; token lexbuf }
+| eof { EOF }
