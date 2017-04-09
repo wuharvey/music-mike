@@ -94,6 +94,7 @@ let rec string_of_expr = function
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | PList(es) -> "p:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
+  | RList(es) -> "r:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"
   | Concat(e1, e2) -> string_of_expr e1 ^ "@" ^ string_of_expr e2
   | Noexpr -> ""
