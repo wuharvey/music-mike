@@ -58,7 +58,7 @@ let translate (exprs, functions, structs) =
     | A.FloatLit f -> L.const_float float_t f 
     | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
     | A.Noexpr -> L.const_int i32_t 0
-    | A.ID s -> L.build_load (Hashtbl.find main_vars s) s builder
+    | A.ID s -> L.build_load (try Hashtbl.find main_vars s with Not_found -> raise(Failure(s ^ " Not Found"))) s builder
     | A.String s -> L.build_global_stringptr s "" builder
     | A.Binop (e1, op, e2) ->
             let e1' = expr builder e1
