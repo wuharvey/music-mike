@@ -1,0 +1,6 @@
+a=5;
+   {
+	a=50;
+	Printint a;
+   };
+Printint a;

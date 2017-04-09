@@ -1,0 +1,7 @@
+Printfloat (2.22);
+Printfloat (3.+.2.5);
+Printfloat (10.-.2.);
+Printfloat (8.*.4.);
+Printfloat (7./.2.);
+
+

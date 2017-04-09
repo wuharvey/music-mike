@@ -1,0 +1,10 @@
+/* assume print is not different words */
+a="hello";
+Print( a);
+b=8;
+Print(b);
+c='c';
+Print(c);
+d=[1 2 3];
+Print(d);
+
