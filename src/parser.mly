@@ -80,7 +80,7 @@ expr:
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
   | PLBRACKET expr_list RBRACKET { PList($2) }
-  | RLBRACKET expr_list RBRACKET {Rlist($2)}
+  | RLBRACKET expr_list RBRACKET {RList($2)}
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr
