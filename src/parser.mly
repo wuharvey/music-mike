@@ -5,11 +5,11 @@
     let third  (_,_,a) = a;;
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE
 %token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOT
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
-%token IF THEN ELSE FOR WHILE INT BOOL VOID  
+%token IF THEN ELSE FOR WHILE INT BOOL VOID
 %token FOR TYP DEF
 %token <int> LITERAL
 %token <float> FLITERAL
@@ -39,7 +39,7 @@
 %%
 
 /* "A program consists of a list of declarations, aka `decls`"*/
-program:        
+program:
   stmts EOF             { $1 }
 
 stmts:
@@ -47,20 +47,20 @@ stmts:
   | stmts expr          { ($2 :: first $1), second $1, third $1 }
   | stmts fdecl         { first $1, ($2 :: second $1), third $1 }
   | stmts tdecl         { first $1, second $1, ($2 :: third $1) }
-                            
 
-/* "A function declaration `fdecl` consists of 
+
+/* "A function declaration `fdecl` consists of
     a Function Identifier `FID` - string w/ first letter capitalized
-    a list of formals `formals_list` 
+    a list of formals `formals_list`
     a body which consists of an `expr` expression "*/
-fdecl: 
-   DEF FID formals_list ASSIGN expr 
+fdecl:
+   DEF FID formals_list ASSIGN expr
      { { ident = $2;
 	       formals = List.rev($3);
 	       body = $5 } }
 
-tdecl: 
-   TYP ID ASSIGN LBRACE assign_list RBRACE  
+tdecl:
+   TYP ID ASSIGN LBRACE assign_list RBRACE
      { { typename = $2; members = $5 } }
 
 literals:
@@ -78,10 +78,10 @@ expr:
   | unop      { $1 }
   | primaries { $1 }
   | LBRACKET expr_list RBRACKET  { List($2) }
-  | PLBRACKET expr_list RBRACKET { PList($2) }  
+  | PLBRACKET expr_list RBRACKET { PList($2) }
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
-  | IF expr THEN expr ELSE expr  
+  | IF expr THEN expr ELSE expr
       %prec IF
       { If($2, $4, $6) }
 
@@ -115,13 +115,13 @@ unop:
     /* stuff that should be on same level as expressions */
 primaries:
     block { $1 }
-  | FID actuals_list SEMI   { Call($1, $2) }             
+  | FID LPAREN actuals_list RPAREN SEMI   { Call($1, $2) }             
   | assign { $1 }
 
 assign:
   | ID ASSIGN expr          { Assign($1, $3) }
-   
-assign_list: 
+
+assign_list:
     assign                  { [$1] }
   | assign_list assign      { $2 :: $1 }
 
@@ -130,17 +130,16 @@ expr_list:
   | expr_list expr          { $2 :: $1 }
 
 block:
-    LBRACE semi_list RBRACE { Block($2) } 
+    LBRACE semi_list RBRACE { Block($2) }
 
-semi_list: 
-    expr SEMI               { [$1] }  
-  | semi_list expr SEMI     { $2 :: $1 } 
-   
+semi_list:
+    expr SEMI               { [$1] }
+  | semi_list expr SEMI     { $2 :: $1 }
+
 formals_list:
     ID                      { [$1] }
-  | formals_list ID         { $2 :: $1 }   
+  | formals_list ID         { $2 :: $1 }
 
 actuals_list:
     expr                    { [$1] }
   | actuals_list expr       { $2 :: $1 }
-
