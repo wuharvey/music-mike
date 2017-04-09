@@ -44,9 +44,9 @@ program:
 
 stmts:
                         { [], [] ,[] }
-  | stmts expr          { ($2 :: first $1), second $1, third $1 }
-  | stmts fdecl         { first $1, ($2 :: second $1), third $1 }
-  | stmts tdecl         { first $1, second $1, ($2 :: third $1) }
+  | stmts expr  SEMI        { ($2 :: first $1), second $1, third $1 }
+  | stmts fdecl SEMI        { first $1, ($2 :: second $1), third $1 }
+  | stmts tdecl SEMI        { first $1, second $1, ($2 :: third $1) }
                             
 
 /* "A function declaration `fdecl` consists of 
@@ -117,8 +117,8 @@ unop:
 primaries:
     /*block { $1 }*/
     LBRACE semi_list RBRACE { Block($2) }
-  | FID actuals_list SEMI   { Call($1, $2) }             
-  | assign SEMI { $1 }
+  | FID actuals_list    { Call($1, $2) }             
+  | assign  { $1 }
 
 assign:
   | ID ASSIGN expr          { Assign($1, $3) }
