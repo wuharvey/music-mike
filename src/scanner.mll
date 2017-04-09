@@ -55,13 +55,13 @@ rule token = parse
 | "false"  { FALSE }
 | "def"    { DEF }
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
-| "\""['a'-'z' 'A'-'Z']*"\""    as lxm { STRING(lxm) } 
 | 'q'      { FLITERAL(1.0) }
 | 'w'      { FLITERAL(4.0) }
 | 'h'      { FLITERAL(2.0) }
 | 't'      { FLITERAL(0.33) }
 | 'e'      { FLITERAL(0.5) }
 | 's'      { FLITERAL(0.25) }
+| '"' { let buffer = Buffer.create 1 in STRING (stringl buffer lexbuf) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
 | ['a'-'d' 'f' 'g' 'i'-'n' 'p' 'r' 'u' 'v' 'x'-'z'] | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | ['A'-'D' 'F' 'G' 'I'-'N' 'P' 'R' 'U' 'V' 'X'-'Z'] | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9'
@@ -72,3 +72,12 @@ rule token = parse
 and comment = parse
   "*/" { token lexbuf }
 | _    { comment lexbuf }
+
+and stringl buffer = parse
+ | '"' { Buffer.contents buffer }
+ | "\\t" { Buffer.add_char buffer '\t'; stringl buffer lexbuf }
+ | "\\n" { Buffer.add_char buffer '\n'; stringl buffer lexbuf }
+ | '\\' '"' { Buffer.add_char buffer '"'; stringl buffer lexbuf }
+ | '\\' '\\' { Buffer.add_char buffer '\\'; stringl buffer lexbuf }
+ | eof { raise End_of_file }
+ | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }
