@@ -77,11 +77,9 @@ expr:
   | binop     { $1 }
   | unop      { $1 }
   | primaries { $1 }
-
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
   | PLBRACKET expr_list RBRACKET { PList($2) }
-
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr
@@ -117,10 +115,9 @@ unop:
 
     /* stuff that should be on same level as expressions */
 primaries:
-
     /*block { $1 }*/
     LBRACE semi_list RBRACE { Block($2) }
-  | FID actuals_list SEMI   { Call($1, $2) }
+  | FID LPAREN actuals_list RPAREN SEMI   { Call($1, $3) }             
   | assign SEMI { $1 }
 
 assign:
@@ -134,9 +131,12 @@ expr_list:
    /*nothing*/              { [] }
   | expr_list expr          { $2 :: $1 }
 
-
 /*block:
     LBRACE semi_list RBRACE { Block($2) } */
+
+semi_list:
+    expr SEMI               { [$1] }
+  | semi_list expr SEMI     { $2 :: $1 }
 
 formals_list:
     ID                      { [$1] }
