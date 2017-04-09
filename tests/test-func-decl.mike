@@ -1,0 +1,3 @@
+Def Hello str1= a=str1;; Print(a);;
+
+Hello("HelloWorld");

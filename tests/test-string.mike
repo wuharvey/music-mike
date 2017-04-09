@@ -1,1 +1,2 @@
-Printstr "helloworld";
+/* test comment */
+Printstr ("helloworld");

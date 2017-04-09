@@ -1,0 +1,5 @@
+Printint(4);
+Printint(4+4);
+Printint(2*8);
+Printint(10/2);
+
