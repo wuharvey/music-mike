@@ -1,1 +1,1 @@
-Printstr "helloworld";
+Printstr("helloworld");
