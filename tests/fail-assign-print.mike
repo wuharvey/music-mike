@@ -1,2 +1,2 @@
-Printint a; a = 5; 
+Printint(a); a = 5; 
 

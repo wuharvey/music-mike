@@ -117,7 +117,7 @@ unop:
 primaries:
     /*block { $1 }*/
     LBRACE semi_list RBRACE { Block($2) }
-  | FID actuals_list    { Call($1, $2) }             
+  | FID LPAREN actuals_list RPAREN   { Call($1, $3) }             
   | assign  { $1 }
 
 assign:

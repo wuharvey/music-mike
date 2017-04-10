@@ -1,4 +1,4 @@
-Printfloat 5. +. 5.;
+Printfloat(5. +. 5.);
 
 
 
