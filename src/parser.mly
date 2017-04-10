@@ -116,7 +116,7 @@ unop:
     /* stuff that should be on same level as expressions */
 primaries:
     /*block { $1 }*/
-    LBRACE semi_list RBRACE { Block($2) }
+    LBRACE semi_list RBRACE { Block(List.rev($2)) }
   | FID LPAREN actuals_list RPAREN   { Call($1, $3) }             
   | assign  { $1 }
 
