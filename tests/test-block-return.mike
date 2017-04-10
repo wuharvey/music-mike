@@ -1,0 +1,2 @@
+/* testing whether {4;5;10;} returns "10" as its value */
+Printint({4;5;10;});
