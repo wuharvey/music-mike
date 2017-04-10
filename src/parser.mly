@@ -44,9 +44,9 @@ program:
 
 stmts:
                         { [], [] ,[] }
-  | stmts expr SEMI         { ($2 :: first $1), second $1, third $1 }
+  | stmts expr  SEMI        { ($2 :: first $1), second $1, third $1 }
   | stmts fdecl SEMI        { first $1, ($2 :: second $1), third $1 }
-  | stmts tdecl SEMI    { first $1, second $1, ($2 :: third $1) }
+  | stmts tdecl SEMI        { first $1, second $1, ($2 :: third $1) }
                             
 
 /* "A function declaration `fdecl` consists of 
@@ -77,7 +77,7 @@ expr:
   | binop     { $1 }
   | unop      { $1 }
   | primaries { $1 }
-  | LBRACKET expr_list RBRACKET  { List($2) }
+  | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
   | PLBRACKET expr_list RBRACKET { PList($2) }  
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
@@ -115,9 +115,10 @@ unop:
 
     /* stuff that should be on same level as expressions */
 primaries:
-    block { $1 }
-  | FID LPAREN actuals_list RPAREN    { Call($1, $3) }             
-  | assign { $1 }
+    /*block { $1 }*/
+    LBRACE semi_list RBRACE { Block($2) }
+  | FID LPAREN actuals_list RPAREN   { Call($1, $3) }             
+  | assign  { $1 }
 
 assign:
   | ID ASSIGN expr          { Assign($1, $3) }
@@ -130,8 +131,8 @@ expr_list:
    /*nothing*/              { [] }
   | expr_list expr          { $2 :: $1 }
 
-block:
-    LBRACE semi_list RBRACE { Block($2) } 
+/*block:
+    LBRACE semi_list RBRACE { Block($2) } */
 
 semi_list: 
     expr SEMI               { [$1] }  
