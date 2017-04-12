@@ -50,6 +50,7 @@ stmts:
   | stmts tdecl         { first $1, second $1, ($2 :: third $1) }
 
 
+
 /* "A function declaration `fdecl` consists of
     a Function Identifier `FID` - string w/ first letter capitalized
     a list of formals `formals_list`
@@ -81,12 +82,14 @@ expr:
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
   | PLBRACKET expr_list RBRACKET { PList($2) }
-  | expr_list RFLITERAL { RList($2::$1) }
+  | rhythm { RList($1) }
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr
       %prec IF
       { If($2, $4, $6) }
+rhythm:
+  | rhythm RFLITERAL {$2 :: FloatLit($1)}
 
 binop:
   | expr PLUS    expr { Binop($1, Add,   $3) }
