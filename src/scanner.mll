@@ -57,7 +57,7 @@ rule token = parse
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
 | '"' { let buffer = Buffer.create 1 in STRING (stringl buffer lexbuf) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
-| ['a'-'z'] | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ['a'-'p'] | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | ['A'-'Z'] | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9''_']* as lxm { FID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
