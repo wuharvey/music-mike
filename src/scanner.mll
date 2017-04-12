@@ -12,7 +12,7 @@ rule token = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
-| "r:["    { listl lexbuf }
+| "r:"    { listl lexbuf }
 | ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
@@ -76,6 +76,7 @@ and stringl buffer = parse
  | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }
 
 and listl = parse
+| '['      { RSTART }
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { RFLITERAL(float_of_string lxm) }
 | 'q'      { RFLITERAL(1.0) }
 | 'w'      { RFLITERAL(4.0) }
@@ -83,4 +84,4 @@ and listl = parse
 | 't'      { RFLITERAL(0.33) }
 | 'e'      { RFLITERAL(0.5) }
 | 's'      { RFLITERAL(0.25) }
-| ']'      { token lexbuf }
+| ']'      { let _ = RBRACKET in token lexbuf }

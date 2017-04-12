@@ -5,7 +5,7 @@
     let third  (_,_,a) = a;;
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RSTART LTUPLE RTUPLE
 %token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOTLBRACKET
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
@@ -82,15 +82,15 @@ expr:
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
   | PLBRACKET expr_list RBRACKET { PList($2) }
-  | rhythm { RList($1) }
+  | RSTART rhythm_list RBRACKET {RList($2)}
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr
       %prec IF
       { If($2, $4, $6) }
-rhythm:
-  | RFLITERAL {[$1]}
-  | rhythm RFLITERAL {$2 :: FloatLit($1)}
+rhythm_list:
+  /*nothing*/              { [] }
+  | rhythm_list RFLITERAL          { FloatLit($2) :: $1 }
 
 binop:
   | expr PLUS    expr { Binop($1, Add,   $3) }
