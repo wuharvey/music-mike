@@ -78,10 +78,10 @@ and stringl buffer = parse
 and listl = parse
 | '['      { RSTART }
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { RFLITERAL(float_of_string lxm) }
-| 'q'      { RFLITERAL(1.0) }
-| 'w'      { RFLITERAL(4.0) }
-| 'h'      { RFLITERAL(2.0) }
-| 't'      { RFLITERAL(0.33) }
-| 'e'      { RFLITERAL(0.5) }
-| 's'      { RFLITERAL(0.25) }
+| 'q'      { RFLITERAL }
+| 'w'      { RFLITERAL }
+| 'h'      { RFLITERAL }
+| 't'      { RFLITERAL }
+| 'e'      { RFLITERAL }
+| 's'      { RFLITERAL }
 | ']'      { let _ = RBRACKET in token lexbuf }
