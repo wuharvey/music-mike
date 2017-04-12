@@ -67,7 +67,6 @@ tdecl:
 literals:
     LITERAL          { Literal($1) }
   | FLITERAL         { FloatLit($1) }
-  | RFLITERAL        { FloatLit($1) }
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | LPAREN RPAREN    { Unit }
