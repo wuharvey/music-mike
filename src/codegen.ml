@@ -64,6 +64,7 @@ let translate (exprs, functions, structs) =
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
 
+
   let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.Int) [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block default_fun) in
 
@@ -153,5 +154,13 @@ let translate (exprs, functions, structs) =
     let builder = List.fold_left exprbuilder builder (List.rev(exprs))
 
   in
+  let build_fun_body fdecl = 
+    let (the_function, _) = StringMap.find fdecl.A.ident function_decls in
+    let builder = L.builder_at_end context (L.entry_block the_function) in 
+    let ret_val = expr builder fdecl.A.body in  
+    ignore(L.build_ret ret_val builder)
+  in
+    List.iter build_fun_body functions; 
+
   ignore (L.build_ret (L.const_int i32_t 0) builder);
   the_module
