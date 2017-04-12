@@ -84,4 +84,4 @@ and listl = parse
 | 't'      { RFLITERAL(0.33) }
 | 'e'      { RFLITERAL(0.5) }
 | 's'      { RFLITERAL(0.25) }
-| ']'      { let _ = RBRACKET in token lexbuf }
+| ']'      { token lexbuf }
