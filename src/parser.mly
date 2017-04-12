@@ -89,6 +89,7 @@ expr:
       %prec IF
       { If($2, $4, $6) }
 rhythm:
+  | RFLITERAL {[$1]}
   | rhythm RFLITERAL {$2 :: FloatLit($1)}
 
 binop:
