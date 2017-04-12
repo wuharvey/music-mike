@@ -12,7 +12,7 @@ rule token = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
-| "r:["    { RLBRACKET; listl lexbuf }
+| "r:["    { listl lexbuf }
 | ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
@@ -57,8 +57,8 @@ rule token = parse
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
 | '"' { let buffer = Buffer.create 1 in STRING (stringl buffer lexbuf) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
-| ['a'-'d' 'f' 'g' 'i'-'n' 'p' 'r' 'u' 'v' 'x'-'z'] | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
-| ['A'-'D' 'F' 'G' 'I'-'N' 'P' 'R' 'U' 'V' 'X'-'Z'] | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9''_']* as lxm { FID(lxm) }
+| ['a'-'z'] | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ['A'-'Z'] | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9''_']* as lxm { FID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
@@ -76,11 +76,11 @@ and stringl buffer = parse
  | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }
 
 and listl = parse
-| ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm); listl lexbuf }
-| 'q'      { FLITERAL(1.0); listl lexbuf}
-| 'w'      { FLITERAL(4.0); listl lexbuf}
-| 'h'      { FLITERAL(2.0); listl lexbuf}
-| 't'      { FLITERAL(0.33); listl lexbuf}
-| 'e'      { FLITERAL(0.5); listl lexbuf}
-| 's'      { FLITERAL(0.25); listl lexbuf}
-| ']'      { RBRACKET; token lexbuf }
+| ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { RFLITERAL(float_of_string lxm) }
+| 'q'      { RFLITERAL(1.0) }
+| 'w'      { RFLITERAL(4.0) }
+| 'h'      { RFLITERAL(2.0) }
+| 't'      { RFLITERAL(0.33) }
+| 'e'      { RFLITERAL(0.5) }
+| 's'      { RFLITERAL(0.25) }
+| ']'      { token lexbuf }

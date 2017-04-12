@@ -13,6 +13,7 @@
 %token TYP DEF FOR
 %token <int> LITERAL
 %token <float> FLITERAL
+%token <float> RFLITERAL
 %token <string> STRING
 %token <string> ID FID
 %token EOF
@@ -66,6 +67,7 @@ tdecl:
 literals:
     LITERAL          { Literal($1) }
   | FLITERAL         { FloatLit($1) }
+  | RFLITERAL        { FloatLit($1) }
   | TRUE             { BoolLit(true) }
   | FALSE            { BoolLit(false) }
   | LPAREN RPAREN    { Unit }
@@ -80,7 +82,7 @@ expr:
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
   | PLBRACKET expr_list RBRACKET { PList($2) }
-  | RLBRACKET expr_list RBRACKET {RList($2)}
+  | expr_list RFLITERAL { RList($2::$1) }
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr
