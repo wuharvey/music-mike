@@ -82,22 +82,22 @@ let translate (exprs, functions, structs) =
             let e1' = expr builder e1
     and e2' = expr builder e2 in
             (match op with
-      A.Add     -> L.build_add
-    | A.Sub     -> L.build_sub
-    | A.Mult    -> L.build_mul
-    | A.Div     -> L.build_sdiv
-    | A.FAdd    -> L.build_fadd
-    | A.FSub    -> L.build_fsub
-    | A.FMult   -> L.build_fmul
-    | A.FDiv    -> L.build_fdiv
-    | A.And     -> L.build_and
-    | A.Or      -> L.build_or
-    | A.Equal   -> L.build_icmp L.Icmp.Eq
-    | A.Neq     -> L.build_icmp L.Icmp.Ne
-    | A.Less    -> L.build_icmp L.Icmp.Slt
-    | A.Leq     -> L.build_icmp L.Icmp.Sle
-    | A.Greater -> L.build_icmp L.Icmp.Sgt
-    | A.Geq     -> L.build_icmp L.Icmp.Sge
+	      A.Add     -> L.build_add
+	    | A.Sub     -> L.build_sub
+	    | A.Mult    -> L.build_mul
+	    | A.Div     -> L.build_sdiv
+	    | A.FAdd    -> L.build_fadd
+	    | A.FSub    -> L.build_fsub
+	    | A.FMult   -> L.build_fmul
+	    | A.FDiv    -> L.build_fdiv
+	    | A.And     -> L.build_and
+	    | A.Or      -> L.build_or
+	    | A.Equal   -> L.build_icmp L.Icmp.Eq
+	    | A.Neq     -> L.build_icmp L.Icmp.Ne
+	    | A.Less    -> L.build_icmp L.Icmp.Slt
+	    | A.Leq     -> L.build_icmp L.Icmp.Sle
+	    | A.Greater -> L.build_icmp L.Icmp.Sgt
+	    | A.Geq     -> L.build_icmp L.Icmp.Sge
     ) e1' e2' "tmp" builder
     | A.List(es)    -> 
           let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
@@ -119,11 +119,17 @@ let translate (exprs, functions, structs) =
         (match es with 
         e::e1::rest -> ignore(expr builder e); expr builder (A.Block(e1::rest))
       | [e] -> expr builder e)
- (* | A.Unop(op, e) ->
+ (*   | A.Unop(op, e) ->
        let e' = expr builder e in
        (match op with
-          A.Neg     -> L.build_neg
-        | A.Not     -> L.build_not) e' "tmp" builder *)
+		  A.Neg     -> L.build_neg
+		| A.Not     -> L.build_not
+		| A.Rhythmdot -> L.build_rhythmdot
+	        | A.Sharp     -> L.build_sharp
+		| A.Flat      -> L.build_flat
+		| A.OctaveUp  -> L.build_oup
+		| A.OctaveDown -> L.build_odown
+       ) e' "tmp" builder *)
     | A.Assign (s, e) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
