@@ -1,0 +1,479 @@
+% This is a LaTeX template for homework assignments
+%
+% Any line starting with a '%' is ignored by the LaTeX engine.
+
+\documentclass[12pt]{report}
+
+% The \documentclass command picks a 'style' for the document. For now,
+% the article style should serve your purposes.
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{courier}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{titlesec}
+
+\titleformat{\chapter}{\normalfont\LARGE}{\thechapter.}{20pt}{\LARGE\bf}
+
+
+% \newtheorem*{theorem}{Theorem}
+
+% The \usepackage commands load extra commands and features (called 
+% 'packages') for use in the document. These are safe to ignore; 
+% but you can add additional packages if you need to as time goes on.
+
+% Tip: If you are getting frustrated with writing in LaTeX, try googling
+% "latex how to ..."
+% Many people have written very nice guides to introduct you to LaTeX.
+
+\linespread{1.2}
+
+\title{Language Reference Manual}
+\author{\textbf{Music Mike} \\ Harvey Wu, Kaitlin Pet, Lakshmi Bodapati, Husam Abdul-Kafi}
+\date{\today}
+
+% This ends thm e "preamble" of the source code. Whenever you are told to
+% add something to the 'preamble,' that means it goes *before* the
+% \begin{document} command.
+
+\begin{document}
+
+\maketitle
+
+% This command tells LaTeX to create the title from the data of title and author set above.
+
+
+% Don't forget to add your hand-written signature on the print out!
+
+\newpage
+
+\tableofcontents{}
+\newpage
+
+% \chapter{Editing compile}
+
+
+\chapter{Introduction}
+ 
+This manual describes the Music-Mike language as submitted to Professor Stephen Edwards, for completion of the Spring 2017 edition of the Programming Languages and Translators class at Columbia University. Care has been taken to make it a reliable and informative guide to the language. \\
+
+Music-Mike is a music programming language inspired by OCaml and Note-Hashtag. The central ethos behind Music-Mike is creating music through repetition and manipulation of a collection of simple musical units. 
+%Its design follows these core principles:
+%\begin{itemize}
+%\item[-]Every expression returns something.
+%\item[-]All objects of non-user-defined type are immutable. 
+%\item[-]Functions are (almost) first-class citizens.
+%\end{itemize}
+
+
+ 
+\chapter{Types, Operators, and Expressions}
+\section{Types and Literals}
+All basic types are immutable in Music-Mike. User defined types are mutable. 
+
+\subsection{Basic Types}
+
+\begin{itemize}
+\item[-] \textbf{Unit (unit)}
+
+			The only value that unit can take is (). 
+			
+\item[-] \textbf{Boolean (bool)}
+
+			Takes two values: \texttt{true} or \texttt{false}.
+
+\item[-] \textbf{Integer (int)}
+
+			A 32-bit signed integer.
+
+\item[-] \textbf{Float (float)}
+
+			A 64-bit floating point number - follows the specifications of IEEE 754. Must contain a decimal point and either an integer or fractional component. The missing component is treated as a zero. 
+			
+			Examples: \texttt{5.    6.43    3.1415  .42}
+			
+\item[-] \textbf{String (string)}
+
+            A simple string enclosed by double quotations not spanning multiple lines.
+
+\item[-] \textbf{Pitch (pitch)}
+
+		%	Composed of two integers: a note value, pitch offset value, and an octave value.
+		
+		TBD WHETHER OCTAVE HAPPENS, WILL MAKE WITHOUT FIRST THEN ADD
+		Composed of positive or negative integer representing octave shift from "reference pitch" and
+		a positive integer representing scale degree. 
+		Can be operated on by pitch operators (described in 'Operators' section)
+		Numerically, scale degree and octave shift are based on a "reference pitch" specified when generating a tune
+		
+		
+		\texttt{2-4}
+		
+		Represents scale degree 4 two octave above scale degree 4 in respect to the reference pitch.
+		
+		
+        \texttt{1} 
+        
+        represents scale degree 1 in the same octave as the reference pitch, which in this case is equal to the reference pitch
+ 
+\end{itemize}
+\medskip
+
+\subsection{Derived Types}
+
+\begin{itemize}
+\item[-] \textbf{Tuple}
+            Tuple, denoted by \texttt{<< x, y>>} where x and y are objects of any type
+           
+\item[-] \textbf{List}
+
+			Constructed by enclosing a list of white-space separated elements with square brackets. All elements must be of the same type.
+
+			Example: \texttt{x = [1 3 5 7] y = [1.0 2.4 3.0 4.0]}
+			
+\end{itemize}
+			
+\subsection{Special Constructors}			
+\begin{itemize}
+
+\item[-] \textbf{Pitch List Constructor}   %let’s use different bracket need tuples
+
+			Takes a list of pitch expressions and constructs a list of pitches. Called by enclosing a list of white-space separated pitch expressions with square brackets, where the left bracket is preceded by "p:". Pitch expressions take the form  
+
+			Example: \texttt{twinkle = p:[1 1 5 5 6 6 5]} 
+			
+			Example: \texttt{complicated = p:[5 \textasciicircum5 v6 5 1b 7 5\# 5 6 5 2 1b3 0]}
+			
+			In a pitch list, it is also possible to define a "chord", i.e. two pitches that at the same time by inserting a \texttt{|} between pitches
+			
+			Example:\texttt{ chords = p:[1|3 1 5|1 5 6 6|1 5]} 
+
+\item[-]  \textbf{Rhythm List Constructor}
+
+			Takes a list of rhythm expressions and returns a list of floats used to denote the length of each pitch/chord at each corresponding position in a pitch list. Constructed by enclosing a list of white-space separated floats or characters with square brackets, where the left bracket is preceded by "r:". If a float is used to represent this length, the absolute length corresponds to f * (beat length). One can also use the keyword characters ‘q’, ‘w’, ‘h’, ‘t’, ‘e’, ‘s’ which correspond to f = 1.0, 4.0, 2.0, 0.33, 0.5, and 0.25 respectively.
+
+			Example: \texttt{r:[ 2.0 q q h ]}
+
+
+	
+% \item[-] \textbf{Tune}
+
+% 			-Wrapper class containing pitch list in position 0, rhythm list in position 1, [mode in position 3, start pitch(as character such as E3 in position 4]. 
+
+% 			-Access internal data with keyword names of elements: pitch list is plist, rhythm list is rlist, mode is mode,  start pitch is spitch
+
+% 			-Can create variations off of an instantiated tune with map functions. Generated by wrap and mapTune
+
+
+% \item[-] \textbf{Timeline}
+
+% Holds a tune corresponding to specified start time from tune. Generated with init and plot. synth will translate timeline to a list of absolute pitch values and absolute lengths of time. 
+
+\end{itemize}
+
+
+
+
+\section{Expressions and Operators}
+\subsection{Expressions}
+
+All expressions have return values in Music-Mike. An expression could be:
+\begin{enumerate}
+\item A literal constant: 
+
+c
+\item An arithmetic operation: 
+
+$e_1$ op $e_2$
+\item A unary prefix or postfix operation: 
+
+op $e$ 
+
+$e$ op
+\item A conditional branch must have an $else$ attached to it
+
+\texttt{if} $e_1$ \texttt{then} $e_2$ \texttt{else} $e_3$
+% \item Variable definition is done in a \texttt{let...in}:
+
+% \texttt{let} \textbf{x} = $e_1$ \texttt{in} $e_2$
+
+\item For loop:
+
+\texttt{for} element \texttt{in} list \{ $e$ \}
+
+\item Variable declarations and assignment:
+
+\textbf{x} = $e_1$
+
+\item Variables:
+
+\textbf{x}
+
+\item Single-expression function declarations:
+
+\texttt{fun} fname $arg_1 \ldots arg_n$ = $e$
+\item Multi-expression function declarations.  The last expression ($e_n$) is the value of the function when called: 
+
+\texttt{fun} fname $arg_1 \ldots arg_n$ = $\{ e_1; e_2; \ldots e_{n-1}; e_n \}$
+
+
+\item Function call: 
+
+fname $e_1 \ldots e_n$
+\item Sequenced expressions: 
+
+$e_1;\ e_2;\ \ldots\ e_{n-1};\ e_n$
+\item A white-space separated list of integers or floats:
+
+\texttt{[$int_1\ \ldots\ int_n$]}
+
+\texttt{[$float_1\ \ldots\ float_n$]}
+
+\item A list of pitches 
+
+\texttt{p:[$pitch_1\ \ldots\ pitch_n$]}
+
+\item A list of rhythms (a wrapper for a list of floats)
+
+\texttt{ r:[ $float_1 \ \ldots \ float_n$ ] } or
+\texttt{ r:[ $rhythm\_expr_1 \ \ldots \ rhythm\_expr_n$ ] }
+
+\item A concatenation of two list expressions:
+
+$e_1$ @ $e_2$
+
+\item Tuple creation:
+
+\texttt{<< $e_1 \ldots e_n$ >>}
+\item Subsetting a list:
+
+$e[int]$
+
+
+\end{enumerate}
+
+\subsection{Variables and Assignment}
+Identifiers in Music-Mike are strings that can be expressed using the regular expression: [insert regex here]. 
+Due to type inference, we can assign a value to a variable without declaring its type by using the following syntax below. Note that the assignment operator is non-associative.\\\\
+\texttt{\emph{identifier} = \emph{expr}}\\\\
+
+\subsection{Arithmetic Operators}
+Binary arithmetic operators are strongly-typed; both operands must be of the same type, and use the correct  for their type. \\
+Binary integer operators in order of precedence: \texttt{* / + - }.  \\
+Binary float operators in order of precedence: \texttt{*. /. +. -. } \\
+\texttt{+ -} are also prefix unary operators that are suitable for integers and floats. \\
+\texttt{o} is a special postfix operator that multiplies a float by 1.5. These are mainly used for rhythm lists to imitate dotted notes. 
+
+\subsection{Logical and Comparison Operators}
+
+Comparison operators support integers and floats; both operands must be of the same type: \\ \texttt{< > == !=} \\
+The following boolean comparison operators are listed in order of precedence: \\\texttt{== != \&\& ||} 
+
+\subsection{Pitch Operators}
+
+All pitch operators are unary. The postfix operators \texttt{`\#' `b'} raise or lower pitch by a half step. The prefix operators \texttt{`\textasciicircum' and `v'} increment/decrement the octave of pitch by one.
+
+
+\subsection{Rhythm Operators}
+The postfix unary rhythm operator is `o', which multiples by 1.5. 
+
+\subsection{List Operators}
+
+\begin{itemize}
+
+\item Concatenation- One list followed by another of same type connected by an `@' symbol. See built in functions for tune concatenation 
+
+\item Index- gets value of element of list using $.[]$ operator 
+
+\texttt{fun get\_second x =  x.$[2]$}
+
+\end{itemize}
+
+\chapter{Control Flow}
+
+\section{Statements}
+Statements are semicolon delimited and can consist of an expression, a type declaration, or a function declaration
+
+\section{Expressions}
+
+Expressions always have a return value.  A constant expression returns its literal value, a variable expression returns the value in that variable.  All of the list expressions return the list.  Each of the expressions in a sequence of expressions has a value. The function declarations return the function itself as a value.
+Expressions are sequenced together by ending them with a `;;'.
+
+
+\section{If-Then-Else}
+
+If statements are structured as \texttt{if \emph{boolean-condition} then \emph{expr} else \emph{expr}}. If-Then-Else statements are themselves expressions and thus have return types; the expressions after \texttt{then} and \texttt{else} must have the same type.\\
+\texttt{fun iszero x = if x == 0 then true else false}
+
+\section{For Loop}
+
+A \texttt{for} loop expression returns an object of type \texttt{unit}.  It is of the form \\
+\-\ \ \ \ \ \  \texttt{for} element \texttt{in} list \{ $e$ \} \\
+where $e$ is computed once for every element in the list.
+Example:
+
+\texttt{ls = [1 2 3 4]; for x in ls \{ y = x + 1; print y \}}
+
+\section{Block}
+
+Blocks of code are used to create scope and consist of semicolon delimited expressions and are enclosed by brackets ended by a semicolon. Inside a block of code, variables and functions with a name overloaded with a previously declared variable or function will be overwritten to the newly declared content. 
+
+Example:
+
+\texttt{a=5;}
+
+\texttt{ \{ }
+
+\texttt{a=6; }
+
+\texttt{Print(a)};
+
+\texttt{ \};}
+
+will print out \texttt{6}
+
+
+
+
+
+
+\chapter{Functions and Program Structure}
+
+\section{Functions}
+Functions can be defined using the keyword \texttt{def}:\\
+\texttt{def \emph{name arg1 ...argN} = \emph{expr}}\\\\
+Here's an example:\\
+\texttt{def plusfive x = x + 5;}\\\\
+We can also define our function to return more complex expressions:\\ \texttt{fun iszero x = \\if x == 0 then true \\else false} \\ \\ There is no function overloading in Music Mike. Declaring a different function of the same name effectively redefines the function. Type checking is enforced when functions are applied. \texttt{iszero 5.0} is not valid.\\\\
+Functions are almost first-class citizens: they can be passed in as arguments to other functions and returned by functions, but user-defined functions cannot be nested. Thus we avoid the funarg problem and handling closure.
+
+
+
+
+
+\subsection{Built-in Functions}
+
+\texttt{string\_of\_int int\_of\_string string\_of\_float \\ float\_of\_string string\_of\_bool bool\_of\_string \\
+print print\_endline}
+
+\section{Comments}
+Comments are notated C-style, with $\setminus \ast \ \ \ast \setminus$ There is no special single-line comment syntax, and nested comments are not supported.
+
+
+\section{Scoping}
+Local scoping occurs in functions and if-then-else statements.
+Otherwise, scoping is defined by Blocks (see above)
+
+
+\chapter{Standard Library Functions}
+
+
+\section{List Manipulation}
+
+\subsection{map}
+
+Takes in function that changes a list and apply that function to existing list.  Implemented as: \\
+
+\texttt{fun map list f = \{\\
+\-\ \ \ \ \ \ \ \ return\_list = []; \\
+\-\ \ \ \ \ \ \ \ for element in list \{\\
+\-\ \ \ \ \ \ \ \ \ \ \ \  return\_list = [f(element)]@return\_list\\
+\-\ \ \ \ \ \ \ \ 	\};\\
+\-\ \ \ \ \ \ \ \ 	return\_list\\
+\-\ \ \ \}}
+
+\section{Tune Manipulation}			
+
+
+
+
+\subsection{wrap}
+ Initializes tune tuple with specified parameters. Takes in pitch list in position 0, rhythm list in position 1, [mode in position 3, start pitch(as character such as E3 in position 4]
+
+
+\subsection{maptune}
+% version of map function we were talking about that generated another tune tuple by changing one aspect of a previous tune tuple
+
+Takes in function changing a list, uses that function to change specified list in a tune and  creates new tune with those changes
+
+% raise_octave= fun x -> ^x //function that applies the increase octave //operator to x
+% tune2= mapTune raise_octave tune1.plist
+
+(here plist is keyword name of position 1 of tune tuple)
+
+\subsection{concact}
+ Given list of tunes, concatenates them  
+
+% tuneList=[tune1 tune2 tune3 tune4]
+% big_tune=concat tuneList
+
+
+
+% \begin{listing}
+% pitchlist1=[2 4 34];
+% raise_octave= fun x -> ^x; //function that applies the increase octave //operator to x
+% Pitchlist2 = map raise_octave pitchlist1;
+% \end{listing}
+
+\section{Timeline Manipulation}
+
+% timeline2=plot timeline1 tune 4 //timeline tune start_time
+
+\subsection{synth}
+
+Translates data in timeline into MIDI file according to specifications
+
+\chapter{User-Defined Types}
+
+\section{General Information}
+
+User-defined types are like structures in C with similar syntax and consist of a wrapper with associated members. Types are defined by the \texttt{type} keyword: \\
+\texttt{type record \{ \\  name = ``Kaitlin'' \\   score = 5 \\ \}}\\ 
+Types are inferred for members of a type, but a default value is needed. For the record type as shown above, the \texttt{name} member has type string and the \texttt{score} member has type int. We can initialize a type with the keyword \texttt{new}: \\  \\
+\texttt{me = new record \{ \\ ``Harvey'' 4 \\ \}} \\ \\ 
+We can access members of types with a period. 
+\texttt{me.name} returns \texttt{``Harvey''}
+
+
+\section{Standard Library Types}
+
+
+\subsection{Tune}
+
+\begin{itemize}
+\item Type containing pitch list in position 0, rhythm list in position 1, [mode in position 3, start pitch(as character such as E3 in position 4]. 
+
+
+\item Can create variations off of an instantiated tune with map functions. Generated by wrap and mapTune
+
+\item Internal Structure
+
+\end{itemize}
+
+\texttt{type Tune=  \{ }
+
+\texttt{plist=() }
+
+\texttt{rlist=\{\}}
+
+\texttt{mode=[]}
+
+\texttt{startnote="C4"}
+
+\texttt{\}}
+
+
+
+\subsection{Timeline}
+
+Timeline is list of tuples with each tuple containing a tune and a start time (in beats). This is fed into synth to create a MIDI file of generated music. 
+
+\texttt{t=new timeline}
+
+\texttt{t@[<<tune1, 3>>]@[<<tune2, 9>>]}
+
+\texttt{synth t}
+
+\end{document}
+
