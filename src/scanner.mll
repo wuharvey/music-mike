@@ -12,7 +12,7 @@ rule token = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
-| "r:["    { RLBRACKET }
+| "r:["    { RLBRACKET; rlisttoken lexbuf }
 | ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
@@ -81,3 +81,12 @@ and stringl buffer = parse
  | '\\' '\\' { Buffer.add_char buffer '\\'; stringl buffer lexbuf }
  | eof { raise End_of_file }
  | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }
+and rlisttoken = parse
+[ ' ']      {rlisttoken lexbuf}
+| 'q'      { FLITERAL(1.0) }
+| 'w'      { FLITERAL(4.0) }
+| 'h'      { FLITERAL(2.0) }
+| 't'      { FLITERAL(0.33) }
+| 'e'      { FLITERAL(0.5) }
+| 's'      { FLITERAL(0.25) }
+| "]"      { RBRACKET; token lexbuf  }
