@@ -17,6 +17,16 @@ module A = Ast
 
 module StringMap = Map.Make(String)
 
+(*
+(*define string hash *)
+
+module StringHash=Hashtbl.Make(struct
+	type t=string       (* type of key *)
+	let equal x y = x = y    (*use structural comparison *)
+ 	let hash = Hash
+
+)
+*)
 let main_vars:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
 let function_defs:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
 
@@ -26,20 +36,26 @@ let translate (exprs, functions, structs) =
   
   let names:(string, L.llvalue) Hashtbl.t = Hashtbl.create 10 in
   let the_module = L.create_module  context "MusicMike"
-  and i32_t   = L.i32_type          context
-  and i8_t    = L.i8_type           context
-  and i1_t    = L.i1_type           context
-  and float_t = L.double_type       context 
-  and void_t  = L.void_type         context in 
-  let i8p_t   = L.pointer_type i8_t   in
-  let i32p_t  = L.pointer_type i32_t in
+  and i32_t   = L.i32_type          context      (* integer *)
+  and i8_t    = L.i8_type           context      (* char? *) 
+  and i1_t    = L.i1_type           context      (* boole *) 
+  and float_t = L.double_type       context      (* float *)
+  and void_t  = L.void_type         context in   (* void *)
+  let i8p_t   = L.pointer_type i8_t   in         (* char pointer-string*) 
+  let i32p_t  = L.pointer_type i32_t in          (* int pointer *)
 
   let ltype_of_typ = function
       A.Int     -> i32_t
     | A.Bool    -> i1_t
-    | A.Void    -> void_t 
+    | A.Void    -> void_t :
     | A.Float   -> float_t 
-    | A.String  -> i8p_t in
+    | A.String  -> i8p_t 
+    | A.Pitch   -> [(); (); ()] in
+(*adding in pitch type - composed of 3 fields: 
+1-pitch degree (positive int), 
+2-scale shift (positive or negative int) 
+3-accidental shift (positive or negative int) *) 
+ 
 
   (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -130,17 +146,19 @@ let translate (exprs, functions, structs) =
         (match es with 
         e::e1::rest -> ignore(expr builder e); expr builder (A.Block(e1::rest))
       | [e] -> expr builder e)
- (*   | A.Unop(op, e) ->
+      | A.Unop(op, e) ->
        let e' = expr builder e in
        (match op with
 		  A.Neg     -> L.build_neg
 		| A.Not     -> L.build_not
+       ) e' "tmp" builder
+    | A.music_op (op, es) ->( match op with		
 		| A.Rhythmdot -> L.build_rhythmdot
-	        | A.Sharp     -> L.build_sharp
-		| A.Flat      -> L.build_flat
-		| A.OctaveUp  -> L.build_oup
-		| A.OctaveDown -> L.build_odown
-       ) e' "tmp" builder *)
+	        | A.Sharp     -> third es + 1 
+		| A.Flat      -> third es - 2 
+		| A.OctaveUp  -> fst es + 1
+		| A.OctaveDown -> fst es - 1
+               )
     | A.Assign (s, e) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
