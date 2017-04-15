@@ -10,6 +10,10 @@ type typ = Int | Bool | Void | Float | String | Pitch
 
 type bind = typ * string
 
+type pitch=
+    Preop of pitch
+  | Postop of pitch
+
 type expr =
     Literal of int
   | FloatLit of float  
@@ -24,7 +28,7 @@ type expr =
   | If of expr * expr * expr
   | Subset of string * int
   | List of expr list
-  | PList of expr list
+  | PList of pitch list
   | Block of expr list
   | Concat of expr * expr
   | Noexpr

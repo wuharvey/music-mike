@@ -78,7 +78,7 @@ expr:
   | unop      { $1 }
   | primaries { $1 }
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
-  | PLBRACKET expr_list RBRACKET { PList($2) }  
+  | PLBRACKET pxpr_list RBRACKET { PList(List.rev($2)) }  
 /*| LTUPLE expr_list RTUPLE      { Tuple($2) }*/
   | expr CONCAT expr  { Concat($1, $3) }
   | IF expr THEN expr ELSE expr  
@@ -107,13 +107,10 @@ binop:
 unop:
 /*| MINUS expr %prec NEG { Preop(Neg, $2) }  */
   | NOT expr             { Preop(Not, $2) }
-  | expr RHYTHMDOT       { Postop($1, Rhythmdot) }
-  | expr OCTOTHORPE      { Postop($1, Sharp) }
-  | expr FLAT            { Postop($1, Flat) }
-  | OUP  expr            { Preop(OctaveUp, $2) }
-  | ODOWN expr           { Preop(OctaveDown, $2) }
 
-    /* stuff that should be on same level as expressions */
+
+
+/* stuff that should be on same level as expressions */
 primaries:
     /*block { $1 }*/
     LBRACE semi_list RBRACE { Block(List.rev($2)) }
@@ -145,3 +142,15 @@ formals_list:
 actuals_list:
     expr                    { [$1] }
   | actuals_list expr       { $2 :: $1 }
+
+pxpr_list:
+/*nothing*/
+  | pxpr_list pitch         { $2 :: $1 }
+
+pitch:
+    pitch OCTOTHORPE        { Postop($1, Sharp) }
+  | pitch FLAT		    { Postop($1, Flat) }
+  | OUP  pitch              { Preop(OctaveUp, $2) }
+  | ODOWN pitch             { Preop(OctaveDown, $2) }
+
+
