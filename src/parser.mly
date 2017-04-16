@@ -148,11 +148,11 @@ pxpr_list:
   | pxpr_list chord         { $2 :: $1 }
 
 chord:
-    pitch                   { [List.rev($1)] }         
-  | chord BAR pitch         { List.rev($3) :: $1 }
+    pitch                   { $1 }         
+  | chord BAR pitch         { $3 :: $1 }
 
 pitch:
-    prefield LITERAL postfield { $3 :: [$2] :: [$1] }
+    prefield LITERAL postfield { $3 :: $2 :: $1 }
 
 prefield:
 /* nothing */               { [] }  
