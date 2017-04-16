@@ -145,12 +145,22 @@ actuals_list:
 
 pxpr_list:
 /*nothing*/
-  | pxpr_list pitch         { $2 :: $1 }
+  | pxpr_list chord         { $2 :: $1 }
+
+chord:
+    pitch                   { [List.rev($1)] }         
+  | chord BAR pitch         { List.rev($2) :: $1 }
 
 pitch:
-    pitch OCTOTHORPE        { Postop($1, Sharp) }
-  | pitch FLAT		    { Postop($1, Flat) }
-  | OUP  pitch              { Preop(OctaveUp, $2) }
-  | ODOWN pitch             { Preop(OctaveDown, $2) }
+    prefield LITERAL postfield { $3 :: $2 :: [[$1]] }
 
+prefield:
+/* nothing */               { [] }  
+  | prefield OUP            { MPreop($2, Sharp) :: $1 }
+  | prefield ODOWN          { MPreop($2, Flat) :: $1 }
 
+postfield:
+/*nothing*/                 { [] }
+  | postfield OCTOTHORPE    { MPostop($2, Sharp) :: 1 }
+  | postfield FLAT          { MPostop($2, Flat)  :: 1 }
+ 
