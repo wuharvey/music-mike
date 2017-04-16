@@ -148,19 +148,19 @@ pxpr_list:
   | pxpr_list chord         { $2 :: $1 }
 
 chord:
-    pitch                   { $1 }         
+/*nothing*/                 { [] }         
   | chord BAR pitch         { $3 :: $1 }
 
 pitch:
-    prefield LITERAL postfield { $3 :: $2 :: $1 }
+    prefield LITERAL postfield { ($3,  $2,  $1) }
 
 prefield:
 /* nothing */               { [] }  
-  | prefield OUP            { LITERAL(1) :: $1 }
-  | prefield ODOWN          { LITERAL(-1) :: $1 }
+  | prefield OUP            { (1) :: $1 }
+  | prefield ODOWN          { (-1) :: $1 }
 
 postfield:
 /*nothing*/                 { [] }
-  | postfield OCTOTHORPE    { LITERAL(1) :: 1 }
-  | postfield FLAT          { LITERAL(-1)  :: 1 }
+  | postfield OCTOTHORPE    { (1) :: $1 }
+  | postfield FLAT          { (-1)  :: $1 }
  

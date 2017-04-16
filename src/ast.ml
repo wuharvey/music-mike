@@ -7,14 +7,12 @@ type preop = Neg | Not | FNeg
 type postop = Rhythmdot 
 
 type typ = Int | Bool | Void | Float | String | Pitch
-(*
-type pre_pitch_field= Literal of int list 
 
-type post_pitch_field=Literal of int list
+type pre_pitch= Literal of int 
 
-type pitch_lit=Literl of int list
-*)
-type pitch=int list * int * int list
+type post_pitch=Literal of int 
+
+type pitch=int list * int * int list 
 
 type chord=pitch list
 
