@@ -2,17 +2,23 @@
 
 type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq | And | Or 
 
-type preop = Neg | Not | FNeg | OctaveUp | OctaveDown
+type preop = Neg | Not | FNeg 
 
-type postop = Sharp | Flat | Rhythmdot 
+type postop = Rhythmdot 
 
 type typ = Int | Bool | Void | Float | String | Pitch
 
-type bind = typ * string
+type pre_pitch_field= Literal of int list 
 
-type pitch=
-    Preop of pitch
-  | Postop of pitch
+type post_pitch_field=Literal of int list
+
+type pitch_lit=Literl of int list
+
+type pitch=int list * int list * int list
+
+type chord=pitch list
+
+type bind = typ * string
 
 type expr =
     Literal of int
@@ -28,7 +34,7 @@ type expr =
   | If of expr * expr * expr
   | Subset of string * int
   | List of expr list
-  | PList of pitch list
+  | PList of chord list
   | Block of expr list
   | Concat of expr * expr
   | Noexpr
@@ -71,14 +77,14 @@ let string_of_preop = function
     Neg -> "-"
   | Not -> "!"
   | FNeg -> "-"
-  | OctaveUp -> "^"
+(*  | OctaveUp -> "^"
   | OctaveDown -> "v"
 
 let string_of_postop = function
     Sharp -> "#"
   | Flat -> "b"
   | Rhythmdot -> "o"
-
+*)
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | FloatLit(f) -> string_of_float f
@@ -89,14 +95,14 @@ let rec string_of_expr = function
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Preop(o, e) -> string_of_preop o ^ string_of_expr e
-  | Postop(e, o) -> string_of_expr e ^ string_of_postop o
+(*| Postop(e, o) -> string_of_expr e ^ string_of_postop o *)
   | Assign(v, e) -> "Assign(" ^ v ^ " = " ^ (string_of_expr e) ^ ")"
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
-  | PList(es) -> "p:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
+(*| PList(es) -> "p:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"*)
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"
   | Concat(e1, e2) -> string_of_expr e1 ^ "@" ^ string_of_expr e2
   | Noexpr -> ""

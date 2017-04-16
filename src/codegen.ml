@@ -47,15 +47,10 @@ let translate (exprs, functions, structs) =
   let ltype_of_typ = function
       A.Int     -> i32_t
     | A.Bool    -> i1_t
-    | A.Void    -> void_t :
+    | A.Void    -> void_t 
     | A.Float   -> float_t 
-    | A.String  -> i8p_t 
-    | A.Pitch   -> [(); (); ()] in
-(*adding in pitch type - composed of 3 fields: 
-1-pitch degree (positive int), 
-2-scale shift (positive or negative int) 
-3-accidental shift (positive or negative int) *) 
- 
+    | A.String  -> i8p_t in 
+                        
 
   (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -132,7 +127,7 @@ let translate (exprs, functions, structs) =
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
-     | A.Pitchlist(es)    ->
+(*     | A.list(es)    ->
           let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
           in
             let deal_with_element index e =
@@ -140,25 +135,18 @@ let translate (exprs, functions, structs) =
               let e' = expr builder e in
                 ignore(L.build_store e' pointer builder)
             in
-             List.iteri deal_with_element es; arr_malloc
+             List.iteri deal_with_element es; arr_malloc  *)
 
     | A.Block(es) -> 
         (match es with 
         e::e1::rest -> ignore(expr builder e); expr builder (A.Block(e1::rest))
       | [e] -> expr builder e)
-      | A.Unop(op, e) ->
+    | A.Preop(op, e) ->
        let e' = expr builder e in
        (match op with
 		  A.Neg     -> L.build_neg
 		| A.Not     -> L.build_not
        ) e' "tmp" builder
-    | A.music_op (op, es) ->( match op with		
-		| A.Rhythmdot -> L.build_rhythmdot
-	        | A.Sharp     -> third es + 1 
-		| A.Flat      -> third es - 2 
-		| A.OctaveUp  -> fst es + 1
-		| A.OctaveDown -> fst es - 1
-               )
     | A.Assign (s, e) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
