@@ -6,7 +6,7 @@
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
-%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOTLBRACKET
+%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOTLBRACKET BAR
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token IF THEN ELSE WHILE INT BOOL VOID  
@@ -149,18 +149,18 @@ pxpr_list:
 
 chord:
     pitch                   { [List.rev($1)] }         
-  | chord BAR pitch         { List.rev($2) :: $1 }
+  | chord BAR pitch         { List.rev($3) :: $1 }
 
 pitch:
-    prefield LITERAL postfield { $3 :: $2 :: [[$1]] }
+    prefield LITERAL postfield { $3 :: [$2] :: [$1] }
 
 prefield:
 /* nothing */               { [] }  
-  | prefield OUP            { MPreop($2, Sharp) :: $1 }
-  | prefield ODOWN          { MPreop($2, Flat) :: $1 }
+  | prefield OUP            { LITERAL(1) :: $1 }
+  | prefield ODOWN          { LITERAL(-1) :: $1 }
 
 postfield:
 /*nothing*/                 { [] }
-  | postfield OCTOTHORPE    { MPostop($2, Sharp) :: 1 }
-  | postfield FLAT          { MPostop($2, Flat)  :: 1 }
+  | postfield OCTOTHORPE    { LITERAL(1) :: 1 }
+  | postfield FLAT          { LITERAL(-1)  :: 1 }
  
