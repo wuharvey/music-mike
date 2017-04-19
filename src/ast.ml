@@ -8,13 +8,13 @@ type postop = Rhythmdot
 
 type typ = Int | Bool | Void | Float | String | Pitch
 
-type pre_pitch= Literal of int 
+(* type pre_pitch= Literal of int 
 
-type post_pitch=Literal of int 
+type post_pitch= Literal of int 
+ *)
+type pitch= int list * int * int list 
 
-type pitch=int list * int * int list 
-
-type chord=pitch list
+type chord= pitch list
 
 type bind = typ * string
 
@@ -32,7 +32,7 @@ type expr =
   | If of expr * expr * expr
   | Subset of string * int
   | List of expr list
-  | PList of chord list
+  | PList of chord list (*PList --> "list of chords"*)
   | Block of expr list
   | Concat of expr * expr
   | Noexpr
@@ -71,6 +71,32 @@ let string_of_op = function
   | And -> "&&"
   | Or -> "||"
 
+let rec string_of_prelist = function 
+    [] -> ""
+  | -1::rest -> "v" ^ string_of_prelist rest
+  | 1::rest -> "^" ^ string_of_prelist rest
+  | _::rest -> "" ^ string_of_prelist rest
+
+let rec string_of_postlist = function 
+    [] -> ""
+  | -1::rest -> "b" ^ string_of_postlist rest
+  | 1::rest -> "#" ^ string_of_postlist rest
+  | _::rest -> "" ^ string_of_postlist rest
+
+
+
+let string_of_pitch (pre,num,post) = string_of_prelist pre ^ string_of_int num ^ string_of_postlist post 
+  
+
+let rec string_of_chord = function
+    [] -> ""
+  | p::ps -> string_of_pitch p ^ "|" ^ string_of_chord ps
+
+
+
+
+
+
 let string_of_preop = function 
     Neg -> "-"
   | Not -> "!"
@@ -100,7 +126,7 @@ let rec string_of_expr = function
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
-(*| PList(es) -> "p:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"*)
+  | PList(cs) -> "p:[ " ^ String.concat " " (List.map string_of_chord cs) ^ " ]"
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"
   | Concat(e1, e2) -> string_of_expr e1 ^ "@" ^ string_of_expr e2
   | Noexpr -> ""

@@ -139,7 +139,7 @@ primaries:
 	/* "list of chords" */
   | PLBRACKET pxpr_list RBRACKET { PList(List.rev($2)) }  
        /* "tuple of expressions with different types (enforced in semant.ml)" */
-  | LTUPLE expr_list RTUPLE      { Tuple($2) }
+/*  | LTUPLE expr_list RTUPLE      { Tuple($2) }*/
 	/* "concatanating 2 lists (enforced in semant.ml)" */
   | expr CONCAT expr  { Concat($1, $3) }
 	/* "If, then else "*/
@@ -206,7 +206,7 @@ pxpr_list:
 chord:
     pitch                   { [$1] }         
   | chord BAR pitch         { $3 :: $1 }
-
+/*p:[3|5|6  3  ^^3#|9bb]*/
 
 
 /* "Tuple consisting of 3 fields: 
@@ -215,7 +215,7 @@ chord:
   	postfield-a list of ints representing '#' and 'b' as '1' and '-1' "*/
 
 pitch:
-    prefield LITERAL postfield { ($3,  $2,  $1) }
+    prefield LITERAL postfield { ($1,  $2,  $3) }
 
 
 /*"a list of ints representing '^' and 'v' as  '1' and '-1' respectively" */

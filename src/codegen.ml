@@ -84,7 +84,7 @@ let translate (exprs, functions, structs) =
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
   let float_format = L.build_global_stringptr "%f\n" "flt" builder in 
   let rec expr builder = function
-      A.Literal i ->  L.const_int i32_t i
+      A.Literal(i) ->  L.const_int i32_t i
     | A.FloatLit f -> L.const_float float_t f 
     | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
     | A.Noexpr -> L.const_int i32_t 0
@@ -127,13 +127,16 @@ let translate (exprs, functions, structs) =
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
- 
+(*     | A.PList(cs) -> 
+        let num_of_pointers = List.length cs
+          in 
 
 
 
+ *)
 
 
-   | A.Plist(es)    ->
+(*    | A.PList(es)    ->
        let es_proccessed=
 	  let get_chord es=function
 	     [] -> []
@@ -162,7 +165,7 @@ let translate (exprs, functions, structs) =
              List.iteri deal_with_element es; arr_malloc  
 
 
-
+ *)
 
 
 
