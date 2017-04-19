@@ -127,15 +127,46 @@ let translate (exprs, functions, structs) =
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
-(*     | A.list(es)    ->
-          let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
+ 
+
+
+
+
+
+   | A.Plist(es)    ->
+       let es_proccessed=
+	  let get_chord es=function
+	     [] -> []
+	   | chord :: tail -> get_chord tail; 
+		    let get_pitch p=function
+			[]->[]
+	       	      | p :: tail -> get_pitch tail;
+                           let fold_in el=function
+			       (x, _, _) -> List.fold_left (fun s e -> s+e) 0 x
+                             | (_, x, _) -> x
+			     | (_, _, x) -> List.fold_left (fun s e -> s+e) 0 x
+			   in fold_in p 
+	            in get_pitch chord
+       in get_chord es		 
+    in  
+
+
+
+    let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
           in
             let deal_with_element index e =
               let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "elem" builder in
               let e' = expr builder e in
                 ignore(L.build_store e' pointer builder)
             in
-             List.iteri deal_with_element es; arr_malloc  *)
+             List.iteri deal_with_element es; arr_malloc  
+
+
+
+
+
+
+
 
     | A.Block(es) -> 
         (match es with 
