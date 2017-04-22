@@ -141,11 +141,16 @@ let translate (exprs, functions, structs) =
         let num_of_pointers = List.length cs
         in
         let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (num_of_pointers)) "pitch_pointer_array" builder 
+							(*allocates space for array of pointers to chords *)
               in
 		let deal_with_element index e=
-		      let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "pointer_elem" builder in
-		      let e' = expr builder e in
-			ignore(L.build_store e' pointer builder)
+		      let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
+		        let arr_list_pitch = L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "p_array" builder  in
+				let deal_with_pfield index1 e1=
+					let pointer1=L.build_gep arr_malloc [| (L.const_int i32_t index)|] "field_elem" builder in
+					let e1'=i32_t(e1) in
+						ignore(L.build_store e1' pointer1 builder)
+			ignore(L.build_store arr_list_pitch pointer builder)
 		    in
 		     List.iteri deal_with_element mod_plist; arr_malloc  
 
