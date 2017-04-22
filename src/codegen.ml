@@ -127,13 +127,29 @@ let translate (exprs, functions, structs) =
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
-(*     | A.PList(cs) -> 
+     | A.PList(cs) -> 
+	let mod_plist=     				(*modified version of pitch list where each pitch is list of 3 intsi*)
+	  let deal_with_pitch =function                 (*decomposes pitch list making up chord and shrinks pitch *) 
+             [] -> []
+           | head :: tail ->
+		head=List.fold_left (fun s e -> s+e) 0 fst head :: fst scnd head :: [List.fold_left (fun s e -> s+e) 0 third head]; 
+							(*sums first field of pitch tuple, gets first element of second field (1st element of list length 1) and sums third field of tuple *)
+
+		deal_with_pitch tail 
+          in List.iter deal_with_pitch cs  in            (*List.iter takes care of chords----at this point mod_plist is defined*)
+
         let num_of_pointers = List.length cs
-          in 
+        in
+        let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (num_of_pointers)) "pitch_pointer_array" builder 
+              in
+		let deal_with_element index e=
+		      let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "pointer_elem" builder in
+		      let e' = expr builder e in
+			ignore(L.build_store e' pointer builder)
+		    in
+		     List.iteri deal_with_element mod_plist; arr_malloc  
 
 
-
- *)
 
 
 (*    | A.PList(es)    ->
@@ -158,12 +174,6 @@ let translate (exprs, functions, structs) =
     let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
           in
             let deal_with_element index e =
-              let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "elem" builder in
-              let e' = expr builder e in
-                ignore(L.build_store e' pointer builder)
-            in
-             List.iteri deal_with_element es; arr_malloc  
-
 
  *)
 
