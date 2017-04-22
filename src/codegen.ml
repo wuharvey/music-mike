@@ -127,8 +127,8 @@ let translate (exprs, functions, structs) =
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
-     | A.PList(cs) -> 
-	let mod_plist=     				(*modified version of pitch list where each pitch is list of 3 intsi*)
+    | A.PList(mod_plist) -> 
+(*	let mod_plist=     				(*modified version of pitch list where each pitch is list of 3 intsi*)
 	  let deal_with_pitch =function                 (*decomposes pitch list making up chord and shrinks pitch *) 
              [] -> []
            | head :: tail ->
@@ -137,22 +137,35 @@ let translate (exprs, functions, structs) =
 
 		deal_with_pitch tail 
           in List.iter deal_with_pitch cs  in            (*List.iter takes care of chords----at this point mod_plist is defined*)
-
+*)
         let num_of_pointers = List.length cs
-        in
-        let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (num_of_pointers)) "pitch_pointer_array" builder 
-							(*allocates space for array of pointers to chords *)
-              in
-		let deal_with_element index e=
-		      let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
-		        let arr_list_pitch = L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "p_array" builder  in
-				let deal_with_pfield index1 e1=
-					let pointer1=L.build_gep arr_malloc [| (L.const_int i32_t index)|] "field_elem" builder in
-					let e1'=i32_t(e1) in
-						ignore(L.build_store e1' pointer1 builder)
-			ignore(L.build_store arr_list_pitch pointer builder)
-		    in
-		     List.iteri deal_with_element mod_plist; arr_malloc  
+        in  
+
+        (*first layer pointers-----allocates space for array of pointers to chords *)
+        let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (num_of_pointers)) "chord_pointer_array" builder in
+        let deal_with_chord index chord=          (* List.iter will be applied so e represents a chord *)
+        let chord_pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
+
+                (*second layer pointers-----allocates spaces for array of pointers to pitches *)
+                let arr_list_pitch = (L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length e)) "pitch_pointer_array" builder  in
+                let deal_with_pitch index1 e_pitch=
+                let pointer_p=L.build_gep arr_malloc [| (L.const_int i32_t index)|] "pitch_pointer_elem" builder in
+
+                        (*third layer pointers-----allocates space for indevidual pitch (list of 3 fields *)
+                        let arr_pitch = (L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "pitch_array" builder  in
+                        let deal_with_pfield index2 e_field=
+                        let pointer_f = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "pfield_elem" builder in
+                        let e_field'=i32_t(e_field) in  (*converts int into llvm int *)
+                        ignore(L.build_store e_field' pointer_f builder)) in
+                        List.iteri deal_with_pfield e_pitch; arr_pitch in
+
+                ignore(L.build_store arr_pitch pointer_p builder) in
+		List.iteri deal_with_pitch chord; arr_list_pitch in
+
+        ignore(L.build_store arr_list_pitch chord_pointer builder) in
+        List.iteri deal_with_chord mod_plist; arr_malloc  
+
+
 
 
 
