@@ -17,7 +17,7 @@ rule token pat = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
-| "r:[]"    { pat := RHYTHM; RLBRACKET }
+| "r:["    { pat := RHYTHM; RLBRACKET }
 | ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
@@ -73,12 +73,12 @@ and comment pat = parse
 
 and stringl pat buffer = parse
  | '"' { Buffer.contents buffer }
- | "\\t" { Buffer.add_char buffer '\t'; stringl buffer lexbuf }
- | "\\n" { Buffer.add_char buffer '\n'; stringl buffer lexbuf }
- | '\\' '"' { Buffer.add_char buffer '"'; stringl buffer lexbuf }
- | '\\' '\\' { Buffer.add_char buffer '\\'; stringl buffer lexbuf }
+ | "\\t" { Buffer.add_char buffer '\t'; stringl pat buffer lexbuf }
+ | "\\n" { Buffer.add_char buffer '\n'; stringl pat buffer lexbuf }
+ | '\\' '"' { Buffer.add_char buffer '"'; stringl pat buffer lexbuf }
+ | '\\' '\\' { Buffer.add_char buffer '\\'; stringl pat buffer lexbuf }
  | eof { raise End_of_file }
- | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }
+ | _ as char { Buffer.add_char buffer char; stringl pat buffer lexbuf }
 
 and listl pat = parse
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
