@@ -124,38 +124,39 @@ let translate (exprs, functions, structs) =
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
     | A.PList(cs) ->
+
     (*most internal level function *)
-    let make_pitch builder=
- 	let arr_pitch = L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "pitch" builder in
-        let deal_with_element index e =   
-            let pointer = L.build_gep arr_pitch [| (L.const_int i32_t index)|] "elem" builder in  
-              let e' = i32_t(e) in  
-                ignore(L.build_store e' pointer builder) 
-            in 
-             List.iteri deal_with_element es; arr_pitch
+	    let make_pitch es builder=
+		let arr_pitch = L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "pitch" builder in
+		let deal_with_element index e =   
+		    let pointer = L.build_gep arr_pitch [| (L.const_int i32_t index)|] "elem" builder in  
+		      let e' = L.const_int i32_t e in  
+			ignore(L.build_store e' pointer builder) 
+		    in 
+		     List.iteri deal_with_element es; arr_pitch
 
- in
-       let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
-        
-       let rec iter_thru_chordlist array1 index l=function (*reimplementing iteri so each element can be recursively accessed *)
-	   [] -> ()
-	 | chord :: tail -> 
-	    let chord_pointer = L.build_gep array1 [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
+	 in
+	       let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
+		
+	       let rec iter_thru_chordlist array1 index l=function (*reimplementing iteri so each element can be recursively accessed *)
+		   [] -> ()
+		 | chord :: tail -> 
+		    let chord_pointer = L.build_gep array1 [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
 
-              let chord'=   
-		let arr_pitch_malloc = L.build_array_malloc (i32_pt) (L.const_int i32_t (List.length chord)) "arr_pitch" builder in
-		let deal_with_pitch index1 pitch=
- 	        let pitch_pointer = L.build_gep arr_pitch_malloc [| (L.const_int i32_t index)|] "pitch_pointer_elem" builder in  
-               	  let pitch'=make_pitch pitch builder in
-		ignore(L.build_store pitch' pitch_pointer builder)
-	     in
-	     ignore(L.build_store chord' chord_pointer builder) 
-           in
-           List.iteri deal_with_pitch chord;
-	 iter_thru_chordlist array1 (index+1) tail builder
+		      let chord'=   
+			let arr_pitch_malloc = L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length chord)) "arr_pitch" builder in
+			let deal_with_pitch index1 pitch=
+			let pitch_pointer = L.build_gep arr_pitch_malloc [| (L.const_int i32_t index)|] "pitch_pointer_elem" builder in  
+			  let pitch'=make_pitch pitch builder in
+			ignore(L.build_store pitch' pitch_pointer builder)
+		     in
+		     ignore(L.build_store chord' chord_pointer builder) 
+		   in
+		   List.iteri deal_with_pitch chord;
+		 iter_thru_chordlist array1 (index+1) tail builder
 
 
-       in iter_thru_chordlist arr_malloc 0 cs builder
+	       in iter_thru_chordlist arr_malloc 0 cs builder
 
     | A.Block(es) -> 
         (match es with 
