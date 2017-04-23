@@ -1,10 +1,15 @@
 (* Ocamllex scanner for Music-Mike *)
 
-{ open Parser }
+{
+	open Parser
+	type is_pat = NO | RHYTHM
+	let state_ref = ref NO
+}
 
-rule token = parse
-  [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
-| "/*"     { comment lexbuf }           (* Comments *)
+
+rule token pat = parse
+  [' ' '\t' '\r' '\n'] { token pat lexbuf } (* Whitespace *)
+| "/*"     { comment pat lexbuf }           (* Comments *)
 | '('      { LPAREN }
 | ')'      { RPAREN }
 | '{'      { LBRACE }
@@ -12,7 +17,7 @@ rule token = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | "p:["    { PLBRACKET }
-| "r:"    { listl lexbuf }
+| "r:[]"    { pat := RHYTHM; RLBRACKET }
 | ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
@@ -55,18 +60,18 @@ rule token = parse
 | "false"  { FALSE }
 | "def"    { DEF }
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
-| '"' { let buffer = Buffer.create 1 in STRING (stringl buffer lexbuf) }
+| '"' { let buffer = Buffer.create 1 in STRING (stringl pat buffer lexbuf) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
 | ['a'-'p'] | ['a'-'p']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | ['A'-'Z'] | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9''_']* as lxm { FID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
-and comment = parse
-  "*/" { token lexbuf }
-| _    { comment lexbuf }
+and comment pat = parse
+  "*/" { token pat lexbuf }
+| _    { comment pat lexbuf }
 
-and stringl buffer = parse
+and stringl pat buffer = parse
  | '"' { Buffer.contents buffer }
  | "\\t" { Buffer.add_char buffer '\t'; stringl buffer lexbuf }
  | "\\n" { Buffer.add_char buffer '\n'; stringl buffer lexbuf }
@@ -75,13 +80,18 @@ and stringl buffer = parse
  | eof { raise End_of_file }
  | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }
 
-and listl = parse
-| '['      { RSTART }
-| ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { RFLITERAL(float_of_string lxm) }
-| 'q'      { let _ = RFLITERAL(1.0) in listl}
-| 'w'      { RFLITERAL(4.0) }
-| 'h'      { RFLITERAL(2.0) }
-| 't'      { RFLITERAL(0.33) }
-| 'e'      { RFLITERAL(0.5) }
-| 's'      { RFLITERAL(0.25) }
-| ']'      { token lexbuf }
+and listl pat = parse
+| ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
+| 'q'      { FLITERAL(1.0)}
+| 'w'      { FLITERAL(4.0) }
+| 'h'      { FLITERAL(2.0) }
+| 't'      { FLITERAL(0.33) }
+| 'e'      { FLITERAL(0.5) }
+| 's'      { FLITERAL(0.25) }
+| ']'      { pat := NO; RBRACKET }
+
+{
+	let next_token lexbuf = match !state_ref with
+	    | NO -> token state_ref lexbuf
+	    | RHYTHM -> listl state_ref lexbuf
+}
