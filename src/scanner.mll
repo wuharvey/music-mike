@@ -81,6 +81,7 @@ and stringl pat buffer = parse
  | _ as char { Buffer.add_char buffer char; stringl pat buffer lexbuf }
 
 and listl pat = parse
+[' ' '\t' '\r' '\n'] { listl pat lexbuf } (* Whitespace *)
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
 | 'q'      { FLITERAL(1.0)}
 | 'w'      { FLITERAL(4.0) }
