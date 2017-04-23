@@ -8,11 +8,7 @@ type postop = Rhythmdot
 
 type typ = Int | Bool | Void | Float | String | Pitch
 
-(* type pre_pitch= Literal of int 
-
-type post_pitch= Literal of int 
- *)
-type pitch= int list * int * int list 
+type pitch= int list
 
 type chord= pitch list
 
