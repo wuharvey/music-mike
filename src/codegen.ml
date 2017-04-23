@@ -143,7 +143,7 @@ let translate (exprs, functions, structs) =
 
         (*first layer pointers-----allocates space for array of pointers to chords *)
         let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (num_of_pointers)) "chord_pointer_array" builder in
-        let deal_with_chord index chord=          (* List.iter will be applied so e represents a chord *)
+        let deal_with_chord index chord=
         let chord_pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
 (*
                 (*second layer pointers-----allocates spaces for array of pointers to pitches *)
