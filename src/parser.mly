@@ -215,21 +215,21 @@ chord:
   	postfield-a list of ints representing '#' and 'b' as '1' and '-1' "*/
 
 pitch:
-    prefield LITERAL postfield { ($1,  $2,  $3) }
+    prefield LITERAL postfield { $1 :: $2 :: [$3] }
 
 
 /*"a list of ints representing '^' and 'v' as  '1' and '-1' respectively" */
 
 prefield:
-/* nothing */               { [] }  
-  | prefield OUP            { (1) :: $1 }
-  | prefield ODOWN          { (-1) :: $1 }
+/* nothing */               { 0 }  
+  | prefield OUP            { $1+1 }
+  | prefield ODOWN          { $1-1 }
 
 
 /* "a list of ints representing '#' and 'b' as '1' and '-1' "*/
 
 postfield:
-/*nothing*/                 { [] }
-  | postfield OCTOTHORPE    { (1) :: $1 }
-  | postfield FLAT          { (-1)  :: $1 }
+/*nothing*/                 { 0 }
+  | postfield OCTOTHORPE    { $1+1 }
+  | postfield FLAT          { $1-1 }
  
