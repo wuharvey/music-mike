@@ -10,7 +10,7 @@ let _ =
 			      ("-c", Compile) ] (* Generate, check LLVM IR *)
   else Compile in
   let lexbuf = Lexing.from_channel stdin in
-  let ast = Parser.program Scanner.token lexbuf in
+  let ast = Parser.program Scanner.next_token lexbuf in
   Semant.check ast;
   match action with
     Ast -> print_string (Ast.string_of_program ast)
