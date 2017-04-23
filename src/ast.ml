@@ -48,7 +48,7 @@ type type_decl = {
 type program = expr list * func_decl list * type_decl list
 
 (* Pretty-printing functions *)
-
+(*
 let string_of_op = function
     Add -> "+"
   | FAdd -> "+."
@@ -66,19 +66,6 @@ let string_of_op = function
   | Geq -> ">="
   | And -> "&&"
   | Or -> "||"
-
-let rec string_of_prelist = function 
-    [] -> ""
-  | -1::rest -> "v" ^ string_of_prelist rest
-  | 1::rest -> "^" ^ string_of_prelist rest
-  | _::rest -> "" ^ string_of_prelist rest
-
-let rec string_of_postlist = function 
-    [] -> ""
-  | -1::rest -> "b" ^ string_of_postlist rest
-  | 1::rest -> "#" ^ string_of_postlist rest
-  | _::rest -> "" ^ string_of_postlist rest
-
 
 
 let string_of_pitch (pre,num,post) = string_of_prelist pre ^ string_of_int num ^ string_of_postlist post 
@@ -149,4 +136,4 @@ let string_of_program (exprs, functions, structs) =
   "FUN DECLS: " ^ String.concat "" (List.map string_of_func_decl functions) ^ "\n" ^
   "EXPRESSIONS: " ^ String.concat "\n" (List.map string_of_expr exprs) ^ "\n"
 
-
+*)
