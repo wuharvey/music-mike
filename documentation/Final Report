@@ -17,4 +17,23 @@ Project Plan Section
 A. Process
   i. Planning
   Our team met regularly twice a week on Wednesdays to meet with our TA Jacob Graff and
-  on Sundays to work together as a team, debrief and set the course for the rest of the week.
+  on Sundays to work together as a team, debrief and set the course for the rest of the week. We used
+  our Wednesday meetings as an opportunity to track and gauge our progress and also ask questions about
+  difficult problems we came across during the previous week. We also talked about goals and milestones for the next
+  Wednesday meeting and talked about any potential problems related to the difficulties of the goals we defined but also
+  about any foreseeable road blocks related to tests, projects, other classes etc. that might hinder our progress. We used
+  these meetings to make sure our project was progressing but also to shift our timeline to account for future roadblocks and delays.
+
+  ii. Development
+  Our team used github issues to define specifications and tasks that needed to be implemented or completed. We used github to help
+  with organizing our development. Each of used a separate branch to develop the feature that we were working on and then submitted a pull
+  request to the main branch once we thought it was ready. Then, another member of the team would review that request and merge the request. This ensured
+  that all the code we pushed had been code reviewed and helped us maintain the quality of our mainline code. 
+
+  iii. Testing
+  We developed a test suite that tested individual components of the compiler. Every time one of
+  us was working on a small component, we first wrote a test for how that component was supposed to work
+  once it was finished. When writing In this regard, we used some principles of Test-First Programming to make sure we were preserving
+  the functionality of the older features but also ensuring functionality of the new ones. While some of these tests were forward
+  looking and failed early-on, the error messages told the developer whether we were making progress towards making these larger full stack
+  tests work or if it was failing in whatever module the developer was working on.
