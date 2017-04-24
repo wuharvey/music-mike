@@ -125,6 +125,18 @@ let translate (exprs, functions, structs) =
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
+  
+    | A.Rlist(es) ->
+          let arr_malloc = L.build_array_malloc (float_t) (L.const_int i32_t (List.length es)) "array" builder
+          in 
+            let deal_with_element index e =  
+              let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "elem" builder in 
+              let e' = L.const_float float_t e in 
+                ignore(L.build_store e' pointer builder)
+            in
+             List.iteri deal_with_element es; arr_malloc
+
+	    
     | A.PList(cs) ->
 
             (* allocates the chord list *)
