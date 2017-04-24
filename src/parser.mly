@@ -88,7 +88,6 @@ expr:
   | IF expr THEN expr ELSE expr
       %prec IF
       { If($2, $4, $6) }
-  | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
 
 binop:
   | expr PLUS    expr { Binop($1, Add,   $3) }
@@ -144,9 +143,9 @@ semi_list:
   | semi_list expr SEMI     { $2 :: $1 }
 
 formals_list:
-    ID                      { [$1] }
+    /*nothing*/                      { [] }
   | formals_list ID         { $2 :: $1 }
 
 actuals_list:
-    expr                    { [$1] }
+    /*nothing*/                    { [] }
   | actuals_list expr       { $2 :: $1 }
