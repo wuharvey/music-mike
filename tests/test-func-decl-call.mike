@@ -1,0 +1,5 @@
+
+def Name = {Printint(10); Printstr("hello"); a = 5 + 10; a;};
+
+Printint(Name());
+
