@@ -141,12 +141,14 @@ let translate (exprs, functions, structs) =
        L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
     | A.Call ("Printfloat", [e]) ->
        L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
-           (* | A.Call (f, act) ->
-               let (fdef, fdecl) = StringMap.find f function_decls in
-  let actuals = List.rev (List.map (expr builder) (List.rev act)) in
-  let result = (match fdecl.A.typ with A.Void -> ""
-            | _ -> f ^ "_result") in
-  L.build_call fdef (Array.of_list actuals) result builder *)
+    | A.Call (f, act) ->
+       let (fdef, fdecl) = StringMap.find f function_decls in
+       let actuals = List.rev (List.map (expr builder) (List.rev act)) in
+(* let result = (match fdecl.A.typ with A.Void -> ""
+    | _ -> f ^ "_result") in *)
+       L.build_call fdef (Array.of_list actuals) "" builder
+
+
     | _ -> L.const_int i32_t 1
   in 
     let exprbuilder builder e = ignore(expr builder e); builder
