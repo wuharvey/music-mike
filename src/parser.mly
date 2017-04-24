@@ -148,8 +148,8 @@ primaries:
       { If($2, $4, $6) }
 	/* "getting an element from a list/tuple/pitchlist" */
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
-
-
+  | chord                            { $1 }
+  | pitch                            { $1 }
 
         /* "Assigning a value to an variable"*/
 assign:

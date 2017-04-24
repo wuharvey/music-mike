@@ -29,6 +29,7 @@ type expr =
   | Subset of string * int
   | List of expr list
   | PList of chord list (*PList --> "list of chords"*)
+  | Rlist of float list
   | Block of expr list
   | Concat of expr * expr
   | Noexpr
