@@ -38,7 +38,9 @@ let translate (exprs, functions, structs) =
   and float_t = L.double_type       context      (* float *)
   and void_t  = L.void_type         context in   (* void *)
   let i8p_t   = L.pointer_type i8_t   in         (* char pointer-string*) 
-  let i32p_t  = L.pointer_type i32_t in          (* int pointer *)
+  let i32p_t  = L.pointer_type i32_t in          (* int* *)
+  let i32pp_t = L.pointer_type i32p_t in         (* int**  *)
+  let i32ppp_t= L.pointer_type i32pp_t in        (* int***  *)
 
   let ltype_of_typ = function
       A.Int     -> i32_t
@@ -126,7 +128,7 @@ let translate (exprs, functions, structs) =
     | A.PList(cs) ->
 
             (* allocates the chord list *)
-	    let arr_malloc = L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
+	    let arr_malloc = L.build_array_malloc (i32pp_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
 	    
               let iter_thru_chord index chord=
 		(* assigns pointer to chord *)
