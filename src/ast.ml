@@ -48,7 +48,7 @@ type type_decl = {
 type program = expr list * func_decl list * type_decl list
 
 (* Pretty-printing functions *)
-(*
+
 let string_of_op = function
     Add -> "+"
   | FAdd -> "+."
@@ -68,12 +68,14 @@ let string_of_op = function
   | Or -> "||"
 
 
-let string_of_pitch (pre,num,post) = string_of_prelist pre ^ string_of_int num ^ string_of_postlist post 
-  
+let rec string_of_pitch  = function
+    [] -> ""
+  | f :: fs -> string_of_int f ^ "_" ^ string_of_pitch fs
+  (*this is probably wrong *)
 
 let rec string_of_chord = function
     [] -> ""
-  | p::ps -> string_of_pitch p ^ "|" ^ string_of_chord ps
+  | p :: ps -> "(" ^ string_of_pitch p ^ ")" ^ "|" ^ string_of_chord ps
 
 
 
@@ -136,4 +138,4 @@ let string_of_program (exprs, functions, structs) =
   "FUN DECLS: " ^ String.concat "" (List.map string_of_func_decl functions) ^ "\n" ^
   "EXPRESSIONS: " ^ String.concat "\n" (List.map string_of_expr exprs) ^ "\n"
 
-*)
+

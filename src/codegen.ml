@@ -126,44 +126,42 @@ let translate (exprs, functions, structs) =
     | A.PList(cs) ->
 
             (* allocates the chord list *)
-	    let arr_malloc=L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
+	    let arr_malloc = L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
 	    
-	      (* applied with List.iteri on indevidual chord *)
-              let iter_thru_chord index el=
+              let iter_thru_chord index chord=
 		(* assigns pointer to chord *)
-		let chord_pointer = L.build_gep array1 [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
+		let chord_pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
 		(*allocates  array for pitches*)
 		let arr_chord_malloc = L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length chord)) "arr_pitch" builder in
                 (* stores array for pitches into pointer to chord*)	
-                ignore(L.build_store arr_chord_malloc chord_pointer builder) in 
+                ignore(L.build_store arr_chord_malloc chord_pointer builder); 
 
-                  (* applied with List.iteri on indevidual pitches *)
 		  let deal_with_pitch index el=
 		    (*assigns a pointer to the pitch *)
-		    let pitch_pointer = L.build_gep array1 [| (L.const_int i32_t index)|] "pitch_pointer_elem" builder in
+		    let pitch_pointer = L.build_gep arr_chord_malloc [| (L.const_int i32_t index)|] "pitch_pointer_elem" builder in
 		    (* allocates single pitch *)
 		    let arr_pitch_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "pitch" builder in  
 		    (* stores allocated pitch into pointer for the pitch  *)
-		    ignore(L.build_store arr_pitch_malloc pitch_pointer builder) in
+		    ignore(L.build_store arr_pitch_malloc pitch_pointer builder);
                     
 		  	(*applied with List.iteri on fields of pitch*)
-			let deal_with_element e index1=
+			let deal_with_element index1 e=
 			  (* assigns pointer to a field of the pitch*)
-			  let pointer = L.build_gep arr_pitch [| (L.const_int i32_t index1)|] "elem" builder in
+			  let pointer = L.build_gep arr_pitch_malloc [| (L.const_int i32_t index1)|] "elem" builder in
 			  (* converts pitch field into lltype*)
 			  let e' = L.const_int i32_t e in 
 			  (* stores converted pitch field to pointer*) 
 			  ignore(L.build_store e' pointer builder) 
 		    in 
                     (* iterates through pitch field with deal_with_elements*)
-		    List.iteri deal_with_element es; arr_pitch_malloc
+		    ignore(List.iteri deal_with_element el)
 
 		in
                 (* iterates through pitches with deal_with_pitch*)
-		ignore(List.iteri deal_with_pitch el); arr_chord_malloc
+		ignore(List.iteri deal_with_pitch chord)
            in
            (*iterates through chords with iter_thru_chord *)   
-           List.iteri iter_thru_chord cs; arr_malloc
+           ignore(List.iteri iter_thru_chord cs); arr_malloc
 
 
     | A.Block(es) -> 
