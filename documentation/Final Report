@@ -31,7 +31,7 @@ A. Process
   we realized that for the use cases we were targeting a fully functional language wouldn't give us the kind of ease of use and usage we'd like.
   Our first concrete specifications were the abstractions and then we decided on syntax. Despite having a very concrete definition of specifications
   early on, we still changed specifications as we worked on our language when it was necessary to be able to finish within our timeline.
-  
+
   iii. Development
   Our team used github issues to define specifications and tasks that needed to be implemented or completed. We used github to help
   with organizing our development. Each of used a separate branch to develop the feature that we were working on and then submitted a pull
@@ -45,3 +45,24 @@ A. Process
   the functionality of the older features but also ensuring functionality of the new ones. While some of these tests were forward
   looking and failed early-on, the error messages told the developer whether we were making progress towards making these larger full stack
   tests work or if it was failing in whatever module the developer was working on.
+B. Programming Style Guide
+1. Landin's pseudo law: Treat the indentation of your programs as if it determines the meaning of your programs.
+Keep indentation consistent with that of the MicroC code.
+
+2. Keep lines shorter than 80 characters.
+
+3. A function should always fit within one screenful (of about 70 lines), or in exceptional cases two, at the very most three. To go beyond this is unreasonable.
+
+Justification: When a function goes beyond one screenful, it's time to divide it into subproblems and handle them independently. Beyond a screenful, one gets lost in the code. The indentation is not readable and is difficult to keep correct.
+
+4. The change in indentation between successive lines of the program is 2 spaces.
+
+5. Using the tab character (ASCII character 9) is absolutely not recommended. Change your .vimrc if you have tabs.
+
+6. Use underscores instead of Camel case
+
+C. Timeline
+Table
+Date        Milestone
+Jan 29th    First commit to repository
+Feb 8th     Project Proposal and White Paper Completed and Submitte
