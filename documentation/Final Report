@@ -82,7 +82,32 @@ together either in-person or teleconference.
 Team Member
 Husam Abdul-Kafi  Systems Architect Testing Architecture, Code generation
 Lakshmi Bodapati  Project Manager   Compiler Front-end, Documentation
-Kaitlin Pet       Tester            Testing Architecture, Compiler Front-end
-Harvey Wu         Language Guru     Code generation, Semantics, Compiler Front-end
+Kaitlin Pet       Tester            Pitch and Chord Full Stack Abstraction, Testing Architecture
+Harvey Wu         Language Guru     Compiler Front-end, Semantic Checker, Type Inference
 
 E. Software Development Environment
+Our Stack
+/list
+/l1 Github-Hosted Git Repository - used for version control and contained all of our code
+and documentation
+/l2 Ocaml 4.04.0 - Used Ocamlyacc and Ocamllex extensions for compiling scanner and parser. Used OCaml for
+the CodeGen, Semantic Checker and Backend.
+*************HUSAM PLEASE ADD MORE NEED HELP FLESHING THIS PART OUT*****************
+
+Testing Environment
+/list
+Google Cloud VM
+
+F. Project Log
+****************COPY FROM GIT WHEN FINISHED****************
+
+G. Architectural Design
+1. Block Diagram                                                     _______________ > Symbol Table
+_______________________                                              |                       |
+|Music-mike source code| -> Scanner -> Parser -> AST -> Type Inference outputs SAST -> Semantic Checking -> Code Generation -> LLVM code
+________________________
+
+2. Scanner
+Relevant Files: scanner.mll
+
+The scanner written in OCamlLex
