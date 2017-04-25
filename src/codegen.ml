@@ -31,8 +31,10 @@ let translate (exprs, functions, structs) =
   and i1_t    = L.i1_type           context
   and float_t = L.double_type       context 
   and void_t  = L.void_type         context in 
-  let i8p_t   = L.pointer_type i8_t   in
-  let i32p_t  = L.pointer_type i32_t in
+  let i8p_t   = L.pointer_type i8_t    in
+  let i32p_t  = L.pointer_type i32_t   in
+  let i32pp_t = L.pointer_type i32p_t  in
+  let i32ppp_t= L.pointer_type i32pp_t in
 
   let ltype_of_typ = function
       A.Int     -> i32_t
@@ -141,12 +143,31 @@ let translate (exprs, functions, structs) =
        L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
     | A.Call ("Printfloat", [e]) ->
        L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
-           (* | A.Call (f, act) ->
-               let (fdef, fdecl) = StringMap.find f function_decls in
-  let actuals = List.rev (List.map (expr builder) (List.rev act)) in
-  let result = (match fdecl.A.typ with A.Void -> ""
-            | _ -> f ^ "_result") in
-  L.build_call fdef (Array.of_list actuals) result builder *)
+    | A.Call (f, act) ->
+       let (fdef, fdecl) = StringMap.find f function_decls in
+       let actuals = List.rev (List.map (expr builder) (List.rev act)) in
+(* let result = (match fdecl.A.typ with A.Void -> ""
+    | _ -> f ^ "_result") in *)
+       L.build_call fdef (Array.of_list actuals) "" builder
+
+    | A.If(e1, e2, e3) -> 
+        let bool_val = expr builder e1 in 
+          let cur_fun = L.block_parent (L.insertion_block builder) in 
+          let merge_bb = L.append_block context "merge" cur_fun in
+
+          let then_bb = L.append_block context "then" cur_fun in
+          ignore(expr (L.builder_at_end context then_bb) e2); ignore(L.build_br merge_bb (L.builder_at_end context then_bb));
+
+          let else_bb = L.append_block context "else" cur_fun in 
+          ignore(expr (L.builder_at_end context else_bb) e3); ignore(L.build_br merge_bb (L.builder_at_end context else_bb));
+
+          ignore(L.build_cond_br bool_val then_bb else_bb builder); 
+          L.position_at_end merge_bb builder;
+            L.const_int i32_t 1 
+
+
+
+
     | _ -> L.const_int i32_t 1
   in 
     let exprbuilder builder e = ignore(expr builder e); builder
