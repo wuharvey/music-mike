@@ -16,6 +16,7 @@ rule token pat = parse
 | '}'      { RBRACE }
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
+| '|'      { BAR }
 | "p:["    { PLBRACKET }
 | "r:["    { pat := RHYTHM; RLBRACKET }
 | ".["	   { DOTLBRACKET }
