@@ -137,7 +137,7 @@ primaries:
 	/* "list of expressions of same type (enforced in semant.ml)" */
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
 	/* "list of chords" */
-  | PLBRACKET pxpr_list RBRACKET { PList(List.rev($2)) }  
+  | PLBRACKET pxpr_list RBRACKET { ChordList(List.rev($2)) }  
        /*"list of rhythms"*/
   | RLBRACKET expr_list RBRACKET { RList(List.rev($2)) }
        /* "tuple of expressions with different types (enforced in semant.ml)" */

@@ -29,7 +29,7 @@ type expr =
   | If of expr * expr * expr
   | Subset of string * int
   | List of expr list
-  | PList of ((int * expr * int) list)  list (*PList --> "list of chords"*)
+  | ChordList of ((int * expr * int) list)  list (*PList --> "list of chords"*)
   | RList of expr list
   | Block of expr list
   | Concat of expr * expr
@@ -102,7 +102,7 @@ let rec string_of_expr = function
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
-  | PList(cs) -> "broken" (*let string_of_pitch i j k = string_of_int i ^ string_of_expr j^ string_of_int k in
+  | ChordList(cs) -> "broken" (*let string_of_pitch i j k = string_of_int i ^ string_of_expr j^ string_of_int k in
 		let rec string_of_chord el= function 
 	          [] -> ""
 	        | p :: ps -> "(" ^ string_of_pitch( fst p second p third p) ^ ")" ^ "|" ^ string_of_chord ps

@@ -140,7 +140,7 @@ let translate (exprs, functions, structs) =
              List.iteri deal_with_element es; arr_malloc
 
 	    
-    | A.PList(cs) ->
+    | A.ChordList(cs) ->
 
             (* allocates the chord list *)
 	    let arr_malloc = L.build_array_malloc (i32pp_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
