@@ -101,13 +101,29 @@ Google Cloud VM
 F. Project Log
 ****************COPY FROM GIT WHEN FINISHED****************
 
-G. Architectural Design
-1. Block Diagram                                                     _______________ > Symbol Table
+Architectural Design Section
+A. Block Diagram (http://www.cs.columbia.edu/~sedwards/classes/2012/w4115-fall/reports/Funk.pdf)                                            _______________ > Symbol Table
 _______________________                                              |                       |
 |Music-mike source code| -> Scanner -> Parser -> AST -> Type Inference outputs SAST -> Semantic Checking -> Code Generation -> LLVM code
 ________________________
 
-2. Scanner
+B. Scanner (Lakshmi, Husam, Harvey)
 Relevant Files: scanner.mll
 
-The scanner written in OCamlLex
+The scanner is written in OCamlLex and takes the .mike input to the compiler
+and tokenizes it into literals, identifiers, operators and keywords. It removes the white space
+and block comments. If any character cannot be lexed by the scanner or if
+any identifier or literal is not syntactically valid, the scanner throws an error. The tokens
+created by the scanner are used by the Parser to create an Abstract Syntax Tree.
+
+C. Parser (Husam, Harvey, Lakshmi, Kaitlin)
+The parser is written in OCamlYacc and takes in a series of tokens. It uses the grammar described
+in parser.mly and datatypes defined in ast.ml to generate an Abstract Syntax Tree. In parser.mly, we define
+the Music-mike context-free grammar using productions. If the tokens produced by the scanner are successfully
+parsed that means that the .mike file is syntactically (though perhaps not semantically) correct.
+
+D. The Semantic Checker ()
+E. The Code Generator (Husam)
+F. The C Libraries ()
+
+Test Plan Section
