@@ -138,6 +138,8 @@ primaries:
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
 	/* "list of chords" */
   | PLBRACKET pxpr_list RBRACKET { PList(List.rev($2)) }  
+       /*"list of rhythms"*/
+  | RLBRACKET expr_list RBRACKET { RList(List.rev($2)) }
        /* "tuple of expressions with different types (enforced in semant.ml)" */
 /*  | LTUPLE expr_list RTUPLE      { Tuple($2) }*/
 	/* "concatanating 2 lists (enforced in semant.ml)" */
