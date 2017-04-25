@@ -170,7 +170,7 @@ let translate (exprs, functions, structs) =
                         let el'=expr builder  (second el) in
                         ignore(L.build_store el' sd_pointer builder); 
 			(*posfield*)
-                        let postfield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 0)|] "postfield_elem" builder in
+                        let postfield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 2)|] "postfield_elem" builder in
                         let el'=L.const_int i32_t (third el) in
                         ignore(L.build_store el' postfield_pointer builder); 
 
