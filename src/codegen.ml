@@ -1,4 +1,5 @@
-(* Code generation: translate takes a semantically checked AST and
+(
+ Code generation: translate takes a semantically checked AST and
 produces LLVM IR
 
 LLVM tutorial: Make sure to read the OCaml version of the tutorial
@@ -21,7 +22,9 @@ module A = Ast
 module StringMap = Map.Make(String)
 
 
-
+   let first  (a,_,_) = a;; 
+    let second (_,a,_) = a;; 
+    let third  (_,_,a) = a;; 
 
 let main_vars:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
 let function_defs:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
@@ -157,19 +160,21 @@ let translate (exprs, functions, structs) =
 		    let arr_pitch_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "pitch" builder in  
 		    (* stores allocated pitch into pointer for the pitch  *)
 		    ignore(L.build_store arr_pitch_malloc pitch_pointer builder);
-                    
-		  	(*applied with List.iteri on fields of pitch*)
-			let deal_with_element index1 e=
-			  (* assigns pointer to a field of the pitch*)
-			  let pointer = L.build_gep arr_pitch_malloc [| (L.const_int i32_t index1)|] "elem" builder in
-			  (* converts pitch field into lltype*)
-			  let e' = L.const_int i32_t e in 
-			  (* stores converted pitch field to pointer*) 
-			  ignore(L.build_store e' pointer builder) 
-		    in 
-                    (* iterates through pitch field with deal_with_elements*)
-		    ignore(List.iteri deal_with_element el)
+                	(* for each field of pitch tuple, allocate space and write in *)
+			(* prefield *)
+			let prefield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 0)|] "prefield_elem" builder in
+			let el'=L.const_int i32_t (fst el) in
+			ignore(L.build_store el' prefield_pointer builder); 
+			(*scale degree *)
+                        let sd_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 1)|] "scaledegreer_elem" builder in
+                        let el'=expr builder  (second el) in
+                        ignore(L.build_store el' sd_pointer builder); 
+			(*posfield*)
+                        let postfield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 0)|] "postfield_elem" builder in
+                        let el'=L.const_int i32_t (third el) in
+                        ignore(L.build_store el' postfield_pointer builder); 
 
+ 
 		in
                 (* iterates through pitches with deal_with_pitch*)
 		ignore(List.iteri deal_with_pitch chord)

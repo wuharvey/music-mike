@@ -1,3 +1,8 @@
+ 
+    let first  (a,_,_) = a;; 
+    let second (_,a,_) = a;; 
+    let third  (_,_,a) = a;; 
+
 (* Abstract Syntax Tree and functions for printing it *)
 
 type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq | And | Or 
@@ -7,10 +12,6 @@ type preop = Neg | Not | FNeg
 type postop = Rhythmdot 
 
 type typ = Int | Bool | Void | Float | String | Pitch
-
-type pitch= int list
-
-type chord= pitch list
 
 type bind = typ * string
 
@@ -28,7 +29,7 @@ type expr =
   | If of expr * expr * expr
   | Subset of string * int
   | List of expr list
-  | PList of chord list (*PList --> "list of chords"*)
+  | PList of ((int * expr * int) list)  list (*PList --> "list of chords"*)
   | Rlist of float list
   | Block of expr list
   | Concat of expr * expr
@@ -69,17 +70,6 @@ let string_of_op = function
   | Or -> "||"
 
 
-let rec string_of_pitch  = function
-    [] -> ""
-  | f :: fs -> string_of_int f ^ "_" ^ string_of_pitch fs
-  (*this is probably wrong *)
-
-let rec string_of_chord = function
-    [] -> ""
-  | p :: ps -> "(" ^ string_of_pitch p ^ ")" ^ "|" ^ string_of_chord ps
-
-
-
 
 
 
@@ -112,11 +102,16 @@ let rec string_of_expr = function
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
-  | PList(cs) -> "p:[ " ^ String.concat " " (List.map string_of_chord cs) ^ " ]"
+  | PList(cs) -> "broken" (*let string_of_pitch i j k = string_of_int i ^ string_of_expr j^ string_of_int k in
+		let rec string_of_chord el= function 
+	          [] -> ""
+	        | p :: ps -> "(" ^ string_of_pitch( fst p second p third p) ^ ")" ^ "|" ^ string_of_chord ps
+	      in "p:[ " ^ String.concat " " (List.map string_of_chord  cs) ^ " ]" *)
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"
   | Concat(e1, e2) -> string_of_expr e1 ^ "@" ^ string_of_expr e2
   | Noexpr -> ""
   | Unit -> "()"
+
 
 
 let string_of_typ = function
