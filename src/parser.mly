@@ -215,7 +215,7 @@ chord:
   	postfield-a list of ints representing '#' and 'b' as '1' and '-1' "*/
 
 pitch:
-    prefield expr postfield { $1 :: $2 :: [$3] }
+    prefield expr postfield { ($1, $2, $3) }
 
 
 /*"a list of ints representing '^' and 'v' as  '1' and '-1' respectively" */

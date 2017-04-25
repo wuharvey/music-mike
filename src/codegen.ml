@@ -1,4 +1,4 @@
-(
+(*
  Code generation: translate takes a semantically checked AST and
 produces LLVM IR
 
@@ -163,8 +163,8 @@ let translate (exprs, functions, structs) =
                 	(* for each field of pitch tuple, allocate space and write in *)
 			(* prefield *)
 			let prefield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 0)|] "prefield_elem" builder in
-			let el'=L.const_int i32_t (fst el) in
-			ignore(L.build_store el' prefield_pointer builder); 
+			let el'=L.const_int i32_t (first el)  in
+			ignore(L.build_store el' prefield_pointer builder);
 			(*scale degree *)
                         let sd_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 1)|] "scaledegreer_elem" builder in
                         let el'=expr builder  (second el) in
