@@ -67,5 +67,22 @@ Date        Milestone
 Jan 29th    First commit to repository
 Feb 8th     Project Proposal and White Paper Completed and Submitted
 Feb 22      Language Reference Manual Completed and Submitted
-Mar
-Mar 21      AST and Parser Complete
+Mar 21      Basic Scanner Complete
+Mar 26      Basic AST and Parser Complete
+Mar 29      Hello World runs
+Apr 7       Testing Framework Complete
+Apr 23      Final Scanner, Parser and AST Complete
+
+D. Roles and Responsibilities
+While we had defined project roles at the beginning of the semester, about
+three weeks in the roles became a lot more fluid. Our assigned roles were
+Tester, System Architect, Project Manager and Language Guru. Each member was involved
+in developing certain functionalities and portions of components. The team frequently worked
+together either in-person or teleconference.
+Team Member
+Husam Abdul-Kafi  Systems Architect Testing Architecture, Code generation
+Lakshmi Bodapati  Project Manager   Compiler Front-end, Documentation
+Kaitlin Pet       Tester            Testing Architecture, Compiler Front-end
+Harvey Wu         Language Guru     Code generation, Semantics, Compiler Front-end
+
+E. Software Development Environment
