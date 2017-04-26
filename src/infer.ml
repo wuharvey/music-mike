@@ -40,15 +40,20 @@ let rec annotate_expr exp env =
       StringMap.add name ntyp env in
     let ae = annotate_expr e env in 
     AAssign(name, e, ntyp)
+  | List(e_list) ->
+    let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
+    AList(ae_list, TList(new_type ())  
   | Call(name, e_list) ->
     let anno one_e = annotate_expr one_e env in
     let ae_list = List.map anno e_list in
     ACall(name, e_list, new_type ())
   | Fun(name, formals, e) ->
-    (* TODO: Check for keywords being passed as args. *)
+    (* TODO: Check for keywords being passed as args.
+     * Currently, only takes first argument of function. 
+     * So only test with one argument functions. *)
     let ae = annotate_expr e env and
-    let t = StringMap.find name env in 
-    AFun(name, formals, 
+    let t = StringMap.find (fst formals) env in 
+    AFun(name, formals, ae, TFun(t, new_type())) 
   | _ -> AUnit
 
 let rec type_of ae = 
@@ -62,8 +67,8 @@ let rec type_of ae =
   | APostop(_,_,t)  -> t
   | AAssign(_,_,t)  -> t
   | ACall(_,_,t)    -> t
-  | AFun(_,_,t)     -> t
-  | _               -> Unit 
+  | AFun(_,_,_,t)     -> t
+  | _               -> TUnit 
 
 let rec collect_expr ae = 
     match ae with
@@ -82,6 +87,12 @@ let rec collect_expr ae =
        | And | Or -> [(t1, Bool); (t2, Bool); (t, Bool)] 
      in 
      (collect_expr e1) @ (collect_expr e2) @ con 
+  | AAssign(name, 
+  | AIf(pred, ae1, ae2, t) ->
+    let pt = type_of pred and t1 = type_of ae1 and t2 = type_of ae2 in
+    let con = [(pt, TBool); (t1, t2); (t, t1)] in 
+    (collect_expr pred) @ (collect_expr ae1) @ (collect_expr ae2) @ con
+
   | AFun(name, 
   | ACall(name, arg, t) -> match type_of name 
   |  
