@@ -45,6 +45,7 @@ let translate (exprs, functions, structs) =
   let i32p_t  = L.pointer_type i32_t in          (* int* *)
   let i32pp_t = L.pointer_type i32p_t in         (* int**  *)
   let i32ppp_t= L.pointer_type i32pp_t in        (* int***  *)
+  let floatp_t= L.pointer_type float_t in        (* float* *)
 
 
   let ltype_of_typ = function
@@ -199,7 +200,8 @@ let translate (exprs, functions, structs) =
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
                     let local_var = L.build_alloca (match e with 
-                         A.List(_) -> i32p_t 
+                          A.List(_) -> i32p_t
+		        | A.RList(_) -> floatp_t 
                         | _ -> i32_t) s builder in 
                         Hashtbl.add main_vars s local_var;local_var in
                 ignore (L.build_store e' var builder); e' 
