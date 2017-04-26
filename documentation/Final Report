@@ -127,3 +127,6 @@ E. The Code Generator (Husam)
 F. The C Libraries ()
 
 Test Plan Section
+A. *****************2 examples of source to code******************
+B. Test Suites
+We wrote tests for every time we implemented a new feature. 
