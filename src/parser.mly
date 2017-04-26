@@ -29,7 +29,6 @@
 %left CONCAT
 %right NOT NEG
 
-
 %start program
 %type <Ast.program> program
 
@@ -40,11 +39,9 @@ program:
   stmts EOF             { $1 }
 
 stmts:
-                        { [], [] }
-  | stmts expr  SEMI        { ($2 :: fst $1), snd $1 }
-  | stmts tdecl SEMI        { fst $1, ($2 :: snd $1) }
+                        { [] }
+  | stmts expr  SEMI    { $2 :: $1 }
                             
-
 /* "A function declaration `fdecl` consists of 
     a Function Identifier `FID` - string w/ first letter capitalized
     a list of formals `formals_list` 
@@ -52,14 +49,6 @@ stmts:
 fdecl: 
     DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }  
     
-/*       { { ident = $2;
-	       formals = List.rev($3);
-	       body = $5 } }            */
-
-tdecl: 
-    TYP ID ASSIGN LBRACE assign_list RBRACE  
-     { { typename = $2; members = $5 } }
-
 literals:
     LITERAL          { Literal($1) }
   | FLITERAL         { FloatLit($1) }

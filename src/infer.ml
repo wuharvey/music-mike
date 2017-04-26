@@ -10,7 +10,8 @@ let new_type () =
   let c1 = !letter in
   incr letter; T(Char.escaped (Char.chr c1));
    
-let keywords = ["if"; "then"; "else"; "true"; "false"; "def"];; 
+let keywords = ["if"; "then"; "else"; "true"; "false"; "def"; "PrintInt";
+  "PrintFloat"; "PrintString"; "Print"];; 
 
 let rec annotate_expr exp env = 
     match exp with
@@ -98,9 +99,6 @@ let rec collect_expr ae =
   |  
 
 
-
-
-
 let rec substitute u x t = 
     match t with 
     | TUnit | TInt | TBool | TFloat | TPitch -> t
@@ -135,9 +133,16 @@ and unify_one t1 t2 =
 
 let rec apply_expr subs ae = 
   match ae with
-  |
-  |
-  |
+  | ALiteral(value, t)      -> ALiteral(value, apply subs t)
+  | AFloatLit(value, t)     -> AFloatLit(value, apply subs t)
+  | ABoolLit(value, t)      -> ABoolLit(value, apply subs t)
+  | AID(name, t)            -> AVal(name, apply subs t)
+  | AAssign(name, ae, t)    -> AAssign(name, apply_expr subs ae, apply subs t)
+  | AFun(name, frmls, ae_list, t1, t2) 
+                            -> AFun(name, frmls, apply subs t1, apply subs t2)
+  | AIf(pred, ae1, ae2, t)  -> AIf(apply_expr subs pred, apply_expr subs ae1, 
+                                    apply_expr subs ae2, apply subs t)
+  | ACall(
 ;;
 
 let infer expr env = 
@@ -148,4 +153,4 @@ let infer expr env =
   inferred_expr, env
 ;;
 
-  
+

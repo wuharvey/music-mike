@@ -64,12 +64,7 @@ type aexpr =
   | AFun of string * string list * expr * typ * typ (* might be some issue with formals as string list *)
   | AUnit 
   
-type type_decl = {
-    typename : string;
-    members  : expr list;
-  }
-
-type program = expr list * type_decl list
+type program = expr list 
 
 (* Pretty-printing functions *)
 
@@ -135,16 +130,12 @@ let string_of_typ = function
   | String -> "string"
   | Pitch -> "pitch"
 
+(*
 let string_of_func_decl fdecl =  
   "def " ^ fdecl.ident ^ " " ^ String.concat " " fdecl.formals ^ "\n" ^ (string_of_expr fdecl.body) ^ "\n"
+*)
 
-let string_of_type_decl tdecl = 
-  "type " ^ tdecl.typename ^ "= {\n" ^ String.concat "\n" (List.map string_of_expr tdecl.members) ^ "}\n"
-
-
-let string_of_program (exprs, functions, structs) =
-  "TYPE DECLS: " ^ String.concat "" (List.map string_of_type_decl structs) ^ "\n" ^ 
-  "FUN DECLS: " ^ String.concat "" (List.map string_of_func_decl functions) ^ "\n" ^
+let string_of_program (exprs) =
   "EXPRESSIONS: " ^ String.concat "\n" (List.map string_of_expr exprs) ^ "\n"
 
 
