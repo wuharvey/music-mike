@@ -7,9 +7,10 @@
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
 %token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOTLBRACKET BAR
+
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
-%token IF THEN ELSE WHILE INT BOOL VOID  
+%token IF THEN ELSE WHILE INT BOOL VOID
 %token TYP DEF FOR
 %token <int> LITERAL
 %token <float> FLITERAL
@@ -41,6 +42,7 @@
 /* "A program consists of a list of statements, aka `stmts`"*/
 
 program:        
+
   stmts EOF             { $1 }
 
 
@@ -51,6 +53,7 @@ third field being a list of type declaratiosn (tdecl)" */
 
 stmts:
                         { [], [] ,[] }
+
   | stmts expr  SEMI        { ($2 :: first $1), second $1, third $1 }
   | stmts fdecl SEMI        { first $1, ($2 :: second $1), third $1 }
   | stmts tdecl SEMI        { first $1, second $1, ($2 :: third $1) }
@@ -59,13 +62,15 @@ stmts:
 
 /* "A function declaration `fdecl` consists of 
     a keyword 'Def'
+
     a Function Identifier `FID` - string w/ first letter capitalized
-    a list of formals `formals_list` 
+    a list of formals `formals_list`
     a body which consists of an `expr` expression "*/
 
-fdecl: 
-   DEF FID formals_list ASSIGN expr 
-     { { ident = $2;
+fdecl:
+   DEF FID formals_list ASSIGN expr
+
+       { { ident = $2;
 	       formals = List.rev($3);
 	       body = $5 } }
 
@@ -77,6 +82,7 @@ fdecl:
 
 tdecl: 
    TYP ID ASSIGN LBRACE assign_list RBRACE  
+
      { { typename = $2; members = $5 } }
 
 
@@ -101,6 +107,7 @@ literals:
   | LPAREN RPAREN    { Unit }
   | ID               { ID($1) }
   | STRING           { String($1) }
+
 
 
 binop:
@@ -129,6 +136,7 @@ unop:
 
 primaries:
 	/* "Block of expressions" */
+
     LBRACE semi_list RBRACE { Block(List.rev($2)) }
 	/* "Calling a function "*/
   | FID LPAREN actuals_list RPAREN   { Call($1, $3) }
@@ -160,6 +168,7 @@ assign:
 /*" List of assingments (a=b) used in type declaration " */  
 
 assign_list: 
+
     assign                  { [$1] }
   | assign_list assign      { $2 :: $1 }
 
@@ -184,14 +193,14 @@ semi_list:
 /* "List of formal arguments used in function declaration" */   
 
 formals_list:
-    ID                      { [$1] }
-  | formals_list ID         { $2 :: $1 }   
+    /*nothing*/                      { [] }
+  | formals_list ID         { $2 :: $1 }
 
 
 /* "List of actual arguments used in function calls" */
 
 actuals_list:
-    expr                    { [$1] }
+    /*nothing*/                    { [] }
   | actuals_list expr       { $2 :: $1 }
 
 

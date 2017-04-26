@@ -5,11 +5,13 @@
 
 (* Abstract Syntax Tree and functions for printing it *)
 
-type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq | And | Or 
+type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq | And | Or
 
 type preop = Neg | Not | FNeg 
 
+
 type postop = Rhythmdot 
+
 
 type typ = Int | Bool | Void | Float | String | Pitch
 
@@ -17,7 +19,7 @@ type bind = typ * string
 
 type expr =
     Literal of int
-  | FloatLit of float  
+  | FloatLit of float
   | BoolLit of bool
   | ID of string
   | String of string
@@ -25,7 +27,7 @@ type expr =
   | Preop of preop * expr
   | Postop of expr * postop
   | Assign of string * expr
-  | Call of string * expr list      
+  | Call of string * expr list
   | If of expr * expr * expr
   | Subset of string * int
   | List of expr list
@@ -70,9 +72,6 @@ let string_of_op = function
   | Or -> "||"
 
 
-
-
-
 let string_of_preop = function 
     Neg -> "-"
   | Not -> "!"
@@ -102,11 +101,14 @@ let rec string_of_expr = function
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
+
   | ChordList(cs) -> "broken" (*let string_of_pitch i j k = string_of_int i ^ string_of_expr j^ string_of_int k in
 		let rec string_of_chord el= function 
 	          [] -> ""
 	        | p :: ps -> "(" ^ string_of_pitch( fst p second p third p) ^ ")" ^ "|" ^ string_of_chord ps
 	      in "p:[ " ^ String.concat " " (List.map string_of_chord  cs) ^ " ]" *)
+
+  | RList(es) -> "r:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"
   | Concat(e1, e2) -> string_of_expr e1 ^ "@" ^ string_of_expr e2
   | Noexpr -> ""
@@ -122,16 +124,14 @@ let string_of_typ = function
   | String -> "string"
   | Pitch -> "pitch"
 
-let string_of_func_decl fdecl =  
+let string_of_func_decl fdecl =
   "def " ^ fdecl.ident ^ " " ^ String.concat " " fdecl.formals ^ "\n" ^ (string_of_expr fdecl.body) ^ "\n"
 
-let string_of_type_decl tdecl = 
+let string_of_type_decl tdecl =
   "type " ^ tdecl.typename ^ "= {\n" ^ String.concat "\n" (List.map string_of_expr tdecl.members) ^ "}\n"
 
 
 let string_of_program (exprs, functions, structs) =
-  "TYPE DECLS: " ^ String.concat "" (List.map string_of_type_decl structs) ^ "\n" ^ 
+  "TYPE DECLS: " ^ String.concat "" (List.map string_of_type_decl structs) ^ "\n" ^
   "FUN DECLS: " ^ String.concat "" (List.map string_of_func_decl functions) ^ "\n" ^
   "EXPRESSIONS: " ^ String.concat "\n" (List.map string_of_expr exprs) ^ "\n"
-
-

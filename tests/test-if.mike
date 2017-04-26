@@ -1,0 +1,5 @@
+
+if true then Printint(5) else Printint(10);
+if false then Printint(5) else Printint(10);
+
+Printint(15);
