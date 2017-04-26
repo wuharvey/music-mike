@@ -103,4 +103,38 @@ let apply subs t =
 ;;
 
 let rec unify constraints = 
-    match 
+    match constraints with 
+  | [] -> []
+  | (x, y) :: tl -> 
+    let t2 = unify tl in 
+    let t1 = unify_one (apply t2 x) (apply t2 y) in
+    t1 @ t2
+
+and unify_one t1 t2 =
+    match t1, t2 with
+  | TNum, TNum | TBool, TBool | TString, TString | TUnit, TUnit | TFloat, TFloat | TPitch, TPitch -> []
+  | TType(x), z | z, TType(x) -> [(x, z)] (* Not completely correct *)
+  | TList(t1), TList(t2) -> unify_one t1 t2
+  | TFun(u, v), TFun(x, y) ->
+     let l1 = List.length u and l2 = List.length x 
+     if l1 = l2 then unify ((List.combine u x) @ [(b, y)]) 
+     else raise (Failure "Mismatched Argument Count") 
+  | _ -> raise (Failure "Mismatched types")
+;;
+
+let rec apply_expr subs ae = 
+  match ae with
+  |
+  |
+  |
+;;
+
+let infer expr env = 
+  let aexpr, env = annotate_expr expr env in
+  let constraints = collect_expr aexpr in
+  let subs = unify constraints in 
+  let inferred_expr = apply_expr subs aexpr in 
+  inferred_expr, env
+;;
+
+  
