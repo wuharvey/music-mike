@@ -1,8 +1,5 @@
 %{
     open Ast
-    let first  (a,_,_) = a;;
-    let second (_,a,_) = a;;
-    let third  (_,_,a) = a;;
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
@@ -43,10 +40,9 @@ program:
   stmts EOF             { $1 }
 
 stmts:
-                        { [], [] ,[] }
-  | stmts expr  SEMI        { ($2 :: first $1), second $1, third $1 }
-  | stmts fdecl SEMI        { first $1, ($2 :: second $1), third $1 }
-  | stmts tdecl SEMI        { first $1, second $1, ($2 :: third $1) }
+                        { [], [] }
+  | stmts expr  SEMI        { ($2 :: fst $1), snd $1 }
+  | stmts tdecl SEMI        { fst $1, ($2 :: snd $1) }
                             
 
 /* "A function declaration `fdecl` consists of 
@@ -54,13 +50,14 @@ stmts:
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
 fdecl: 
-   DEF FID formals_list ASSIGN expr 
-     { { ident = $2;
+    DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }  
+    
+/*       { { ident = $2;
 	       formals = List.rev($3);
-	       body = $5 } }
+	       body = $5 } }            */
 
 tdecl: 
-   TYP ID ASSIGN LBRACE assign_list RBRACE  
+    TYP ID ASSIGN LBRACE assign_list RBRACE  
      { { typename = $2; members = $5 } }
 
 literals:
@@ -85,6 +82,7 @@ expr:
       %prec IF
       { If($2, $4, $6) }
   | ID DOTLBRACKET LITERAL RBRACKET  { Subset($1, $3) }
+  | fdecl     { $1 }
 
 binop:
   | expr PLUS    expr { Binop($1, Add,   $3) }

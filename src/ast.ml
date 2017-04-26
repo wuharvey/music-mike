@@ -6,7 +6,17 @@ type preop = Neg | Not | FNeg | OctaveUp | OctaveDown
 
 type postop = Sharp | Flat | Rhythmdot 
 
-type typ = Int | Bool | Void | Float | String | Pitch
+type typ = 
+    TUnit
+  | TInt 
+  | TBool
+  | TVoid
+  | TFloat
+  | TString
+  | TPitch
+  | TType of string
+  | TList of typ
+  | TFun of typ * typ 
 
 type bind = typ * string
 
@@ -25,23 +35,41 @@ type expr =
   | Subset of string * int
   | List of expr list
   | PList of expr list
+  | RList of expr list
   | Block of expr list
   | Concat of expr * expr
   | Noexpr
+  | Fun of string * string list * expr  
   | Unit
 
-type func_decl = {
-    ident : string;
-    formals : string list;
-    body : expr;
-  }
-
+type aexpr = 
+    ALiteral of int * typ
+  | AFloatLit of float * typ 
+  | ABoolLit of bool * typ
+  | AID of string * typ
+  | AString of string * typ
+  | ABinop of expr * op * expr * typ
+  | APreop of preop * expr * typ
+  | APostop of expr * postop * typ
+  | AAssign of string * expr * typ
+  | ACall of string * expr list * typ     
+  | AIf of expr * expr * expr * typ
+  | ASubset of string * int * typ
+  | AList of expr list * typ
+  | APList of expr list * typ
+  | ARList of expr list * typ
+  | ABlock of expr list * typ
+  | AConcat of expr * expr * typ
+  | ANoexpr
+  | AFun of string * string list * expr * typ * typ (* might be some issue with formals as string list *)
+  | AUnit 
+  
 type type_decl = {
     typename : string;
     members  : expr list;
   }
 
-type program = expr list * func_decl list * type_decl list
+type program = expr list * type_decl list
 
 (* Pretty-printing functions *)
 
