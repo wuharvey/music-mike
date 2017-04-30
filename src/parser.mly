@@ -47,7 +47,7 @@ stmts:
     a list of formals `formals_list` 
     a body which consists of an `expr` expression "*/
 fdecl: 
-    DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }  
+    DEF FID formals_list ASSIGN expr { Fun(ID($2), $3, $5) }  
     
 literals:
     LITERAL          { Literal($1) }

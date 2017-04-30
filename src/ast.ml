@@ -10,13 +10,12 @@ type typ =
     TUnit
   | TInt 
   | TBool
-  | TVoid
   | TFloat
   | TString
   | TPitch
   | TType of string
   | TList of typ
-  | TFun of typ * typ 
+  | TFun of typ list * typ 
 
 type bind = typ * string
 
@@ -30,7 +29,7 @@ type expr =
   | Preop of preop * expr
   | Postop of expr * postop
   | Assign of string * expr
-  | Call of string * expr list      
+  | Call of expr * expr list      
   | If of expr * expr * expr
   | Subset of string * int
   | List of expr list
@@ -48,21 +47,21 @@ type aexpr =
   | ABoolLit of bool * typ
   | AID of string * typ
   | AString of string * typ
-  | ABinop of expr * op * expr * typ
-  | APreop of preop * expr * typ
-  | APostop of expr * postop * typ
-  | AAssign of string * expr * typ
-  | ACall of string * expr list * typ     
-  | AIf of expr * expr * expr * typ
+  | ABinop of aexpr * op * aexpr * typ
+  | APreop of preop * aexpr * typ
+  | APostop of aexpr * postop * typ
+  | AAssign of string * aexpr * typ
+  | ACall of aexpr * aexpr list * typ     
+  | AIf of aexpr * aexpr * aexpr * typ
   | ASubset of string * int * typ
-  | AList of expr list * typ
-  | APList of expr list * typ
-  | ARList of expr list * typ
-  | ABlock of expr list * typ
-  | AConcat of expr * expr * typ
+  | AList of aexpr list * typ
+  | APList of aexpr list * typ
+  | ARList of aexpr list * typ
+  | ABlock of aexpr list * typ
+  | AConcat of aexpr * aexpr * typ
   | ANoexpr
-  | AFun of string * string list * expr * typ * typ (* might be some issue with formals as string list *)
-  | AUnit 
+  | AFun of string * string list * aexpr * typ (* might be some issue with formals as string list *)
+  | AUnit of typ 
   
 type program = expr list 
 
@@ -111,7 +110,7 @@ let rec string_of_expr = function
   | Postop(e, o) -> string_of_expr e ^ string_of_postop o
   | Assign(v, e) -> "Assign(" ^ v ^ " = " ^ (string_of_expr e) ^ ")"
   | Call(f, el) ->
-      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+      string_of_expr f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
@@ -120,15 +119,17 @@ let rec string_of_expr = function
   | Concat(e1, e2) -> string_of_expr e1 ^ "@" ^ string_of_expr e2
   | Noexpr -> ""
   | Unit -> "()"
+  | _ -> "string_of_expr not implemented for your expression yet."
 
 
 let string_of_typ = function
-    Int -> "int"
-  | Bool -> "bool"
-  | Void -> "void"
-  | Float -> "float"
-  | String -> "string"
-  | Pitch -> "pitch"
+    TInt -> "int"
+  | TBool -> "bool"
+  | TFloat -> "float"
+  | TString -> "string"
+  | TPitch -> "pitch"
+  | TUnit -> "unit"
+  | _ -> "String of type not implemented for this type yet"
 
 (*
 let string_of_func_decl fdecl =  
