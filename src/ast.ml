@@ -17,8 +17,6 @@ type typ =
   | TList of typ
   | TFun of typ list * typ 
 
-type bind = typ * string
-
 type expr =
     Literal of int
   | FloatLit of float  
@@ -64,6 +62,8 @@ type aexpr =
   | AUnit of typ 
   
 type program = expr list 
+
+type inferred_program = aexpr list
 
 (* Pretty-printing functions *)
 
@@ -121,22 +121,48 @@ let rec string_of_expr = function
   | Unit -> "()"
   | _ -> "string_of_expr not implemented for your expression yet."
 
-
-let string_of_typ = function
+let rec string_of_typ = function
     TInt -> "int"
   | TBool -> "bool"
   | TFloat -> "float"
   | TString -> "string"
   | TPitch -> "pitch"
   | TUnit -> "unit"
-  | _ -> "String of type not implemented for this type yet"
+  | TType(s) -> s
+  | TFun(t1, t2) -> String.concat " " (List.map string_of_typ t1) ^ string_of_typ t2  
+  | TList(s) -> string_of_typ s ^ " list"
 
-(*
-let string_of_func_decl fdecl =  
-  "def " ^ fdecl.ident ^ " " ^ String.concat " " fdecl.formals ^ "\n" ^ (string_of_expr fdecl.body) ^ "\n"
-*)
+let rec string_of_aexpr = function
+    ALiteral(l,t) -> string_of_int l ^ string_of_typ t
+  | AFloatLit(f,t) -> string_of_float f ^ string_of_typ t
+  | ABoolLit(true, t) -> "true" ^ string_of_typ t
+  | ABoolLit(false, t) -> "false" ^ string_of_typ t
+  | AID(s, t) -> s ^ string_of_typ t
+  | AString(s, t) -> s ^ string_of_typ t
+  | ABinop(e1, o, e2, t) ->
+      string_of_aexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_aexpr e2 ^ string_of_typ t
+  | APreop(o, e, t) -> string_of_preop o ^ string_of_aexpr e ^ string_of_typ t
+  | APostop(e, o, t) -> string_of_aexpr e ^ string_of_postop o ^ string_of_typ t
+  | AAssign(v, e, t) -> "Assign(" ^ v ^ " = " ^ (string_of_aexpr e) ^ ")" ^ string_of_typ t
+  | AFun(id, f, e, t) -> "Function" ^ string_of_typ t
+  | ACall(f, el, t) ->
+      string_of_aexpr f ^ "(" ^ String.concat ", " (List.map string_of_aexpr el) ^ ")" ^ string_of_typ t
+  | AIf(e1, e2, e3, t) -> "if " ^ string_of_aexpr e1 ^ " then " ^ string_of_aexpr
+  e2 ^ " else " ^ string_of_aexpr e3 ^ string_of_typ t
+  | ASubset(s, i, t) -> s ^ ".[" ^ string_of_int i ^ "]" ^ string_of_typ t
+  | AList(es, t) -> "[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
+  | APList(es, t) -> "p:[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
+  | ABlock(es, t) -> "{ " ^ String.concat " " (List.map string_of_aexpr es) ^ " }" ^ string_of_typ t
+  | AConcat(e1, e2, t) -> string_of_aexpr e1 ^ "@" ^ string_of_aexpr e2 ^ string_of_typ t
+  | ANoexpr -> ""
+  | AUnit(t) -> "()" ^ string_of_typ t
+  | _ -> "[string_of_aexpr not implemented.]"
 
 let string_of_program (exprs) =
   "EXPRESSIONS: " ^ String.concat "\n" (List.map string_of_expr exprs) ^ "\n"
+
+let string_of_inferred (aexprs) = 
+  "INFERRED EXPRS: " ^ String.concat "\n" (List.map string_of_aexpr aexprs) ^
+  "\n"
 
 

@@ -2,6 +2,7 @@ open Ast
 
 module StringMap = Map.Make(String)
 type environment = typ StringMap.t
+type substitutions = (typ * typ) list 
 (* TODO: Right now everything is a global *)
 
 let letter = ref (Char.code 'a');;
@@ -76,7 +77,7 @@ let rec type_of ae =
   | _               -> TUnit
 ;;
 
-let rec collect_expr ae = 
+let rec collect_expr ae : substitutions = 
     match ae with
   | ALiteral(_)     -> []
   | ABoolLit(_)     -> []
