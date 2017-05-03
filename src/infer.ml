@@ -51,6 +51,11 @@ let rec annotate_expr exp env : aexpr =
     let a_func = annotate_expr func env in
     let a_args = List.map (fun arg -> (annotate_expr arg env)) args in
     ACall(a_func, a_args, new_type ())
+  | If(pred, e1, e2) ->
+    let apred = annotate_expr pred env 
+    and e1 = annotate_expr e1 env
+    and e2 = annotate_expr e2 env in
+    AIf(apred, e1, e2, new_type ())
   | Fun(name, formals, e) ->
     (* TODO: Check for keywords being passed as args.
      * Currently, only takes first argument of function. 
@@ -75,7 +80,7 @@ let type_of ae =
   | ACall(_,_,t)    -> t
   | AFun(_,_,_,t)   -> t
   | AIf(_,_,_,t)    -> t
-  | _               -> print_string TUnit
+  | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
 
 let rec collect_expr ae : substitutions = 
@@ -178,8 +183,9 @@ let rec apply_expr subs ae =
 
 let infer expr env = 
   let aexpr = annotate_expr expr env in
-  let constraints = collect_expr aexpr in
-  let subs = unify constraints in 
+  let constraints = print_string ("[Annotated Expr:]" ^ string_of_aexpr aexpr); collect_expr aexpr in
+  let subs = 
+      List.iter (fun (a,b) -> print_string ("[Constraints:]" ^ string_of_typ a ^ string_of_typ b)) constraints; unify constraints in 
   let inferred_expr = apply_expr subs aexpr in 
   inferred_expr, env
 ;;
