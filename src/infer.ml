@@ -1,8 +1,9 @@
 open Ast
 
 module StringMap = Map.Make(String)
+module StringSet = Set.Make(String)
 type environment = typ StringMap.t
-type substitutions = (typ * typ) list 
+type constraints = (typ * typ) list 
 (* TODO: Right now everything is a global *)
 
 let letter = ref (Char.code 'a');;
@@ -11,7 +12,11 @@ let new_type () = let c1 = !letter in
   incr letter; TType(Char.escaped (Char.chr c1))
 ;;
    
-let keywords = ["if"; "then"; "else"; "true"; "false"; "def"]
+let kws = ["if"; "then"; "else"; "true"; "false"; "def"]
+;;
+
+let keywords = 
+  List.fold_left (fun set x -> StringSet.add x set) StringSet.empty kws
 ;;
 
 let rec annotate_expr exp env : (aexpr * environment) = 
@@ -37,13 +42,16 @@ let rec annotate_expr exp env : (aexpr * environment) =
     let ae, _ = annotate_expr e env
     and ntyp = new_type () in 
     APostop(ae, postop, ntyp), env
-(*  |  Assign(name, e) ->
+  | Assign(name, e) ->
+(* TODO: Assign adds a dummy type to the environment but does not update it once it is inferred!! *)
     if StringMap.mem name env
-    then raise (Failure "Reassignment")
-    else let ntyp = new_type () in 
-      StringMap.add name ntyp env in
-    let ae = annotate_expr e env in 
-    AAssign(name, e, ntyp) *)
+      then raise (Failure "Reassignment")
+      else if StringSet.mem name keywords
+      then raise (Failure "Redefining keyword")
+      else let ntyp = new_type () in 
+    let nenv = StringMap.add name ntyp env in
+    let ae, _ = annotate_expr e nenv in 
+    AAssign(name, ae, ntyp), nenv 
   | List(e_list) ->
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
     AList(ae_list, TList(new_type ())), env
@@ -63,10 +71,10 @@ let rec annotate_expr exp env : (aexpr * environment) =
     if StringMap.mem name env 
     then raise (Failure "Redefining function") 
     else let nenv = StringMap.add name env in
-    let nnenv = List.fold_left (fun id -> StringMap.add id env) nenv formals in 
+    let nnenv = List.fold_left (fun (env , id) -> StringMap.add id env) nenv formals in 
     let ae, _ = annotate_expr e nnenv 
     and t = List.map (fun term -> StringMap.find term env) formals in 
-    AFun(name, formals, ae, TFun(t, new_type())), nnenv *)
+    AFun(name, formals, ae, TFun(t, new_type())), nnenv  *)
   | _ -> AUnit(TUnit), env
 ;;
 
@@ -88,7 +96,7 @@ let type_of ae =
   | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
 
-let rec collect_expr ae : substitutions = 
+let rec collect_expr ae : constraints = 
     match ae with
   | ALiteral(_)     -> []
   | ABoolLit(_)     -> []
@@ -97,19 +105,18 @@ let rec collect_expr ae : substitutions =
   | AUnit(_)        -> []
   | AID(_)          -> []
   | ABinop(ae1, op, ae2, t) ->
-     let t1 = type_of ae1
-     and t2 = type_of ae2 in
-     let con = match op with 
-       | Add | Sub | Mult | Div -> [(t1, TInt); (t2, TInt); (t, TInt)]
-       | FAdd | FSub | FMult | FDiv ->
-         [(t1, TFloat); (t2, TFloat); (t, TFloat)]
-       | Neq | Equal | Greater | Less | Geq | Leq ->
-         [(t1, t2); (t, TBool)]
-       | And | Or -> [(t1, TBool); (t2, TBool); (t, TBool)] 
-     in 
-     (collect_expr ae1) @ (collect_expr ae2) @ con 
-(*  | AAssign(name, e, t) ->  *)
-  | AList(ae_list, t)      ->
+    let t1 = type_of ae1
+    and t2 = type_of ae2 in
+    let con = match op with 
+      | Add | Sub | Mult | Div -> [(t1, TInt); (t2, TInt); (t, TInt)]
+      | FAdd | FSub | FMult | FDiv -> [(t1, TFloat); (t2, TFloat); (t, TFloat)]
+      | Neq | Equal | Greater | Less | Geq | Leq -> [(t1, t2); (t, TBool)]
+      | And | Or -> [(t1, TBool); (t2, TBool); (t, TBool)] 
+    in 
+    (collect_expr ae1) @ (collect_expr ae2) @ con 
+
+  | AAssign(name, ae, t) -> (collect_expr ae) @ [(t, type_of ae)]
+  | AList(ae_list, t)   ->
     let list_t = match t with
       | TList(s) -> s
       | _ -> raise (Failure "Unreachable state in List literal") in
@@ -125,29 +132,32 @@ let rec collect_expr ae : substitutions =
     | _ -> raise (Failure "Unreachable state in Function literal") end
 
   | ACall(name, args, t) -> 
-          let fnt = (match name with 
-            | AID(_) -> type_of name
-            | _ -> raise (Failure "Unreachable state in Call") ) in 
-          let s = match fnt with 
-            | TFun(args_t, ret_t) -> begin
-              let l1 = List.length args and l2 = List.length args_t in
-              if l1 <> l2 then raise (Failure "Mismatched argument count")
-              else let args_c = List.map2 (fun ft at -> (ft, type_of at)) args_t args in
-                args_c @ [(t, ret_t)]
-            end
-            | TType(_) -> [(fnt, TFun(List.map type_of args, t))] 
-            | _ -> raise (Failure "Mismatched types") in 
-          (collect_expr name) @ (List.flatten (List.map collect_expr args)) @ s
+    let fnt = (match name with 
+      | AID(_) -> type_of name
+      | _ -> raise (Failure "Unreachable state in Call") ) in 
+    let s = match fnt with 
+      | TFun(args_t, ret_t) -> 
+        begin
+          let l1 = List.length args and l2 = List.length args_t in
+          if l1 <> l2 
+          then raise (Failure "Mismatched argument count")
+          else let args_c = List.map2 (fun ft at -> (ft, type_of at)) args_t args in
+          args_c @ [(t, ret_t)]
+        end
+      | TType(_) -> [(fnt, TFun(List.map type_of args, t))] 
+      | _ -> raise (Failure "Mismatched types")
+    in 
+    (collect_expr name) @ (List.flatten (List.map collect_expr args)) @ s
 
   | e -> raise (Failure ("collect_expr can't handle your expr yet" ^ string_of_aexpr e) )
 ;;
 
 let rec substitute u x t = 
     match t with 
-    | TUnit | TInt | TBool | TFloat | TPitch | TString -> t
-    | TType(c) -> if c = x then u else t
-    | TFun(t1, t2) -> TFun(List.map (substitute u x) t1, substitute u x t2)
-    | TList(t) -> TList(substitute u x t)
+  | TUnit | TInt | TBool | TFloat | TPitch | TString -> t
+  | TType(c) -> if c = x then u else t
+  | TFun(t1, t2) -> TFun(List.map (substitute u x) t1, substitute u x t2)
+  | TList(t) -> TList(substitute u x t)
 ;;
 
 let apply subs t = 
@@ -183,8 +193,7 @@ let rec apply_expr subs ae =
   | AString(value, t)        -> AString(value, apply subs t)
   | ABinop(ae1, op, ae2, t)  -> ABinop(apply_expr subs ae1, op, apply_expr subs ae2, apply subs t) 
   | AID(name, t)             -> AID(name, apply subs t)
-(*  |  AAssign(name, ae, t)    -> AAssign(name, apply_expr subs ae, apply subs
-  t) *)
+  | AAssign(name, ae, t)     -> AAssign(name, apply_expr subs ae, apply subs t) 
   | AList(ae_list, t)        -> AList(List.map (apply_expr subs) ae_list, apply subs t)
   | AFun(name, frmls, ae, t) -> AFun(name, frmls, apply_expr subs ae, apply subs t)
   | AIf(pred, ae1, ae2, t)   -> AIf(apply_expr subs pred, apply_expr subs ae1, 
@@ -202,21 +211,19 @@ let infer expr env =
   let inferred_expr =
       List.iter (fun (a,b) -> print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
       apply_expr subs aexpr in 
-  print_endline("FINAL: " ^ string_of_aexpr inferred_expr) 
-       ;inferred_expr, nenv
+  print_endline("FINAL: " ^ string_of_aexpr inferred_expr); inferred_expr, nenv
 ;;
 
 let typecheck program : (aexpr list) = 
   let env = Lib.predefined in 
-  let inferred_program, _ = ListLabels.fold_left program ~init: ([], env) 
+  let inferred_program, _ = ListLabels.fold_left (List.rev program) ~init: ([], env) 
   
   ~f: (
         fun (acc, env) expr -> 
-
-        let inferred_expr, env = 
-          infer expr env in
+        let inferred_expr, env = infer expr env in
         (inferred_expr :: acc, env)
-      ) in
-    List.rev inferred_program
+      ) 
+    
+    in List.rev inferred_program
 ;;
 
