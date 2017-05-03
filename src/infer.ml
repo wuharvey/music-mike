@@ -11,8 +11,7 @@ let new_type () = let c1 = !letter in
   incr letter; TType(Char.escaped (Char.chr c1))
 ;;
    
-let keywords = ["if"; "then"; "else"; "true"; "false"; "def"; "PrintInt";
-"PrintFloat"; "PrintString"; "Print"]
+let keywords = ["if"; "then"; "else"; "true"; "false"; "def"]
 ;;
 
 let rec annotate_expr exp env : (aexpr * environment) = 
@@ -76,6 +75,7 @@ let type_of ae =
   | AUnit(t)        -> t
   | ALiteral(_,t)   -> t
   | AFloatLit(_,t)  -> t
+  | AString(_,t)    -> t
   | ABoolLit(_,t)   -> t
   | AID(_,t)        -> t
   | ABinop(_,_,_,t) -> t
@@ -180,6 +180,8 @@ let rec apply_expr subs ae =
   | ALiteral(value, t)       -> ALiteral(value, apply subs t)
   | AFloatLit(value, t)      -> AFloatLit(value, apply subs t)
   | ABoolLit(value, t)       -> ABoolLit(value, apply subs t)
+  | AString(value, t)        -> AString(value, apply subs t)
+  | ABinop(ae1, op, ae2, t)  -> ABinop(apply_expr subs ae1, op, apply_expr subs ae2, apply subs t) 
   | AID(name, t)             -> AID(name, apply subs t)
 (*  |  AAssign(name, ae, t)    -> AAssign(name, apply_expr subs ae, apply subs
   t) *)
@@ -189,7 +191,7 @@ let rec apply_expr subs ae =
                                     apply_expr subs ae2, apply subs t)
   | ACall(fname, args, t)    -> ACall(apply_expr subs fname, List.map (apply_expr subs) 
                                         args, apply subs t)
-  | _ -> AUnit(TUnit) 
+  | e -> raise (Failure ("apply_expr not implemented for aexpr" ^ string_of_aexpr e))  
 ;;
 
 let infer expr env = 

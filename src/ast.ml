@@ -138,7 +138,7 @@ let rec string_of_typ = function
   | TPitch -> " [pitch]"
   | TUnit -> " [unit]"
   | TType(s) -> " [" ^ s ^ "]"
-  | TFun(t1, t2) -> String.concat " " (List.map string_of_typ t1) ^ string_of_typ t2  
+  | TFun(t1, t2) -> String.concat " " (List.map string_of_typ t1) ^ " ->" string_of_typ t2  
   | TList(s) -> string_of_typ s ^ "list"
 
 let rec string_of_aexpr = function
