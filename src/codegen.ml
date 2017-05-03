@@ -27,10 +27,10 @@ module StringMap = Map.Make(String)
     let third  (_,_,a) = a;; 
 
 let main_vars:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
-let function_defs:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
+let function_defs:(string, (L.llvalue * A.expr)) Hashtbl.t = Hashtbl.create 100
 
-
-let translate (exprs, functions, structs) =
+(* , functions, structs *)
+let translate (exprs) =
   let context = L.global_context () in
   
   let names:(string, L.llvalue) Hashtbl.t = Hashtbl.create 10 in
@@ -49,12 +49,13 @@ let translate (exprs, functions, structs) =
 
 
   let ltype_of_typ = function
-      A.Int     -> i32_t
-    | A.Bool    -> i1_t
-    | A.Void    -> void_t 
-    | A.Float   -> float_t 
-    | A.String  -> i8p_t in 
-                        
+      A.TInt     -> i32_t
+    | A.TBool    -> i1_t
+    (* | A.TVoid    -> void_t  *)
+    | A.TFloat   -> float_t 
+    | A.TString  -> i8p_t 
+    | A.TUnit    -> void_t in
+
 
   (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -70,7 +71,7 @@ let translate (exprs, functions, structs) =
       print_string("hello")
   in *)
 
-  let function_decls =
+(*   let function_decls =
     let function_decl m fdecl =
       let name = fdecl.A.ident
       (* and formal_types =
@@ -78,9 +79,9 @@ let translate (exprs, functions, structs) =
       in let ftype = L.function_type i32_t [||] in
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in
+ *)
 
-
-  let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.Int) [||]) the_module in
+  let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.TInt) [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block default_fun) in
 
 
@@ -207,14 +208,14 @@ let translate (exprs, functions, structs) =
                 ignore (L.build_store e' var builder); e' 
 
 
-    | A.Call ("Printint", [e]) ->
+    | A.Call (A.ID("Printint"), [e]) ->
        L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
-    | A.Call ("Printstr", [e]) ->
+    | A.Call (A.ID("Printstr"), [e]) ->
        L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
-    | A.Call ("Printfloat", [e]) ->
+    | A.Call (A.ID("Printfloat"), [e]) ->
        L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
-    | A.Call (f, act) ->
-       let (fdef, fdecl) = StringMap.find f function_decls in
+    | A.Call (A.ID(s), act) ->
+       let (fdef, fdecl) = Hashtbl.find function_defs s  in
        let actuals = List.rev (List.map (expr builder) (List.rev act)) in
 (* let result = (match fdecl.A.typ with A.Void -> ""
     | _ -> f ^ "_result") in *)
@@ -234,8 +235,15 @@ let translate (exprs, functions, structs) =
           ignore(L.build_cond_br bool_val then_bb else_bb builder); 
           L.position_at_end merge_bb builder;
             L.const_int i32_t 1 
-
-
+    | A.Fun(fid, arg_list, e) -> 
+      (* and formal_types =
+  Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.A.formals) *)
+      let ftype = L.function_type i32_t [||] in
+      let the_function = L.define_function fid ftype the_module in
+      Hashtbl.add function_defs fid (the_function, A.Fun(fid, arg_list, e)); 
+      let builder2 = L.builder_at_end context (L.entry_block the_function) in 
+      let ret_val = expr builder2 e in 
+        L.build_ret ret_val builder2
 
 
     | _ -> L.const_int i32_t 1
@@ -244,7 +252,7 @@ let translate (exprs, functions, structs) =
   in
     let builder = List.fold_left exprbuilder builder (List.rev(exprs))
 
-  in
+  in(* 
   let build_fun_body fdecl = 
     let (the_function, _) = StringMap.find fdecl.A.ident function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in 
@@ -252,6 +260,6 @@ let translate (exprs, functions, structs) =
     ignore(L.build_ret ret_val builder)
   in
     List.iter build_fun_body functions; 
-
+ *)
   ignore (L.build_ret (L.const_int i32_t 0) builder);
   the_module
