@@ -75,8 +75,8 @@ let type_of ae =
   | ACall(_,_,t)    -> t
   | AFun(_,_,_,t)   -> t
   | AIf(_,_,_,t)    -> t
-  | _               -> print_string TUnit
-;;
+(*   | _               -> print_string TUnit
+ *);;
 
 let rec collect_expr ae : substitutions = 
     match ae with
