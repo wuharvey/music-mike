@@ -74,6 +74,7 @@ expr:
   | unop      { $1 }
   | primaries { $1 }
   | fdecl     { $1 }
+  | LPAREN expr RPAREN { $2 }
   
 literals:
     LITERAL          { Literal($1) }

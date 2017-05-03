@@ -15,28 +15,28 @@ let keywords = ["if"; "then"; "else"; "true"; "false"; "def"; "PrintInt";
 "PrintFloat"; "PrintString"; "Print"]
 ;;
 
-let rec annotate_expr exp env : aexpr = 
+let rec annotate_expr exp env : (aexpr * environment) = 
     match exp with
-  | Unit        -> AUnit(TUnit)
-  | Literal(n)  -> ALiteral(n, TInt)
-  | FloatLit(n) -> AFloatLit(n, TFloat)
-  | BoolLit(n)  -> ABoolLit(n, TBool)
+  | Unit        -> AUnit(TUnit), env
+  | Literal(n)  -> ALiteral(n, TInt), env
+  | FloatLit(n) -> AFloatLit(n, TFloat), env
+  | BoolLit(n)  -> ABoolLit(n, TBool), env
   | ID(n)       -> if StringMap.mem n env 
-                   then AID(n, StringMap.find n env)
+                   then AID(n, StringMap.find n env), env
                    else raise Not_found
   | Binop(e1, op, e2) -> 
-    let ae1 = annotate_expr e1 env 
-    and ae2 = annotate_expr e2 env
+    let ae1, _ = annotate_expr e1 env 
+    and ae2, _ = annotate_expr e2 env
     and ntyp = new_type () in
-    ABinop(ae1, op, ae2, ntyp)
+    ABinop(ae1, op, ae2, ntyp), env
   | Preop(preop, e) -> 
-    let ae = annotate_expr e env
+    let ae, _ = annotate_expr e env
     and ntyp = new_type () in
-    APreop(preop, ae, ntyp)
+    APreop(preop, ae, ntyp), env
   | Postop(e, postop) ->
-    let ae = annotate_expr e env
+    let ae, _ = annotate_expr e env
     and ntyp = new_type () in 
-    APostop(ae, postop, ntyp)
+    APostop(ae, postop, ntyp), env
 (*  |  Assign(name, e) ->
     if StringMap.mem name env
     then raise (Failure "Reassignment")
@@ -45,25 +45,29 @@ let rec annotate_expr exp env : aexpr =
     let ae = annotate_expr e env in 
     AAssign(name, e, ntyp) *)
   | List(e_list) ->
-    let ae_list = List.map (fun e -> (annotate_expr e env)) e_list in 
-    AList(ae_list, TList(new_type ()))
+    let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
+    AList(ae_list, TList(new_type ())), env
   | Call(func, args) ->
-    let a_func = annotate_expr func env in
-    let a_args = List.map (fun arg -> (annotate_expr arg env)) args in
-    ACall(a_func, a_args, new_type ())
+    let a_func, _ = annotate_expr func env in
+    let a_args = List.map (fun arg -> fst (annotate_expr arg env)) args in
+    ACall(a_func, a_args, new_type ()), env
   | If(pred, e1, e2) ->
-    let apred = annotate_expr pred env 
-    and e1 = annotate_expr e1 env
-    and e2 = annotate_expr e2 env in
-    AIf(apred, e1, e2, new_type ())
-  | Fun(name, formals, e) ->
+    let apred, _ = annotate_expr pred env 
+    and e1, _ = annotate_expr e1 env
+    and e2, _ = annotate_expr e2 env in
+    AIf(apred, e1, e2, new_type ()), env
+(*  | Fun(name, formals, e) ->
     (* TODO: Check for keywords being passed as args.
      * Currently, only takes first argument of function. 
      * So only test with one argument functions. *)
-    let ae = annotate_expr e env 
+    if StringMap.mem name env 
+    then raise (Failure "Redefining function") 
+    else let nenv = StringMap.add name env in
+    let nnenv = List.fold_left StringMap.add 
+    let ae, _ = annotate_expr e env 
     and t = List.map (fun term -> StringMap.find term env) formals in 
-    AFun(name, formals, ae, TFun(t, new_type())) 
-  | _ -> AUnit(TUnit)
+    AFun(name, formals, ae, TFun(t, new_type())), nenv *)
+  | _ -> AUnit(TUnit), env
 ;;
 
 let type_of ae = 
@@ -182,12 +186,12 @@ let rec apply_expr subs ae =
 ;;
 
 let infer expr env = 
-  let aexpr = annotate_expr expr env in
+  let aexpr, nenv = annotate_expr expr env in
   let constraints = print_string ("[Annotated Expr:]" ^ string_of_aexpr aexpr); collect_expr aexpr in
   let subs = 
       List.iter (fun (a,b) -> print_string ("[Constraints:]" ^ string_of_typ a ^ string_of_typ b)) constraints; unify constraints in 
   let inferred_expr = apply_expr subs aexpr in 
-  inferred_expr, env
+  inferred_expr, nenv
 ;;
 
 let typecheck program : (aexpr list) = 
