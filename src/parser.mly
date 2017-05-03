@@ -60,7 +60,7 @@ stmts:
     a body which consists of an `expr` expression "*/
 
 fdecl: 
-    DEF FID formals_list ASSIGN expr { Fun(ID($2), $3, $5) }  
+    DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }  
     
 /* "expressions always return a value and consists of:
 	literals-basic types
@@ -115,7 +115,7 @@ primaries:
 
     LBRACE semi_list RBRACE { Block(List.rev($2)) }
 	/* "Calling a function "*/
-  | FID LPAREN actuals_list RPAREN   { Call($1, $3) }
+  | FID LPAREN actuals_list RPAREN   { Call(ID($1), $3) }
 	/* "Assigning a value to an variable"*/       
   | assign          { $1 }
 	/* "list of expressions of same type (enforced in semant.ml)" */
