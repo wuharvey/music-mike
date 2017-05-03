@@ -61,7 +61,7 @@ let rec annotate_expr exp env : aexpr =
   | _ -> AUnit(TUnit)
 ;;
 
-let rec type_of ae = 
+let type_of ae = 
     match ae with
   | AUnit(t)        -> t
   | ALiteral(_,t)   -> t
@@ -73,15 +73,19 @@ let rec type_of ae =
   | APostop(_,_,t)  -> t
   | AAssign(_,_,t)  -> t
   | ACall(_,_,t)    -> t
-  | AFun(_,_,_,t)     -> t
-  | _               -> TUnit
+  | AFun(_,_,_,t)   -> t
+  | AIf(_,_,_,t)    -> t
+  | _               -> print_string TUnit
 ;;
 
 let rec collect_expr ae : substitutions = 
     match ae with
   | ALiteral(_)     -> []
   | ABoolLit(_)     -> []
-  | AID(_)         -> []
+  | AFloatLit(_)    -> []
+  | AString(_)      -> []
+  | AUnit(_)        -> []
+  | AID(_)          -> []
   | ABinop(ae1, op, ae2, t) ->
      let t1 = type_of ae1
      and t2 = type_of ae2 in
@@ -119,7 +123,7 @@ let rec collect_expr ae : substitutions =
             | _ -> raise (Failure "Mismatched types") in 
           (collect_expr name) @ (List.flatten (List.map collect_expr args)) @ s
 
-  | _ -> raise (Failure "collect_expr can't handle your expr yet")
+  | e -> raise (Failure ("collect_expr can't handle your expr yet" ^ string_of_aexpr e) )
 ;;
 
 let rec substitute u x t = 
@@ -180,4 +184,17 @@ let infer expr env =
   inferred_expr, env
 ;;
 
+let typecheck program : (aexpr list) = 
+  let env = Lib.predefined in 
+  let inferred_program, _ = ListLabels.fold_left program ~init: ([], env) 
+  
+  ~f: (
+        fun (acc, env) expr -> 
+
+        let inferred_expr, env = 
+          infer expr env in
+        (inferred_expr :: acc, env)
+      ) in
+    List.rev inferred_program
+;;
 
