@@ -1,17 +1,10 @@
- 
-    let first  (a,_,_) = a;; 
-    let second (_,a,_) = a;; 
-    let third  (_,_,a) = a;; 
-
 (* Abstract Syntax Tree and functions for printing it *)
 
 type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Less | Leq | Greater | Geq | And | Or
 
 type preop = Neg | Not | FNeg 
 
-
 type postop = Rhythmdot 
-
 
 type typ = 
     TUnit
@@ -98,14 +91,14 @@ let string_of_preop = function
     Neg -> "-"
   | Not -> "!"
   | FNeg -> "-"
-(*  | OctaveUp -> "^"
-  | OctaveDown -> "v"
+(*| OctaveUp -> "^"
+  | OctaveDown -> "v" *)
 
 let string_of_postop = function
-    Sharp -> "#"
-  | Flat -> "b"
+(*    Sharp -> "#"
+  | Flat -> "b" *)
   | Rhythmdot -> "o"
-*)
+
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | FloatLit(f) -> string_of_float f
