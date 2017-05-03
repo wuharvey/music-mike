@@ -21,6 +21,7 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | Literal(n)  -> ALiteral(n, TInt), env
   | FloatLit(n) -> AFloatLit(n, TFloat), env
   | BoolLit(n)  -> ABoolLit(n, TBool), env
+  | String(n)   -> AString(n, TString), env
   | ID(n)       -> if StringMap.mem n env 
                    then AID(n, StringMap.find n env), env
                    else raise Not_found
@@ -63,10 +64,10 @@ let rec annotate_expr exp env : (aexpr * environment) =
     if StringMap.mem name env 
     then raise (Failure "Redefining function") 
     else let nenv = StringMap.add name env in
-    let nnenv = List.fold_left StringMap.add 
-    let ae, _ = annotate_expr e env 
+    let nnenv = List.fold_left (fun id -> StringMap.add id env) nenv formals in 
+    let ae, _ = annotate_expr e nnenv 
     and t = List.map (fun term -> StringMap.find term env) formals in 
-    AFun(name, formals, ae, TFun(t, new_type())), nenv *)
+    AFun(name, formals, ae, TFun(t, new_type())), nnenv *)
   | _ -> AUnit(TUnit), env
 ;;
 
@@ -108,6 +109,12 @@ let rec collect_expr ae : substitutions =
      in 
      (collect_expr ae1) @ (collect_expr ae2) @ con 
 (*  | AAssign(name, e, t) ->  *)
+  | AList(ae_list, t)      ->
+    let list_t = match t with
+      | TList(s) -> s
+      | _ -> raise (Failure "Unreachable state in List literal") in
+    let con = List.map (fun aexpr -> (list_t, type_of aexpr)) ae_list in 
+    (List.flatten (List.map collect_expr ae_list)) @ con
   | AIf(pred, ae1, ae2, t) ->
     let pt = type_of pred and t1 = type_of ae1 and t2 = type_of ae2 in
     let con = [(pt, TBool); (t1, t2); (t, t1)] in 
@@ -170,28 +177,31 @@ and unify_one t1 t2 =
 
 let rec apply_expr subs ae = 
   match ae with
-  | ALiteral(value, t)      -> ALiteral(value, apply subs t)
-  | AFloatLit(value, t)     -> AFloatLit(value, apply subs t)
-  | ABoolLit(value, t)      -> ABoolLit(value, apply subs t)
-  | AID(name, t)            -> AID(name, apply subs t)
+  | ALiteral(value, t)       -> ALiteral(value, apply subs t)
+  | AFloatLit(value, t)      -> AFloatLit(value, apply subs t)
+  | ABoolLit(value, t)       -> ABoolLit(value, apply subs t)
+  | AID(name, t)             -> AID(name, apply subs t)
 (*  |  AAssign(name, ae, t)    -> AAssign(name, apply_expr subs ae, apply subs
   t) *)
-  | AFun(name, frmls, ae, t) 
-                            -> AFun(name, frmls, apply_expr subs ae, apply subs t)
-  | AIf(pred, ae1, ae2, t)  -> AIf(apply_expr subs pred, apply_expr subs ae1, 
+  | AList(ae_list, t)        -> AList(List.map (apply_expr subs) ae_list, apply subs t)
+  | AFun(name, frmls, ae, t) -> AFun(name, frmls, apply_expr subs ae, apply subs t)
+  | AIf(pred, ae1, ae2, t)   -> AIf(apply_expr subs pred, apply_expr subs ae1, 
                                     apply_expr subs ae2, apply subs t)
-  | ACall(fname, args, t)   -> ACall(apply_expr subs fname, List.map (apply_expr subs) 
+  | ACall(fname, args, t)    -> ACall(apply_expr subs fname, List.map (apply_expr subs) 
                                         args, apply subs t)
   | _ -> AUnit(TUnit) 
 ;;
 
 let infer expr env = 
   let aexpr, nenv = annotate_expr expr env in
-  let constraints = print_string ("[Annotated Expr:]" ^ string_of_aexpr aexpr); collect_expr aexpr in
+  let constraints = print_endline ("AEXPR: " ^ string_of_aexpr aexpr); collect_expr aexpr in
   let subs = 
-      List.iter (fun (a,b) -> print_string ("[Constraints:]" ^ string_of_typ a ^ string_of_typ b)) constraints; unify constraints in 
-  let inferred_expr = apply_expr subs aexpr in 
-  inferred_expr, nenv
+      List.iter (fun (a,b) -> print_endline ("CONSTRAINTS: " ^ string_of_typ a ^ " "  ^ string_of_typ b)) constraints; unify constraints in 
+  let inferred_expr =
+      List.iter (fun (a,b) -> print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
+      apply_expr subs aexpr in 
+  print_endline("FINAL: " ^ string_of_aexpr inferred_expr) 
+       ;inferred_expr, nenv
 ;;
 
 let typecheck program : (aexpr list) = 
