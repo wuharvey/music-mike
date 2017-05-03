@@ -1,8 +1,5 @@
 %{
     open Ast
-    let first  (a,_,_) = a;;
-    let second (_,a,_) = a;;
-    let third  (_,_,a) = a;;
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
@@ -33,7 +30,6 @@
 %left CONCAT
 %right NOT NEG
 
-
 %start program
 %type <Ast.program> program
 
@@ -52,14 +48,10 @@ the second field being a list of function declarations (fdecl), and the
 third field being a list of type declaratiosn (tdecl)" */
 
 stmts:
-                        { [], [] ,[] }
-
-  | stmts expr  SEMI        { ($2 :: first $1), second $1, third $1 }
-  | stmts fdecl SEMI        { first $1, ($2 :: second $1), third $1 }
-  | stmts tdecl SEMI        { first $1, second $1, ($2 :: third $1) }
+                        { [] }
+  | stmts expr  SEMI    { $2 :: $1 }
 
                             
-
 /* "A function declaration `fdecl` consists of 
     a keyword 'Def'
 
@@ -67,26 +59,9 @@ stmts:
     a list of formals `formals_list`
     a body which consists of an `expr` expression "*/
 
-fdecl:
-   DEF FID formals_list ASSIGN expr
-
-       { { ident = $2;
-	       formals = List.rev($3);
-	       body = $5 } }
-
-
-/* "A type declaration 'tdecl' consists of 
-	a keyword 'type'
-	a type identifier
-	a list of assingments 'assign_list' "*/
-
-tdecl: 
-   TYP ID ASSIGN LBRACE assign_list RBRACE  
-
-     { { typename = $2; members = $5 } }
-
-
-
+fdecl: 
+    DEF FID formals_list ASSIGN expr { Fun(ID($2), $3, $5) }  
+    
 /* "expressions always return a value and consists of:
 	literals-basic types
 	binop-binary operator
@@ -98,7 +73,8 @@ expr:
   | binop     { $1 }
   | unop      { $1 }
   | primaries { $1 }
-
+  | fdecl     { $1 }
+  
 literals:
     LITERAL          { Literal($1) }
   | FLITERAL         { FloatLit($1) }
