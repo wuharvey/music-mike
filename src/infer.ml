@@ -42,7 +42,7 @@ let rec annotate_expr exp env : (aexpr * environment) =
     let ae, _ = annotate_expr e env
     and ntyp = new_type () in 
     APostop(ae, postop, ntyp), env
-  | Assign(name, e) ->
+  | Assign(name, e) -> 
 (* TODO: Assign adds a dummy type to the environment but does not update it once it is inferred!! *)
     if StringMap.mem name env
       then raise (Failure "Reassignment")
@@ -221,6 +221,11 @@ let typecheck program : (aexpr list) =
   ~f: (
         fun (acc, env) expr -> 
         let inferred_expr, env = infer expr env in
+        let inferred_expr, env = match inferred_expr with
+          | AAssign(name, ae, t) -> 
+            let env = StringMap.add name t env in
+            inferred_expr, env
+          | _ -> inferred_expr, env in  
         (inferred_expr :: acc, env)
       ) 
     

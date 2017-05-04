@@ -13,6 +13,7 @@ type typ =
   | TFloat
   | TString
   | TPitch
+  | TChord
   | TType of string
   | TList of typ
   | TFun of typ list * typ 
