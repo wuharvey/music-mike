@@ -118,11 +118,24 @@ let rec string_of_expr = function
   | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
 
-  | ChordList(cs) -> "broken" (*let string_of_pitch i j k = string_of_int i ^ string_of_expr j^ string_of_int k in
-		let rec string_of_chord el= function 
-	          [] -> ""
-	        | p :: ps -> "(" ^ string_of_pitch( fst p second p third p) ^ ")" ^ "|" ^ string_of_chord ps
-	      in "p:[ " ^ String.concat " " (List.map string_of_chord  cs) ^ " ]" *)
+  | ChordList(cs) -> 
+    let string_of_chord ps = 
+      let string_of_pitch (i1, e, i2) = 
+        if i1 < 0 && i2 < 0 then 
+          (String.make (abs i1) 'v') ^ (string_of_expr e) ^ (String.make (abs i2) 'b')
+        else 
+        if i1 < 0 && i2 >= 0 then 
+          (String.make (abs i1) 'v') ^ (string_of_expr e) ^ (String.make (abs i2) '#')
+        else 
+        if i1 >= 0 && i2 < 0 then 
+          (String.make (abs i1) '^') ^ (string_of_expr e) ^ (String.make (abs i2) 'b')
+        else 
+          (String.make (abs i1) '^') ^ (string_of_expr e) ^ (String.make (abs i2) '#')
+      in
+        String.concat "|" (List.map string_of_pitch ps) 
+    in
+    "p:[" ^ String.concat " " (List.map string_of_chord cs) ^ " ]"
+
 
   | RList(es) -> "r:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
   | Block(es) -> "{ " ^ String.concat " " (List.map string_of_expr es) ^ " }"

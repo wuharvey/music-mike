@@ -96,6 +96,7 @@ let type_of ae =
   | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
 
+
 let rec collect_expr ae : constraints = 
     match ae with
   | ALiteral(_)     -> []
