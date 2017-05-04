@@ -89,6 +89,8 @@ let translate (exprs) =
   let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
   let float_format = L.build_global_stringptr "%f\n" "flt" builder in 
+  let char_no_line = L.build_global_stringptr "%c" "str" builder in 
+  let int_no_line = L.build_global_stringptr "%d " "fmt" builder in 
   let rec expr builder = function
       A.Literal(i) ->  L.const_int i32_t i
     | A.FloatLit f -> L.const_float float_t f 
@@ -118,14 +120,17 @@ let translate (exprs) =
 	    | A.Geq     -> L.build_icmp L.Icmp.Sge
     ) e1' e2' "tmp" builder
     | A.List(es)    -> 
-          let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
-          in 
+(*       let arty = L.array_type i32_t (List.length es) in  *)
+        let arr = L.build_array_alloca i32_t (L.const_int i32_t (List.length es)) "array" builder in 
+          (* let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
+          in  *)
             let deal_with_element index e =  
-              let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "elem" builder in 
+              let pointer = L.build_gep arr [| (L.const_int i32_t index)|] "elem" builder in 
               let e' = expr builder e in 
                 ignore(L.build_store e' pointer builder)
             in
-             List.iteri deal_with_element es;  arr_malloc
+             List.iteri deal_with_element es; (*  print_endline (L.string_of_llvalue (L.size_of (L.type_of arr))); *)  arr
+(*         L.const_array i32_t (Array.of_list(List.map (expr builder) es)) *)
     | A.Subset(s, index)  ->
           let var = try Hashtbl.find main_vars s
                     with Not_found -> raise (Failure (s ^ " Not Found!"))
@@ -199,7 +204,7 @@ let translate (exprs) =
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
                     let local_var = L.build_alloca (match e with 
-                          A.List(es) -> Hashtbl.add array_lengths s (List.length es); i32p_t
+                          A.List(es) -> Hashtbl.add array_lengths s (List.length es); (* L.array_type i32_t (List.length es) *) i32p_t
 		                    | A.RList(_) -> floatp_t 
                         | A.ChordList(_) -> i32ppp_t
                         | _ -> i32_t) s builder in 
@@ -213,29 +218,15 @@ let translate (exprs) =
     | A.Call (A.ID("Printfloat"), [e]) ->
        L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
     | A.Call (A.ID("Printlist"), [A.ID(s)]) ->
-       let e' = expr builder (A.ID(s)) in
+       let e' = expr builder (A.ID(s)) in(*  print_string (L.string_of_llvalue e'); *)
        let len = try Hashtbl.find array_lengths s
                     with Not_found -> raise (Failure ("Array Not Found!")) in 
-        let arr_malloc = L.build_array_malloc (i8_t) (L.const_int i32_t (2*len + 3)) "array" builder
-          in 
-            let pointer0 = L.build_gep arr_malloc [| (L.const_int i32_t 0)|] "elem" builder in 
-            let pointer2 = L.build_gep arr_malloc [| (L.const_int i32_t (2*len))|] "elem" builder in 
-            let deal_with_element index = 
-              let pointer1 = L.build_gep e' [| (L.const_int i32_t index)|] "elem" builder and 
-              pointer1s = L.build_gep arr_malloc [| (L.const_int i32_t (2*index + 1)) |] "elem" builder and 
-              pointer2s = L.build_gep arr_malloc [| (L.const_int i32_t (2*index + 2)) |] "elem" builder in
-              let val1 = L.build_load pointer1 "val1" builder in
-                let val2 = L.build_trunc val1 i8_t "val2" builder in 
-                ignore(L.build_store val2 pointer1s builder); ignore(L.build_store (L.const_int i8_t 32) pointer2s builder); 
-            in ignore(L.build_store (L.const_int i8_t 91) pointer0 builder); 
-               List.iter deal_with_element (range 0 (len-1)); ignore(L.build_store (L.const_int i8_t 93) pointer2 builder); 
-              L.build_call printf_func [| str_format ; arr_malloc  |] "printf" builder
+        let deal_with_element index = 
+          let pointer1 = L.build_gep e' [| (L.const_int i32_t index)|] "elem" builder in
+          let val1 = L.build_load pointer1 "val" builder in
+            ignore(L.build_call printf_func [|int_no_line; val1 |] "printf" builder) in 
+        List.iter deal_with_element (range 0 (len-2)); L.const_int i32_t 1
 
-
-
-(*             let len_lv = expr builder (A.Literal(len)) in
-              L.build_call printf_func [| int_format_str ; len_lv  |] "printf" builder
- *)
     | A.Call (A.ID(s), act) ->
        let (fdef, fdecl) = Hashtbl.find function_defs s  in
        let actuals = List.rev (List.map (expr builder) (List.rev act)) in
