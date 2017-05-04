@@ -20,7 +20,7 @@ let keywords =
 ;;
 
 let rec annotate_expr exp env : (aexpr * environment) = 
-    match exp with
+  match exp with
   | Unit        -> AUnit(TUnit), env
   | Literal(n)  -> ALiteral(n, TInt), env
   | FloatLit(n) -> AFloatLit(n, TFloat), env
@@ -43,7 +43,6 @@ let rec annotate_expr exp env : (aexpr * environment) =
     and ntyp = new_type () in 
     APostop(ae, postop, ntyp), env
   | Assign(name, e) -> 
-(* TODO: Assign adds a dummy type to the environment but does not update it once it is inferred!! *)
     if StringMap.mem name env
       then raise (Failure "Reassignment")
       else if StringSet.mem name keywords
@@ -64,7 +63,7 @@ let rec annotate_expr exp env : (aexpr * environment) =
     and e1, _ = annotate_expr e1 env
     and e2, _ = annotate_expr e2 env in
     AIf(apred, e1, e2, new_type ()), env
-(*  | Fun(name, formals, e) ->
+  | Fun(name, formals, e) ->
     (* TODO: Check for keywords being passed as args.
      * Currently, only takes first argument of function. 
      * So only test with one argument functions. *)
@@ -74,12 +73,12 @@ let rec annotate_expr exp env : (aexpr * environment) =
     let nnenv = List.fold_left (fun (env , id) -> StringMap.add id env) nenv formals in 
     let ae, _ = annotate_expr e nnenv 
     and t = List.map (fun term -> StringMap.find term env) formals in 
-    AFun(name, formals, ae, TFun(t, new_type())), nnenv  *)
+    AFun(name, formals, ae, TFun(t, new_type())), nnenv  
   | _ -> AUnit(TUnit), env
 ;;
 
 let type_of ae = 
-    match ae with
+  match ae with
   | AUnit(t)        -> t
   | ALiteral(_,t)   -> t
   | AFloatLit(_,t)  -> t
@@ -97,7 +96,7 @@ let type_of ae =
 ;;
 
 let rec collect_expr ae : constraints = 
-    match ae with
+  match ae with
   | ALiteral(_)     -> []
   | ABoolLit(_)     -> []
   | AFloatLit(_)    -> []
@@ -153,7 +152,7 @@ let rec collect_expr ae : constraints =
 ;;
 
 let rec substitute u x t = 
-    match t with 
+  match t with 
   | TUnit | TInt | TBool | TFloat | TPitch | TString -> t
   | TType(c) -> if c = x then u else t
   | TFun(t1, t2) -> TFun(List.map (substitute u x) t1, substitute u x t2)
@@ -165,7 +164,7 @@ let apply subs t =
 ;;
 
 let rec unify constraints = 
-    match constraints with 
+  match constraints with 
   | [] -> []
   | (x, y) :: tl -> 
     let t2 = unify tl in 
@@ -173,15 +172,16 @@ let rec unify constraints =
     t1 @ t2
 
 and unify_one t1 t2 =
-    match t1, t2 with
-  | TInt, TInt | TBool, TBool | TString, TString | TUnit, TUnit | TFloat, TFloat | TPitch, TPitch -> []
+  match t1, t2 with
+  | TInt, TInt | TBool, TBool | TString, TString 
+  | TUnit, TUnit | TFloat, TFloat | TPitch, TPitch -> []
   | TType(x), z | z, TType(x) -> [(x, z)] (* Not completely correct *)
   | TList(t1), TList(t2) -> unify_one t1 t2
   | TFun(u, v), TFun(x, y) ->
-     let l1 = List.length u and l2 = List.length x in
-     if l1 = l2 then unify ((List.combine u x) @ [(v, y)])  (* Double check if
+    let l1 = List.length u and l2 = List.length x in
+    if l1 = l2 then unify ((List.combine u x) @ [(v, y)])  (* Double check if
          args are correct *)
-     else raise (Failure "Mismatched Argument Count") 
+    else raise (Failure "Mismatched Argument Count") 
   | _ -> raise (Failure "Mismatched types")
 ;;
 
@@ -191,32 +191,46 @@ let rec apply_expr subs ae =
   | AFloatLit(value, t)      -> AFloatLit(value, apply subs t)
   | ABoolLit(value, t)       -> ABoolLit(value, apply subs t)
   | AString(value, t)        -> AString(value, apply subs t)
-  | ABinop(ae1, op, ae2, t)  -> ABinop(apply_expr subs ae1, op, apply_expr subs ae2, apply subs t) 
+  | ABinop(ae1, op, ae2, t)  -> 
+      ABinop(apply_expr subs ae1, op, apply_expr subs ae2, apply subs t) 
   | AID(name, t)             -> AID(name, apply subs t)
-  | AAssign(name, ae, t)     -> AAssign(name, apply_expr subs ae, apply subs t) 
-  | AList(ae_list, t)        -> AList(List.map (apply_expr subs) ae_list, apply subs t)
-  | AFun(name, frmls, ae, t) -> AFun(name, frmls, apply_expr subs ae, apply subs t)
-  | AIf(pred, ae1, ae2, t)   -> AIf(apply_expr subs pred, apply_expr subs ae1, 
-                                    apply_expr subs ae2, apply subs t)
-  | ACall(fname, args, t)    -> ACall(apply_expr subs fname, List.map (apply_expr subs) 
-                                        args, apply subs t)
-  | e -> raise (Failure ("apply_expr not implemented for aexpr" ^ string_of_aexpr e))  
+  | AAssign(name, ae, t)     -> 
+      AAssign(name, apply_expr subs ae, apply subs t) 
+  | AList(ae_list, t)        -> 
+      AList(List.map (apply_expr subs) ae_list, apply subs t)
+  | AFun(name, frmls, ae, t) -> 
+      AFun(name, frmls, apply_expr subs ae, apply subs t)
+  | AIf(pred, ae1, ae2, t)   -> 
+      AIf(apply_expr subs pred, apply_expr subs ae1, 
+          apply_expr subs ae2, apply subs t)
+  | ACall(fname, args, t)    -> 
+      ACall(apply_expr subs fname, 
+            List.map (apply_expr subs) args, apply subs t)
+  | e -> raise (Failure ("No apply_expr for AEXPR:" ^ string_of_aexpr e))  
 ;;
 
 let infer expr env = 
   let aexpr, nenv = annotate_expr expr env in
-  let constraints = print_endline ("AEXPR: " ^ string_of_aexpr aexpr); collect_expr aexpr in
+  let constraints = 
+    print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
+    collect_expr aexpr in
   let subs = 
-      List.iter (fun (a,b) -> print_endline ("CONSTRAINTS: " ^ string_of_typ a ^ " "  ^ string_of_typ b)) constraints; unify constraints in 
+    List.iter (fun (a,b) -> 
+      print_endline 
+      ("CONSTRAINTS: " ^ string_of_typ a ^ " "  ^ string_of_typ b)) constraints;
+      unify constraints in 
   let inferred_expr =
-      List.iter (fun (a,b) -> print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
-      apply_expr subs aexpr in 
+      List.iter (fun (a,b) -> 
+        print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
+        apply_expr subs aexpr in 
   print_endline("FINAL: " ^ string_of_aexpr inferred_expr); inferred_expr, nenv
 ;;
 
 let typecheck program : (aexpr list) = 
   let env = Lib.predefined in 
-  let inferred_program, _ = ListLabels.fold_left (List.rev program) ~init: ([], env) 
+  let inferred_program, _ = ListLabels.fold_left (List.rev program) 
+  
+  ~init: ([], env) 
   
   ~f: (
         fun (acc, env) expr -> 
