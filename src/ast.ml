@@ -13,6 +13,7 @@ type typ =
   | TFloat
   | TString
   | TPitch
+  | TChord
   | TType of string
   | TList of typ
   | TFun of typ list * typ 
@@ -144,15 +145,15 @@ let rec string_of_expr = function
   | _ -> "string_of_expr not implemented for your expression yet."
 
 let rec string_of_typ = function
-    TInt -> "int"
-  | TBool -> "bool"
-  | TFloat -> "float"
-  | TString -> "string"
-  | TPitch -> "pitch"
-  | TUnit -> "unit"
-  | TType(s) -> s
-  | TFun(t1, t2) -> String.concat " " (List.map string_of_typ t1) ^ string_of_typ t2  
-  | TList(s) -> string_of_typ s ^ " list"
+    TInt -> " [int]"
+  | TBool -> " [bool]"
+  | TFloat -> " [float]"
+  | TString -> " [string]"
+  | TPitch -> " [pitch]"
+  | TUnit -> " [unit]"
+  | TType(s) -> " [" ^ s ^ "]"
+  | TFun(t1, t2) -> String.concat " " (List.map string_of_typ t1) ^ " ->" ^ string_of_typ t2  
+  | TList(s) -> string_of_typ s ^ "list"
 
 let rec string_of_aexpr = function
     ALiteral(l,t) -> string_of_int l ^ string_of_typ t
