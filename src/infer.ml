@@ -6,6 +6,8 @@ type environment = typ StringMap.t
 type constraints = (typ * typ) list 
 (* TODO: Right now everything is a global *)
 
+let flag = ref (true);;
+
 let letter = ref (Char.code 'a');;
 
 let new_type () = let c1 = !letter in
@@ -217,19 +219,24 @@ let rec apply_expr subs ae =
 
 let infer expr env = 
   let aexpr, nenv = annotate_expr expr env in
-  let constraints = 
-    print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
+  let constraints =
+    if !flag
+    then print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
     collect_expr aexpr in
   let subs = 
     List.iter (fun (a,b) -> 
+      if !flag then
       print_endline 
       ("CONSTRAINTS: " ^ string_of_typ a ^ " "  ^ string_of_typ b)) constraints;
       unify constraints in 
   let inferred_expr =
       List.iter (fun (a,b) -> 
+        if !flag then
         print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
         apply_expr subs aexpr in 
-  print_endline("FINAL: " ^ string_of_aexpr inferred_expr); inferred_expr, nenv
+        if !flag then
+        print_endline("FINAL: " ^ string_of_aexpr inferred_expr);
+        inferred_expr, nenv
 ;;
 
 let typecheck program : (aexpr list) = 
