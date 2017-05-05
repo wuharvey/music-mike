@@ -244,6 +244,9 @@ let typecheck program : (aexpr list) =
           | AAssign(name, ae, t) -> 
             let env = StringMap.add name t env in
             inferred_expr, env
+          | AFun(name, args, ae, t) ->
+            let env = StringMap.add name t env in
+            inferred_expr, env
           | _ -> inferred_expr, env in  
         (inferred_expr :: acc, env)
       ) 
