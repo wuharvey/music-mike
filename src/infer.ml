@@ -6,8 +6,6 @@ type environment = typ StringMap.t
 type constraints = (typ * typ) list 
 (* TODO: Right now everything is a global *)
 
-let flag = ref (true);;
-
 let letter = ref (Char.code 'a');;
 
 let new_type () = let c1 = !letter in
@@ -56,6 +54,9 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | List(e_list) ->
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
     AList(ae_list, TList(new_type ())), env
+  | RList(e_list) -> 
+    let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in
+    AList(ae_list, TList(TFloat)), env
   | Call(func, args) ->
     let a_func, _ = annotate_expr func env in
     let a_args = List.map (fun arg -> fst (annotate_expr arg env)) args in
@@ -98,6 +99,7 @@ let type_of ae =
   | AAssign(_,_,t)  -> t
   | ACall(_,_,t)    -> t
   | AFun(_,_,_,t)   -> t
+  | AList(_,t)      -> t
   | AIf(_,_,_,t)    -> t
   | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
@@ -122,7 +124,7 @@ let rec collect_expr ae : constraints =
     in 
     (collect_expr ae1) @ (collect_expr ae2) @ con 
 
-  | AAssign(name, ae, t) -> (collect_expr ae) @ [(t, type_of ae)]
+  | AAssign(_, ae, t) -> (collect_expr ae) @ [(t, type_of ae)]
   | AList(ae_list, t)   ->
     let list_t = match t with
       | TList(s) -> s
@@ -217,29 +219,28 @@ let rec apply_expr subs ae =
   | e -> raise (Failure ("No apply_expr for AEXPR:" ^ string_of_aexpr e))  
 ;;
 
-let infer expr env = 
+let infer expr env flag = 
   let aexpr, nenv = annotate_expr expr env in
   let constraints =
-    if !flag
+    if flag
     then print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
     collect_expr aexpr in
   let subs = 
     List.iter (fun (a,b) -> 
-      if !flag then
+      if flag then
       print_endline 
       ("CONSTRAINTS: " ^ string_of_typ a ^ " "  ^ string_of_typ b)) constraints;
       unify constraints in 
   let inferred_expr =
-      List.iter (fun (a,b) -> 
-        if !flag then
+      List.iter (fun (a,b) -> if flag then
         print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
         apply_expr subs aexpr in 
-        if !flag then
+        if flag then
         print_endline("FINAL: " ^ string_of_aexpr inferred_expr);
-        inferred_expr, nenv
+  inferred_expr, nenv
 ;;
 
-let typecheck program : (aexpr list) = 
+let typecheck program flag : (aexpr list) = 
   let env = Lib.predefined in 
   let inferred_program, _ = ListLabels.fold_left (List.rev program) 
   
@@ -247,12 +248,12 @@ let typecheck program : (aexpr list) =
   
   ~f: (
         fun (acc, env) expr -> 
-        let inferred_expr, env = infer expr env in
+        let inferred_expr, env = infer expr env flag in
         let inferred_expr, env = match inferred_expr with
-          | AAssign(name, ae, t) -> 
+          | AAssign(name, _, t) -> 
             let env = StringMap.add name t env in
             inferred_expr, env
-          | AFun(name, args, ae, t) ->
+          | AFun(name, _, _, t) ->
             let env = StringMap.add name t env in
             inferred_expr, env
           | _ -> inferred_expr, env in  

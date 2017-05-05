@@ -12,8 +12,10 @@ let _ =
   else Compile in
   let lexbuf = Lexing.from_channel stdin in
   let ast = Parser.program Scanner.next_token lexbuf in
-  let sast = Infer.typecheck ast in 
-(*  Semant.check ast; *) 
+  let sast = 
+  match action with
+  | Sast -> Infer.typecheck ast true 
+  | _ -> Infer.typecheck ast false in 
     Semant.check sast;
   match action with
   | Ast -> print_string (Ast.string_of_program ast)
