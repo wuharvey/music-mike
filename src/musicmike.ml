@@ -12,12 +12,13 @@ let _ =
   else Compile in
   let lexbuf = Lexing.from_channel stdin in
   let ast = Parser.program Scanner.next_token lexbuf in
+  let sast = Infer.typecheck ast in 
 (*  Semant.check ast; *) 
-    Semant.check ast;
+    Semant.check sast;
   match action with
   | Ast -> print_string (Ast.string_of_program ast)
-  | Sast -> let sast = Infer.typecheck ast in print_string (Ast.string_of_inferred sast)
-  | LLVM_IR -> print_string (Llvm.string_of_llmodule (Codegen.translate ast))
-  | Compile -> let m = Codegen.translate ast in
+  | Sast -> print_string (Ast.string_of_inferred sast)
+  | LLVM_IR -> print_string (Llvm.string_of_llmodule (Codegen.translate sast))
+  | Compile -> let m = Codegen.translate sast in
     Llvm_analysis.assert_valid_module m;
     print_string (Llvm.string_of_llmodule m)

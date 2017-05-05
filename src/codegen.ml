@@ -27,7 +27,7 @@ module StringMap = Map.Make(String)
     let third  (_,_,a) = a;; 
 
 let main_vars:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
-let function_defs:(string, (L.llvalue * A.expr)) Hashtbl.t = Hashtbl.create 100
+let function_defs:(string, (L.llvalue * A.aexpr)) Hashtbl.t = Hashtbl.create 100
 
 (* , functions, structs *)
 let translate (exprs) =
@@ -54,8 +54,9 @@ let translate (exprs) =
     (* | A.TVoid    -> void_t  *)
     | A.TFloat   -> float_t 
     | A.TString  -> i8p_t 
-    | A.TUnit    -> void_t in
-
+    | A.TUnit    -> void_t 
+    | _ -> raise (Failure "Shouldn't be here") in
+    
 
   (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -89,13 +90,13 @@ let translate (exprs) =
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
   let float_format = L.build_global_stringptr "%f\n" "flt" builder in 
   let rec expr builder = function
-      A.Literal(i) ->  L.const_int i32_t i
-    | A.FloatLit f -> L.const_float float_t f 
-    | A.BoolLit b -> L.const_int i1_t (if b then 1 else 0)
-    | A.Noexpr -> L.const_int i32_t 0
-    | A.ID s -> L.build_load (try Hashtbl.find main_vars s with Not_found -> raise(Failure(s ^ " Not Found"))) s builder
-    | A.String s -> L.build_global_stringptr s "" builder
-    | A.Binop (e1, op, e2) ->
+      A.ALiteral(i, _) ->  L.const_int i32_t i
+    | A.AFloatLit(f, _) -> L.const_float float_t f 
+    | A.ABoolLit(b, _) -> L.const_int i1_t (if b then 1 else 0)
+    | A.ANoexpr -> L.const_int i32_t 0
+    | A.AID(s, _) -> L.build_load (try Hashtbl.find main_vars s with Not_found -> raise(Failure(s ^ " Not Found"))) s builder
+    | A.AString(s, _) -> L.build_global_stringptr s "" builder
+    | A.ABinop (e1, op, e2, _) ->
             let e1' = expr builder e1
     and e2' = expr builder e2 in
             (match op with
@@ -116,7 +117,7 @@ let translate (exprs) =
 	    | A.Greater -> L.build_icmp L.Icmp.Sgt
 	    | A.Geq     -> L.build_icmp L.Icmp.Sge
     ) e1' e2' "tmp" builder
-    | A.List(es)    -> 
+    | A.AList(es, _)    -> 
           let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
           in 
             let deal_with_element index e =  
@@ -125,7 +126,7 @@ let translate (exprs) =
                 ignore(L.build_store e' pointer builder)
             in
              List.iteri deal_with_element es; arr_malloc
-    | A.Subset(s, index)  ->
+    | A.ASubset(s, index, _)  ->
           let var = try Hashtbl.find main_vars s
                     with Not_found -> raise (Failure (s ^ " Not Found!"))
             in 
@@ -133,7 +134,7 @@ let translate (exprs) =
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
   
-    | A.RList(es) ->
+    | A.ARList(es, _) ->
           let arr_malloc = L.build_array_malloc (float_t) (L.const_int i32_t (List.length es)) "array" builder
           in 
             let deal_with_element index e =  
@@ -144,7 +145,7 @@ let translate (exprs) =
              List.iteri deal_with_element es; arr_malloc
 
 	    
-    | A.ChordList(cs) ->
+    | A.AChordList(cs, _) ->
 
             (* allocates the chord list *)
 	    let arr_malloc = L.build_array_malloc (i32pp_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
@@ -187,41 +188,42 @@ let translate (exprs) =
            ignore(List.iteri iter_thru_chord cs); arr_malloc
 
 
-    | A.Block(es) -> 
+    | A.ABlock(es, t) -> 
         (match es with 
-        e::e1::rest -> ignore(expr builder e); expr builder (A.Block(e1::rest))
+        e::e1::rest -> ignore(expr builder e); expr builder (A.ABlock(e1::rest,
+        t))
       | [e] -> expr builder e)
-    | A.Preop(op, e) ->
+    | A.APreop(op, e, _) ->
        let e' = expr builder e in
        (match op with
-		  A.Neg     -> L.build_neg
-		| A.Not     -> L.build_not
+		     A.Neg     -> L.build_neg
+		   | A.Not     -> L.build_not
        ) e' "tmp" builder
-    | A.Assign (s, e) -> let e' = expr builder e in 
+    | A.AAssign (s, e, _) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
                     let local_var = L.build_alloca (match e with 
-                          A.List(_) -> i32p_t
-		        | A.RList(_) -> floatp_t 
+                          A.AList(_) -> i32p_t
+		                    | A.ARList(_) -> floatp_t 
                         | _ -> i32_t) s builder in 
                         Hashtbl.add main_vars s local_var;local_var in
                 ignore (L.build_store e' var builder); e' 
 
 
-    | A.Call (A.ID("Printint"), [e]) ->
+    | A.ACall (A.AID("Printint", _), [e], _) ->
        L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
-    | A.Call (A.ID("Printstr"), [e]) ->
+    | A.ACall (A.AID("Printstr", _), [e], _) ->
        L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
-    | A.Call (A.ID("Printfloat"), [e]) ->
+    | A.ACall (A.AID("Printfloat", _), [e], _) ->
        L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
-    | A.Call (A.ID(s), act) ->
+    | A.ACall (A.AID(s, _), act, _) ->
        let (fdef, fdecl) = Hashtbl.find function_defs s  in
        let actuals = List.rev (List.map (expr builder) (List.rev act)) in
 (* let result = (match fdecl.A.typ with A.Void -> ""
     | _ -> f ^ "_result") in *)
        L.build_call fdef (Array.of_list actuals) "" builder
 
-    | A.If(e1, e2, e3) -> 
+    | A.AIf(e1, e2, e3, _) -> 
         let bool_val = expr builder e1 in 
           let cur_fun = L.block_parent (L.insertion_block builder) in 
           let merge_bb = L.append_block context "merge" cur_fun in
@@ -235,12 +237,12 @@ let translate (exprs) =
           ignore(L.build_cond_br bool_val then_bb else_bb builder); 
           L.position_at_end merge_bb builder;
             L.const_int i32_t 1 
-    | A.Fun(fid, arg_list, e) -> 
+    | A.AFun(fid, arg_list, e, typ) -> 
       (* and formal_types =
   Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.A.formals) *)
       let ftype = L.function_type i32_t [||] in
       let the_function = L.define_function fid ftype the_module in
-      Hashtbl.add function_defs fid (the_function, A.Fun(fid, arg_list, e)); 
+      Hashtbl.add function_defs fid (the_function, A.AFun(fid, arg_list, e, typ)); 
       let builder2 = L.builder_at_end context (L.entry_block the_function) in 
       let ret_val = expr builder2 e in 
         L.build_ret ret_val builder2

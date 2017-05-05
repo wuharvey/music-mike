@@ -56,6 +56,7 @@ type aexpr =
   | ASubset of string * int * typ
   | AList of aexpr list * typ
   | APList of aexpr list * typ
+  | AChordList of ((int * aexpr * int) list) list * typ (*PList --> "list of chords"*)
   | ARList of aexpr list * typ
   | ABlock of aexpr list * typ
   | AConcat of aexpr * aexpr * typ
