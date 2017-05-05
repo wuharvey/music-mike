@@ -141,10 +141,11 @@ let translate (exprs) =
           let var = try Hashtbl.find main_vars s
                     with Not_found -> raise (Failure (s ^ " Not Found!"))
             in 
-              let head = L.build_load var "head" builder in 
-              let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
+              let s_list = L.build_load var "head" builder in 
+              let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
+            let act_list = L.build_load list_pointer "cur_list" builder in
+              let pointer = L.build_in_bounds_gep act_list [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
-  
     | A.RList(es) ->
           let arr_malloc = L.build_array_malloc (float_t) (L.const_int i32_t (List.length es)) "array" builder
           in 
@@ -232,21 +233,25 @@ let translate (exprs) =
             let cur_index_ptr = L.build_alloca i32_t "cur_index_ptr" builder in 
             let cur_index = L.build_store (L.const_int i32_t 0) cur_index_ptr builder in 
             
-              (* L.build_call printf_func [|int_format_str ; pred |] "printf" builder *)
 
             let cur_fun = L.block_parent (L.insertion_block builder) in 
             let pred_bb = L.append_block context "while" cur_fun in 
               ignore (L.build_br pred_bb builder);
 
             let body_bb = L.append_block context "while_body" cur_fun in let body_builder = L.builder_at_end context body_bb in
+
+            (* DO THE WORK ON THE ACTUAL ELEMENTS OF THE LIST HERE *)
                 let ptr_to_idx = L.build_in_bounds_gep act_list [| L.build_load cur_index_ptr "cur_indexplz" body_builder |] "cur_val" body_builder in
                   let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in  
               ignore(L.build_call printf_func [|int_no_line ; val_idx |] "printf" body_builder);
+            (* END WORK HERE *)
+            
               let cur_index_val = L.build_load cur_index_ptr "cur_index" body_builder in
               let new_idx = L.build_add cur_index_val (L.const_int i32_t 1) "new_idx" body_builder in 
                 ignore(L.build_store new_idx cur_index_ptr body_builder);
                 ignore(L.build_br pred_bb body_builder); 
-            let pred_builder = L.builder_at_end context pred_bb in
+
+                        let pred_builder = L.builder_at_end context pred_bb in
             let cur_index_val2 = L.build_load cur_index_ptr "cur_index2" pred_builder in
             let bool_val = L.build_icmp L.Icmp.Ne length cur_index_val2 "pred" pred_builder in 
 
