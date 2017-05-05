@@ -63,17 +63,22 @@ let rec annotate_expr exp env : (aexpr * environment) =
     and e1, _ = annotate_expr e1 env
     and e2, _ = annotate_expr e2 env in
     AIf(apred, e1, e2, new_type ()), env
-  | Fun(name, formals, e) ->
-    (* TODO: Check for keywords being passed as args.
-     * Currently, only takes first argument of function. 
-     * So only test with one argument functions. *)
+  | Fun(name, args, e) ->
+    let args_t = List.map (fun f -> new_type ()) args
+    and ret_t = new_type() in 
+    let fun_t = TFun(args_t, ret_t) in
+      let a_args = List.combine args args_t in 
+      let nenv = List.fold_left  
+            (fun e (id, t) -> 
+              if StringMap.mem id e
+              then raise (Failure "Variable already defined")
+              else StringMap.add id t e) env a_args 
+      in
     if StringMap.mem name env 
     then raise (Failure "Redefining function") 
-    else let nenv = StringMap.add name env in
-    let nnenv = List.fold_left (fun (env , id) -> StringMap.add id env) nenv formals in 
-    let ae, _ = annotate_expr e nnenv 
-    and t = List.map (fun term -> StringMap.find term env) formals in 
-    AFun(name, formals, ae, TFun(t, new_type())), nnenv  
+    else let nenv = StringMap.add name fun_t nenv in
+    let ae, _ = annotate_expr e nenv in 
+    AFun(name, args, ae, fun_t), nenv  
   | _ -> AUnit(TUnit), env
 ;;
 
