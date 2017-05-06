@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
 
 int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[],  int start_pitch, int *modelist, int mode_length){
 printf("%s\n", "entering chord list");
