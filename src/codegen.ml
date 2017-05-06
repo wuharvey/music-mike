@@ -125,13 +125,13 @@ let translate (exprs) =
                 ignore(L.build_store e' pointer builder)
             in
              List.iteri deal_with_element es; arr_malloc
-    | A.ASubset(s, index, _)  ->
+ (*   | A.ASubset(s, index, _)  ->
           let var = try Hashtbl.find main_vars s
                     with Not_found -> raise (Failure (s ^ " Not Found!"))
             in 
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
-               L.build_load pointer "tmp" builder
+               L.build_load pointer "tmp" builder *)
   
     | A.ARList(es, _) ->
           let arr_malloc = L.build_array_malloc (float_t) (L.const_int i32_t (List.length es)) "array" builder

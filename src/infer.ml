@@ -82,6 +82,12 @@ let rec annotate_expr exp env : (aexpr * environment) =
     else let nenv = StringMap.add name fun_t nenv in
     let ae, _ = annotate_expr e nenv in 
     AFun(name, args, ae, fun_t), nenv  
+  | Subset(var, e) -> 
+    let avar, _ = annotate_expr var env 
+    and ae, _ = annotate_expr e env 
+    and t = new_type() in
+    let typ = TFun([TList(t); TInt], t) in
+    ASubset(avar, ae, t), env
   | _ -> AUnit(TUnit), env
 ;;
 
@@ -101,6 +107,7 @@ let type_of ae =
   | AFun(_,_,_,t)   -> t
   | AList(_,t)      -> t
   | AIf(_,_,_,t)    -> t
+  | ASubset(_,_,t)  -> t
   | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
 
@@ -139,6 +146,18 @@ let rec collect_expr ae : constraints =
   | AFun(_,_,ae,t) -> begin match t with 
     | TFun(_,ret_t) -> (collect_expr ae) @ [(type_of ae, ret_t)]
     | _ -> raise (Failure "Unreachable state in Function literal") end
+
+  | ASubset(v, e, typ) ->  
+    let vt = (match v with
+      | AID(_) -> type_of v
+      | _ -> raise (Failure "Unreachable state in Subset") ) in
+    let s = match vt with 
+      | TList(t) -> [(TFun([t;TInt], t), typ)]
+      | TType(t) -> [(vt, TList(typ))] 
+      | _ -> raise (Failure "Subset can only be applied to lists") 
+    in
+    (collect_expr e) @ [(type_of e, TInt)] @ s
+
 
   | ACall(name, args, t) -> 
     let fnt = (match name with 
@@ -216,6 +235,8 @@ let rec apply_expr subs ae =
   | ACall(fname, args, t)    -> 
       ACall(apply_expr subs fname, 
             List.map (apply_expr subs) args, apply subs t)
+  | ASubset(var, i, t)       ->
+      ASubset(apply_expr subs var, apply_expr subs i, apply subs t)
   | e -> raise (Failure ("No apply_expr for AEXPR:" ^ string_of_aexpr e))  
 ;;
 

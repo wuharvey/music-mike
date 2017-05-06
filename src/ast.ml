@@ -30,7 +30,7 @@ type expr =
   | Assign of string * expr
   | Call of expr * expr list      
   | If of expr * expr * expr
-  | Subset of string * int
+  | Subset of expr * expr
   | List of expr list
   | PList of expr list
   | ChordList of ((int * expr * int) list)  list (*PList --> "list of chords"*)
@@ -53,7 +53,7 @@ type aexpr =
   | AAssign of string * aexpr * typ
   | ACall of aexpr * aexpr list * typ     
   | AIf of aexpr * aexpr * aexpr * typ
-  | ASubset of string * int * typ
+  | ASubset of aexpr * aexpr * typ
   | AList of aexpr list * typ
   | APList of aexpr list * typ
   | AChordList of ((int * aexpr * int) list) list * typ (*PList --> "list of chords"*)
@@ -116,7 +116,7 @@ let rec string_of_expr = function
   | Call(f, el) ->
       string_of_expr f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
-  | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
+  | Subset(s, i) -> string_of_expr s ^ ".[" ^ string_of_expr i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
 
   | ChordList(cs) -> 
@@ -173,7 +173,7 @@ let rec string_of_aexpr = function
       string_of_aexpr f ^ "(" ^ String.concat ", " (List.map string_of_aexpr el) ^ ")" ^ string_of_typ t
   | AIf(e1, e2, e3, t) -> "if " ^ string_of_aexpr e1 ^ " then " ^ string_of_aexpr
   e2 ^ " else " ^ string_of_aexpr e3 ^ string_of_typ t
-  | ASubset(s, i, t) -> s ^ ".[" ^ string_of_int i ^ "]" ^ string_of_typ t
+  | ASubset(s, i, t) -> string_of_aexpr s ^ ".[" ^ string_of_aexpr i ^ "]" ^ string_of_typ t
   | AList(es, t) -> "[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
   | APList(es, t) -> "p:[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
   | ABlock(es, t) -> "{ " ^ String.concat " " (List.map string_of_aexpr es) ^ " }" ^ string_of_typ t
