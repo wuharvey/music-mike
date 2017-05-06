@@ -30,10 +30,12 @@ type expr =
   | Assign of string * expr
   | Call of expr * expr list      
   | If of expr * expr * expr
+  | Pitch of int * expr * int
+  | Chord of expr list
   | Subset of expr * expr
   | List of expr list
   | PList of expr list
-  | ChordList of ((int * expr * int) list)  list (*PList --> "list of chords"*)
+  | ChordList of expr list (*PList --> "list of chords"*)
   | RList of expr list
   | Block of expr list
   | Concat of expr * expr
@@ -56,7 +58,9 @@ type aexpr =
   | ASubset of aexpr * aexpr * typ
   | AList of aexpr list * typ
   | APList of aexpr list * typ
-  | AChordList of ((int * aexpr * int) list) list * typ (*PList --> "list of chords"*)
+  | APitch of int * aexpr * int * typ 
+  | AChord of aexpr list * typ
+  | AChordList of aexpr list * typ (*PList --> "list of chords"*)
   | ARList of aexpr list * typ
   | ABlock of aexpr list * typ
   | AConcat of aexpr * aexpr * typ
