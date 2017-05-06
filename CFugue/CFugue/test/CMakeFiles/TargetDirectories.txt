@@ -1,7 +1,0 @@
-/home/lmb2254/music-mike/CFugue/CFugue/test/CMakeFiles/install.dir
-/home/lmb2254/music-mike/CFugue/CFugue/test/CMakeFiles/list_install_components.dir
-/home/lmb2254/music-mike/CFugue/CFugue/test/CMakeFiles/rebuild_cache.dir
-/home/lmb2254/music-mike/CFugue/CFugue/test/CMakeFiles/testCFugueLib.dir
-/home/lmb2254/music-mike/CFugue/CFugue/test/CMakeFiles/edit_cache.dir
-/home/lmb2254/music-mike/CFugue/CFugue/test/CMakeFiles/install/strip.dir
-/home/lmb2254/music-mike/CFugue/CFugue/test/CMakeFiles/install/local.dir

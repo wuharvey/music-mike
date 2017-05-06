@@ -1,1 +1,0 @@
-/usr/bin/c++   -g   CMakeFiles/testCFugueLib.dir/StaticLibTestApp/SampleApp.cpp.o CMakeFiles/testCFugueLib.dir/StaticLibTestApp/stdafx.cpp.o  -o ../bin/testCFugueLib -rdynamic ../lib/libCFuguedu.a -lasound ../lib/libjdkmididu.a -lasound -lpthread 
