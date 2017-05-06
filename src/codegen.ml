@@ -220,10 +220,10 @@ let translate (exprs) =
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
                     let local_var = L.build_alloca (match e with 
-                          A.AList(_) -> i32p_t
-		                    | A.ARList(_) -> floatp_t 
+                          A.AList(_, _) -> listp_t
+		                    | A.ARList(_, _) -> floatp_t 
                         | _ -> i32_t) s builder in 
-                        Hashtbl.add main_vars s local_var;local_var in
+                        Hashtbl.add main_vars s local_var; local_var in
                 ignore (L.build_store e' var builder); e' 
 
 
