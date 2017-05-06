@@ -31,7 +31,7 @@ A. Process
   we realized that for the use cases we were targeting a fully functional language wouldn't give us the kind of ease of use and usage we'd like.
   Our first concrete specifications were the abstractions and then we decided on syntax. Despite having a very concrete definition of specifications
   early on, we still changed specifications as we worked on our language when it was necessary to be able to finish within our timeline.
-  
+
   iii. Development
   Our team used github issues to define specifications and tasks that needed to be implemented or completed. We used github to help
   with organizing our development. Each of used a separate branch to develop the feature that we were working on and then submitted a pull
@@ -45,3 +45,88 @@ A. Process
   the functionality of the older features but also ensuring functionality of the new ones. While some of these tests were forward
   looking and failed early-on, the error messages told the developer whether we were making progress towards making these larger full stack
   tests work or if it was failing in whatever module the developer was working on.
+B. Programming Style Guide
+1. Landin's pseudo law: Treat the indentation of your programs as if it determines the meaning of your programs.
+Keep indentation consistent with that of the MicroC code.
+
+2. Keep lines shorter than 80 characters.
+
+3. A function should always fit within one screenful (of about 70 lines), or in exceptional cases two, at the very most three. To go beyond this is unreasonable.
+
+Justification: When a function goes beyond one screenful, it's time to divide it into subproblems and handle them independently. Beyond a screenful, one gets lost in the code. The indentation is not readable and is difficult to keep correct.
+
+4. The change in indentation between successive lines of the program is 2 spaces.
+
+5. Using the tab character (ASCII character 9) is absolutely not recommended. Change your .vimrc if you have tabs.
+
+6. Use underscores instead of Camel case
+
+C. Timeline
+Table
+Date        Milestone
+Jan 29th    First commit to repository
+Feb 8th     Project Proposal and White Paper Completed and Submitted
+Feb 22      Language Reference Manual Completed and Submitted
+Mar 21      Basic Scanner Complete
+Mar 26      Basic AST and Parser Complete
+Mar 29      Hello World runs
+Apr 7       Testing Framework Complete
+Apr 23      Final Scanner, Parser and AST Complete
+
+D. Roles and Responsibilities
+While we had defined project roles at the beginning of the semester, about
+three weeks in the roles became a lot more fluid. Our assigned roles were
+Tester, System Architect, Project Manager and Language Guru. Each member was involved
+in developing certain functionalities and portions of components. The team frequently worked
+together either in-person or teleconference.
+Team Member
+Husam Abdul-Kafi  Systems Architect Testing Architecture, Code generation
+Lakshmi Bodapati  Project Manager   Compiler Front-end, Documentation
+Kaitlin Pet       Tester            Pitch and Chord Full Stack Abstraction, Testing Architecture
+Harvey Wu         Language Guru     Compiler Front-end, Semantic Checker, Type Inference
+
+E. Software Development Environment
+Our Stack
+/list
+/l1 Github-Hosted Git Repository - used for version control and contained all of our code
+and documentation
+/l2 Ocaml 4.04.0 - Used Ocamlyacc and Ocamllex extensions for compiling scanner and parser. Used OCaml for
+the CodeGen, Semantic Checker and Backend.
+*************HUSAM PLEASE ADD MORE NEED HELP FLESHING THIS PART OUT*****************
+
+Testing Environment
+/list
+Google Cloud VM
+
+F. Project Log
+****************COPY FROM GIT WHEN FINISHED****************
+
+Architectural Design Section
+A. Block Diagram (http://www.cs.columbia.edu/~sedwards/classes/2012/w4115-fall/reports/Funk.pdf)                                            _______________ > Symbol Table
+_______________________                                              |                       |
+|Music-mike source code| -> Scanner -> Parser -> AST -> Type Inference outputs SAST -> Semantic Checking -> Code Generation -> LLVM code
+________________________
+
+B. Scanner (Lakshmi, Husam, Harvey)
+Relevant Files: scanner.mll
+
+The scanner is written in OCamlLex and takes the .mike input to the compiler
+and tokenizes it into literals, identifiers, operators and keywords. It removes the white space
+and block comments. If any character cannot be lexed by the scanner or if
+any identifier or literal is not syntactically valid, the scanner throws an error. The tokens
+created by the scanner are used by the Parser to create an Abstract Syntax Tree.
+
+C. Parser (Husam, Harvey, Lakshmi, Kaitlin)
+The parser is written in OCamlYacc and takes in a series of tokens. It uses the grammar described
+in parser.mly and datatypes defined in ast.ml to generate an Abstract Syntax Tree. In parser.mly, we define
+the Music-mike context-free grammar using productions. If the tokens produced by the scanner are successfully
+parsed that means that the .mike file is syntactically (though perhaps not semantically) correct.
+
+D. The Semantic Checker ()
+E. The Code Generator (Husam)
+F. The C Libraries ()
+
+Test Plan Section
+A. *****************2 examples of source to code******************
+B. Test Suites
+We wrote tests for every time we implemented a new feature. 

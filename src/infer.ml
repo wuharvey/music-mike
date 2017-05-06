@@ -28,7 +28,7 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | String(n)   -> AString(n, TString), env
   | ID(n)       -> if StringMap.mem n env 
                    then AID(n, StringMap.find n env), env
-                   else raise Not_found
+                   else raise(Failure(n ^ " Not Found"))
   | Binop(e1, op, e2) -> 
     let ae1, _ = annotate_expr e1 env 
     and ae2, _ = annotate_expr e2 env
@@ -281,6 +281,6 @@ let typecheck program flag : (aexpr list) =
         (inferred_expr :: acc, env)
       ) 
     
-    in List.rev inferred_program
+    in (* List.rev *) inferred_program
 ;;
 
