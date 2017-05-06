@@ -138,7 +138,7 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths, int start_p
         char buff[1000];//max length of each note should be 11 so more space than we need.
         buff[0]='\0';
         strgen (buff, rhythmlist, correct_pitches, len_chordlist, chord_lengths );
-        execl("./testCFugueLib", "./testCFugueLib", buff);
+        execl("./testCFugueLib", "./testCFugueLib", buff, (char *)0);
 	printf("%s\n", buff);
 
 	return 0;
