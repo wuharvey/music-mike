@@ -56,10 +56,13 @@ let translate (exprs) =
   let ltype_of_typ = function
       A.TInt     -> i32_t
     | A.TBool    -> i1_t
+    | A.TList(A.TInt)    -> listp_t
+    | A.TList(A.TFloat)  -> floatp_t
     (* | A.TVoid    -> void_t  *)
     | A.TFloat   -> float_t 
     | A.TString  -> i8p_t 
     | A.TUnit    -> void_t 
+
     | _ -> raise (Failure "Shouldn't be here") in
     
 
@@ -149,14 +152,24 @@ let translate (exprs) =
             let act_list = L.build_load list_pointer "cur_list" builder in
               let pointer = L.build_in_bounds_gep act_list [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder *)
- (*   | A.ASubset(s, index, _)  ->
-          let var = try Hashtbl.find main_vars s
+   | A.ASubset(e1, e2, _)  ->
+      let s_list = expr builder e1 in 
+      let index  = expr builder e2 in 
+        let pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+          let length = L.build_load pointer "size" builder in 
+            let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
+            let act_list = L.build_load list_pointer "cur_list" builder in
+            let pointer_to_element = L.build_gep act_list [| index |] "pointer_to_element" builder in 
+            L.build_load pointer_to_element "tmp" builder
+
+
+(*           let var = try Hashtbl.find main_vars s
                     with Not_found -> raise (Failure (s ^ " Not Found!"))
             in 
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
-               L.build_load pointer "tmp" builder *)
-  
+               L.build_load pointer "tmp" builder
+ *)  
     | A.ARList(es, _) ->
           let arr_malloc = L.build_array_malloc (float_t) (L.const_int i32_t (List.length es)) "array" builder
           in 
@@ -219,13 +232,10 @@ let translate (exprs) =
 		     A.Neg     -> L.build_neg
 		   | A.Not     -> L.build_not
        ) e' "tmp" builder
-    | A.AAssign (s, e, _) -> let e' = expr builder e in 
+    | A.AAssign (s, e, t) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
-                    let local_var = L.build_alloca (match e with 
-                          A.AList(_, _) -> listp_t
-		                    | A.ARList(_, _) -> floatp_t 
-                        | _ -> i32_t) s builder in 
+                    let local_var = L.build_alloca (ltype_of_typ t) s builder in 
                         Hashtbl.add main_vars s local_var; local_var in
                 ignore (L.build_store e' var builder); e' 
 
