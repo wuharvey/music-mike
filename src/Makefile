@@ -29,10 +29,11 @@ frontend:
 	ocamlc -c ast.ml
 	ocamlyacc -v parser.mly
 	ocamlc -c parser.mli
+	ocamlc -c lib.ml
 
 # More detailed: build using ocamlc/ocamlopt + ocamlfind to locate LLVM
 
-OBJS = ast.cmx codegen.cmx parser.cmx scanner.cmx semant.cmx musicmike.cmx
+OBJS = ast.cmx codegen.cmx infer.cmx lib.cmx parser.cmx scanner.cmx semant.cmx musicmike.cmx
 
 musicmike : $(OBJS)
 	ocamlfind ocamlopt -linkpkg -package llvm -package llvm.analysis $(OBJS) -o musicmike
@@ -57,14 +58,18 @@ ast.cmo :
 ast.cmx :
 codegen.cmo : ast.cmo
 codegen.cmx : ast.cmx
-musicmike.cmo : semant.cmo scanner.cmo parser.cmi codegen.cmo ast.cmo
-musicmike.cmx : semant.cmx scanner.cmx parser.cmx codegen.cmx ast.cmx
+musicmike.cmo : semant.cmo scanner.cmo parser.cmi codegen.cmo ast.cmo infer.cmo
+musicmike.cmx : semant.cmx scanner.cmx parser.cmx codegen.cmx ast.cmx infer.cmx
 parser.cmo : ast.cmo parser.cmi
 parser.cmx : ast.cmx parser.cmi
 scanner.cmo : parser.cmi
 scanner.cmx : parser.cmx
 semant.cmo : ast.cmo
 semant.cmx : ast.cmx
+infer.cmo : ast.cmo lib.cmo
+infer.cmx : ast.cmx lib.cmx
+lib.cmo: ast.cmo
+lib.cmx: ast.cmx
 parser.cmi : ast.cmo
 
 # Building the tarball
