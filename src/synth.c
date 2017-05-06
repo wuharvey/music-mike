@@ -101,7 +101,7 @@ int strgen (char * buff, float * rhythmlist, int ** corrected_chordlist, int cl_
 			char lbracket[2];
 			strcpy(lbracket, "[");
 			char rbracket[3];
-			strcpy(rbracket, "]\\");
+			strcpy(rbracket, "]/");
 			char plus[2];
 			strcpy(plus, "+");
 			char space[2];
