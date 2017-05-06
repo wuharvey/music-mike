@@ -13,6 +13,7 @@ type typ =
   | TFloat
   | TString
   | TPitch
+  | TChord
   | TType of string
   | TList of typ
   | TFun of typ list * typ 
@@ -29,7 +30,7 @@ type expr =
   | Assign of string * expr
   | Call of expr * expr list      
   | If of expr * expr * expr
-  | Subset of string * int
+  | Subset of expr * expr
   | List of expr list
   | PList of expr list
   | ChordList of ((int * expr * int) list)  list (*PList --> "list of chords"*)
@@ -52,9 +53,10 @@ type aexpr =
   | AAssign of string * aexpr * typ
   | ACall of aexpr * aexpr list * typ     
   | AIf of aexpr * aexpr * aexpr * typ
-  | ASubset of string * int * typ
+  | ASubset of aexpr * aexpr * typ
   | AList of aexpr list * typ
   | APList of aexpr list * typ
+  | AChordList of ((int * aexpr * int) list) list * typ (*PList --> "list of chords"*)
   | ARList of aexpr list * typ
   | ABlock of aexpr list * typ
   | AConcat of aexpr * aexpr * typ
@@ -114,7 +116,7 @@ let rec string_of_expr = function
   | Call(f, el) ->
       string_of_expr f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | If(e1, e2, e3) -> "if " ^ string_of_expr e1 ^ " then " ^ string_of_expr e2 ^ " else " ^ string_of_expr e3
-  | Subset(s, i) -> s ^ ".[" ^ string_of_int i ^ "]"
+  | Subset(s, i) -> string_of_expr s ^ ".[" ^ string_of_expr i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
 
   | ChordList(cs) -> 
@@ -144,15 +146,15 @@ let rec string_of_expr = function
   | _ -> "string_of_expr not implemented for your expression yet."
 
 let rec string_of_typ = function
-    TInt -> "int"
-  | TBool -> "bool"
-  | TFloat -> "float"
-  | TString -> "string"
-  | TPitch -> "pitch"
-  | TUnit -> "unit"
-  | TType(s) -> s
-  | TFun(t1, t2) -> String.concat " " (List.map string_of_typ t1) ^ string_of_typ t2  
-  | TList(s) -> string_of_typ s ^ " list"
+    TInt -> " [int]"
+  | TBool -> " [bool]"
+  | TFloat -> " [float]"
+  | TString -> " [string]"
+  | TPitch -> " [pitch]"
+  | TUnit -> " [unit]"
+  | TType(s) -> " [" ^ s ^ "]"
+  | TFun(t1, t2) -> String.concat " " (List.map string_of_typ t1) ^ " ->" ^ string_of_typ t2  
+  | TList(s) -> string_of_typ s ^ "list"
 
 let rec string_of_aexpr = function
     ALiteral(l,t) -> string_of_int l ^ string_of_typ t
@@ -166,12 +168,12 @@ let rec string_of_aexpr = function
   | APreop(o, e, t) -> string_of_preop o ^ string_of_aexpr e ^ string_of_typ t
   | APostop(e, o, t) -> string_of_aexpr e ^ string_of_postop o ^ string_of_typ t
   | AAssign(v, e, t) -> "Assign(" ^ v ^ " = " ^ (string_of_aexpr e) ^ ")" ^ string_of_typ t
-  | AFun(id, f, e, t) -> "Function" ^ string_of_typ t
+  | AFun(id, f, e, t) -> "Function" ^ id ^ " " ^ String.concat " " f ^ " -> " ^ string_of_aexpr e ^ string_of_typ t
   | ACall(f, el, t) ->
       string_of_aexpr f ^ "(" ^ String.concat ", " (List.map string_of_aexpr el) ^ ")" ^ string_of_typ t
   | AIf(e1, e2, e3, t) -> "if " ^ string_of_aexpr e1 ^ " then " ^ string_of_aexpr
   e2 ^ " else " ^ string_of_aexpr e3 ^ string_of_typ t
-  | ASubset(s, i, t) -> s ^ ".[" ^ string_of_int i ^ "]" ^ string_of_typ t
+  | ASubset(s, i, t) -> string_of_aexpr s ^ ".[" ^ string_of_aexpr i ^ "]" ^ string_of_typ t
   | AList(es, t) -> "[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
   | APList(es, t) -> "p:[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
   | ABlock(es, t) -> "{ " ^ String.concat " " (List.map string_of_aexpr es) ^ " }" ^ string_of_typ t

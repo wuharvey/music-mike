@@ -6,6 +6,7 @@ let stdlib = [
     ("Printint", TFun([TInt], TString));
     ("Printstr", TFun([TString], TString));
     ("Printfloat", TFun([TFloat], TString));
+    ("Printlist", TFun([TList(TInt)], TString));
 ];;
 
 let predefined = 
