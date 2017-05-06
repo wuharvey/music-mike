@@ -86,7 +86,7 @@ let rec annotate_expr exp env : (aexpr * environment) =
     let avar, _ = annotate_expr var env 
     and ae, _ = annotate_expr e env 
     and t = new_type() in
-    let typ = TFun([TList(t); TInt], t) in
+    let typ = t in
     ASubset(avar, ae, t), env
   | _ -> AUnit(TUnit), env
 ;;
@@ -152,7 +152,7 @@ let rec collect_expr ae : constraints =
       | AID(_) -> type_of v
       | _ -> raise (Failure "Unreachable state in Subset") ) in
     let s = match vt with 
-      | TList(t) -> [(TFun([t;TInt], t), typ)]
+      | TList(t) -> [(t, typ)]
       | TType(t) -> [(vt, TList(typ))] 
       | _ -> raise (Failure "Subset can only be applied to lists") 
     in
