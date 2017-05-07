@@ -45,12 +45,30 @@ let translate (exprs) =
   let i32pp_t = L.pointer_type i32p_t in         (* int**  *)
   let i32ppp_t= L.pointer_type i32pp_t in        (* int***  *)
   let floatp_t= L.pointer_type float_t in        (* float* *)
+
+  (* int list struct  *)
   let list_t  = L.named_struct_type context "list_struct" in 
   L.struct_set_body list_t  [| i32_t ; i32p_t |] true; 
   let listp_t = L.pointer_type list_t in 
+
+  (* float list struct   *)
   let list_t_f  = L.named_struct_type context "list_struct_f" in 
   L.struct_set_body list_t_f  [| i32_t ; floatp_t |] true; 
-  let listp_t_f = L.pointer_type list_t_f in 
+  let listp_t_f = L.pointer_type list_t_f in
+ 
+  (* int * list struct *) 
+  let list_i32p_t  = L.named_struct_type context "list_struct_i32p_t" in
+  L.struct_set_body list_i32p_t  [| i32_t ; i32pp_t |] true;
+  let listpp_t = L.pointer_type list_i32p_t in
+ 
+  (* int ** list struct  *)
+  let list_i32pp_t  = L.named_struct_type context "list_struct_i32pp_t" in
+  L.struct_set_body list_i32pp_t  [| i32_t ; i32ppp_t |] true;
+  let listppp_t = L.pointer_type list_i32pp_t in
+ 
+ 
+
+  
 (*   print_endline (string_of_bool (L.is_packed list_t)); *)
 
   let ltype_of_typ = function
