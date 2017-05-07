@@ -65,12 +65,6 @@ let translate (exprs) =
   let list_i32pp_t  = L.named_struct_type context "list_struct_i32pp_t" in
   L.struct_set_body list_i32pp_t  [| i32_t ; i32ppp_t |] true;
   let listppp_t = L.pointer_type list_i32pp_t in
- 
-  (* int *** list struct *)
-  let list_i32ppp_t  = L.named_struct_type context "list_struct_i32ppp_t" in
-  L.struct_set_body list_i32ppp_t  [| i32_t ; i32pppp_t |] true;
-  let listpppp_t = L.pointer_type list_i32ppp_t in
-
 
   
 (*   print_endline (string_of_bool (L.is_packed list_t)); *)
@@ -210,7 +204,7 @@ let translate (exprs) =
 	      let c_len_pointer = L.build_in_bounds_gep cl_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
 	 		ignore(L.build_store (L.const_int i32_t (List.length cs)) c_len_pointer builder);
 	      (* allocates the chord list *)
-	      let arr_malloc = L.build_array_malloc listppt (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
+	      let arr_malloc = L.build_array_malloc listpp_t (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
 	      (* make pointer to chord array in s list *)
 	      let cl_pointer_arr = L.build_in_bounds_gep cl_struct [| L.const_int i32_t 0; L.const_int i32_t 1 |] "struct_cl_pointer" builder in 
 	      (* fill arr_malloc into pointer to chord list struct *)
@@ -221,7 +215,7 @@ let translate (exprs) =
 		 (*makes chord struct- length + content *)
 	 	 let c_struct=L.build_array_malloc listpp_t (L.const_int i32_t 1) "chord_pointer_struct" builder in
                  let c_len_pointer = L.build_in_bounds_gep cl_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
-                	ignore(L.build_store (L.const_int i32_t (List.length chord)) pointer builder);
+                	ignore(L.build_store (L.const_int i32_t (List.length chord)) c_len_pointer builder);
                  let arr_chord_malloc = L.build_array_malloc i32p_t (L.const_int i32_t (List.length chord)) "arr_pitch" builder in
                  let c_pointer_arr = L.build_in_bounds_gep c_struct [| L.const_int i32_t 0; L.const_int i32_t 1 |] "struct_c_pointer" builder in
 			ignore(L.build_store arr_chord_malloc c_pointer_arr builder);
