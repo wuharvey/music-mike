@@ -48,6 +48,9 @@ let translate (exprs) =
   let list_t  = L.named_struct_type context "list_struct" in 
   L.struct_set_body list_t  [| i32_t ; i32p_t |] true; 
   let listp_t = L.pointer_type list_t in 
+  let list_t_f  = L.named_struct_type context "list_struct_f" in 
+  L.struct_set_body list_t_f  [| i32_t ; floatp_t |] true; 
+  let listp_t_f = L.pointer_type list_t_f in 
 (*   print_endline (string_of_bool (L.is_packed list_t)); *)
 
   let ltype_of_typ = function
@@ -244,33 +247,59 @@ let translate (exprs) =
     | A.ACall (A.AID("Printfloat", _), [e], _) ->
        L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
     | A.ACall (A.AID("Printlist", _), [e], _) -> 
+      (* cur_index = 0
+         while cur_index < length:
+            printf act_list[cur_index] 
+            cur_index += 1*)
+      (* Get the struct we made before *)
       let s_list = expr builder e in 
+        (* get pointer to length in the struct (at position 0,0) *)
         let pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+          (* load that pointer to the length *)
           let length = L.build_load pointer "size" builder in 
+            (* get pointer to the int* in the struct (at position 0,1) *)
             let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
+            (* load that pointer - now act_list is the pointer to the head of the list *)
             let act_list = L.build_load list_pointer "cur_list" builder in
+            (* allocate a pointer to an int (on the stack) *)
             let cur_index_ptr = L.build_alloca i32_t "cur_index_ptr" builder in 
+            (* store a 0 in that location *)
             let cur_index = L.build_store (L.const_int i32_t 0) cur_index_ptr builder in 
             
-
+            (* we are creating blocks, so we need the function we are currently in *)
             let cur_fun = L.block_parent (L.insertion_block builder) in 
+            (* create the block that's supposed to have cur_index < length
+               "the conditional block" ==> pred_bb *)
             let pred_bb = L.append_block context "while" cur_fun in 
               ignore (L.build_br pred_bb builder);
 
-            let body_bb = L.append_block context "while_body" cur_fun in let body_builder = L.builder_at_end context body_bb in
+            (* create the block of the body - basically 
+                printf act_list[cur_index] *)
+            let body_bb = L.append_block context "while_body" cur_fun in 
+              (* body_builder is the builder in the "while body" *)
+              let body_builder = L.builder_at_end context body_bb in
 
             (* DO THE WORK ON THE ACTUAL ELEMENTS OF THE LIST HERE *)
-                let ptr_to_idx = L.build_in_bounds_gep act_list [| L.build_load cur_index_ptr "cur_indexplz" body_builder |] "cur_val" body_builder in
-                  let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in  
+                (* loads the value in cur_index_ptr *)
+                let cur_idx_in_body = L.build_load cur_index_ptr "cur_indexplz" body_builder in
+                (* get a pointer into the list at the index with the value just loaded *)
+                let ptr_to_idx = L.build_in_bounds_gep act_list [| cur_idx_in_body |] "cur_val" body_builder in
+                  (* load the value at that pointer (aka value of act_list[cur_index]) *)
+                  let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in 
+               (* call printf with that value *)
               ignore(L.build_call printf_func [|int_no_line ; val_idx |] "printf" body_builder);
             (* END WORK HERE *)
             
+              (* loads the value in cur_index_ptr *)
               let cur_index_val = L.build_load cur_index_ptr "cur_index" body_builder in
+              (* add 1 to the value *)
               let new_idx = L.build_add cur_index_val (L.const_int i32_t 1) "new_idx" body_builder in 
+                (* store the new value in the pointer  *)
                 ignore(L.build_store new_idx cur_index_ptr body_builder);
                 ignore(L.build_br pred_bb body_builder); 
 
-                        let pred_builder = L.builder_at_end context pred_bb in
+            (* the builder at the "check if cur_index < length" *)
+            let pred_builder = L.builder_at_end context pred_bb in
             let cur_index_val2 = L.build_load cur_index_ptr "cur_index2" pred_builder in
             let bool_val = L.build_icmp L.Icmp.Ne length cur_index_val2 "pred" pred_builder in 
 
