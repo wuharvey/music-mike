@@ -181,7 +181,7 @@ let translate (exprs) =
              List.iteri deal_with_element es; arr_malloc
 
 	    
-    | A.AChordList(cs, _) ->
+(*    | A.AChordList(cs, _) ->
             (* allocates the chord list *)
 	    let arr_malloc = L.build_array_malloc (i32pp_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
 	    
@@ -218,7 +218,7 @@ let translate (exprs) =
   		ignore(List.iteri deal_with_pitch chord)
              in
              (*iterates through chords with iter_thru_chord *)   
-             ignore(List.iteri iter_thru_chord cs); arr_malloc
+             ignore(List.iteri iter_thru_chord cs); arr_malloc *)
 
 
     | A.ABlock(es, t) -> 
