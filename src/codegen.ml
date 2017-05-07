@@ -326,7 +326,9 @@ let translate (exprs) =
               L.position_at_end merge_bb builder;
               L.const_int i32_t 1;
 
-
+    | A.ACall (A.AID("Synth", _), [e], _)
+		
+	
     | A.ACall (A.AID(s, _), act, _) ->
        let (fdef, fdecl) = Hashtbl.find function_defs s  in
        let actuals = List.rev (List.map (expr builder) (List.rev act)) in
