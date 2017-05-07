@@ -76,25 +76,6 @@ let translate (exprs) =
   let printf_func = L.declare_function "printf" printf_t the_module in
 
 
-(* 
-  let local_main_vars = StringMap.empty in 
-  let print_var s llv = print_string(s ^ ": " ^ L.string_of_llvalue llv ^ "\n") in *)
-  
-(*   let process_fun_decl fdecl = 
-    let name = fdecl.A.name in 
-      print_string("hello")
-  in *)
-
-(*   let function_decls =
-    let function_decl m fdecl =
-      let name = fdecl.A.ident
-      (* and formal_types =
-  Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.A.formals) *)
-      in let ftype = L.function_type i32_t [||] in
-      StringMap.add name (L.define_function name ftype the_module, fdecl) m in
-    List.fold_left function_decl StringMap.empty functions in
- *)
-
   let default_fun = L.define_function "main" (L.function_type (ltype_of_typ A.TInt) [||]) the_module in
   let builder = L.builder_at_end context (L.entry_block default_fun) in
 
@@ -117,6 +98,19 @@ let translate (exprs) =
     let list_pointer = L.build_in_bounds_gep struct_obj [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" sub_builder in 
     (* load that pointer - now act_list is the pointer to the head of the list *)
     L.build_load list_pointer "cur_list" sub_builder 
+  in
+
+  let print_element (idx_ptr, sub_builder, list_ptr, fmt_type) = 
+    (* DO THE WORK ON THE ACTUAL ELEMENTS OF THE LIST HERE *)
+    (* loads the value in cur_index_ptr *)
+    let cur_idx_in_body = L.build_load idx_ptr "cur_indexplz" sub_builder in
+    (* get a pointer into the list at the index with the value just loaded *)
+    let ptr_to_idx = L.build_in_bounds_gep list_ptr [| cur_idx_in_body |] "cur_val" sub_builder in
+      (* load the value at that pointer (aka value of act_list[cur_index]) *)
+      let val_idx = L.build_load ptr_to_idx "val_idx" sub_builder in 
+     (* call printf with that value *)
+    ignore(L.build_call printf_func [|fmt_type ; val_idx |] "printf" sub_builder);
+    (* END WORK HERE *)
   in
 
 
@@ -155,16 +149,8 @@ let translate (exprs) =
             (* body_builder is the builder in the "while body" *)
             let body_builder = L.builder_at_end context body_bb in
 
-          (* DO THE WORK ON THE ACTUAL ELEMENTS OF THE LIST HERE *)
-              (* loads the value in cur_index_ptr *)
-              let cur_idx_in_body = L.build_load cur_index_ptr "cur_indexplz" body_builder in
-              (* get a pointer into the list at the index with the value just loaded *)
-              let ptr_to_idx = L.build_in_bounds_gep act_list [| cur_idx_in_body |] "cur_val" body_builder in
-                (* load the value at that pointer (aka value of act_list[cur_index]) *)
-                let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in 
-             (* call printf with that value *)
-            ignore(L.build_call printf_func [|format_type ; val_idx |] "printf" body_builder);
-          (* END WORK HERE *)
+            (* do the actual printing of the element in the list at the current index *)
+            print_element(cur_index_ptr, body_builder, act_list, format_type);
           
             (* loads the value in cur_index_ptr *)
             let cur_index_val = L.build_load cur_index_ptr "cur_index" body_builder in
@@ -182,8 +168,59 @@ let translate (exprs) =
           let merge_bb = L.append_block context "merge" cur_fun in 
             ignore(L.build_cond_br bool_val body_bb merge_bb pred_builder);
             L.position_at_end merge_bb sub_builder;
+  in
+  let copy_list (length, small_list, big_idx_ptr , big_list, sub_builder) = 
+    (* allocate a pointer to an int (on the stack) *)
+    let cur_index_ptr = L.build_alloca i32_t "cur_index_ptr" sub_builder in 
+    (* store a 0 in that location *)
+    let cur_index = L.build_store (L.const_int i32_t 0) cur_index_ptr sub_builder in 
+    
+    (* we are creating blocks, so we need the function we are currently in *)
+    let cur_fun = L.block_parent (L.insertion_block sub_builder) in 
+    (* create the block that's supposed to have cur_index < length
+       "the conditional block" ==> pred_bb *)
+    let pred_bb = L.append_block context "while" cur_fun in 
+      ignore (L.build_br pred_bb sub_builder);
 
-    in
+    (* create the block of the body - basically 
+        printf act_list[cur_index] *)
+    let body_bb = L.append_block context "while_body" cur_fun in 
+      (* body_builder is the builder in the "while body" *)
+      let body_builder = L.builder_at_end context body_bb in
+
+      (* loads the value in cur_index_ptr *)
+      let cur_idx_in_body = L.build_load cur_index_ptr "cur_indexplz" body_builder in
+      (* get a pointer into the list at the index with the value just loaded *)
+      let ptr_to_idx = L.build_in_bounds_gep small_list [| cur_idx_in_body |] "cur_val" body_builder in
+      (* load the value at that pointer (aka value of act_list[cur_index]) *)
+      let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in 
+
+      let big_idx_in_body = L.build_load big_idx_ptr "big_idx_in_body" body_builder in 
+      let ptr_to_dest = L.build_in_bounds_gep big_list [|big_idx_in_body|] "ptr_to_dest" body_builder in 
+      ignore(L.build_store val_idx ptr_to_dest body_builder);
+
+      let big_idx_val = L.build_load big_idx_ptr "big_index" body_builder in 
+      let big_idx = L.build_add big_idx_val (L.const_int i32_t 1) "new_big_idx" body_builder in 
+        ignore(L.build_store big_idx big_idx_ptr body_builder);
+    
+      (* loads the value in cur_index_ptr *)
+      let cur_index_val = L.build_load cur_index_ptr "cur_index" body_builder in
+      (* add 1 to the value *)
+      let new_idx = L.build_add cur_index_val (L.const_int i32_t 1) "new_idx" body_builder in 
+        (* store the new value in the pointer  *)
+        ignore(L.build_store new_idx cur_index_ptr body_builder);
+        ignore(L.build_br pred_bb body_builder); 
+
+    (* the builder at the "check if cur_index < length" *)
+    let pred_builder = L.builder_at_end context pred_bb in
+    let cur_index_val2 = L.build_load cur_index_ptr "cur_index2" pred_builder in
+    let bool_val = L.build_icmp L.Icmp.Ne length cur_index_val2 "pred" pred_builder in 
+
+    let merge_bb = L.append_block context "merge" cur_fun in 
+      ignore(L.build_cond_br bool_val body_bb merge_bb pred_builder);
+      L.position_at_end merge_bb sub_builder;
+  in 
+
 
 
   let rec expr builder = function
@@ -277,9 +314,25 @@ let translate (exprs) =
              (*iterates through chords with iter_thru_chord *)   
              ignore(List.iteri iter_thru_chord cs); arr_malloc
 
-(*     | A.AConcat(e1, e2, _) -> 
-      let s_list1 = expr builder e1 and s_list2 = expr builder e2 in 
- *)
+    | A.AConcat(e1, e2, _) -> 
+      let struct1 = expr builder e1 
+      and struct2 = expr builder e2 in 
+      let length1 = get_length(struct1, builder) 
+      and length2 = get_length(struct2, builder) in 
+      let list1 = get_list(struct1, builder) 
+      and list2 = get_list(struct2, builder) in 
+      let new_length = L.build_add length1 length2 "new_length" builder in 
+      let new_struct = L.build_alloca list_t "array_struct" builder in
+      let len_ptr = L.build_in_bounds_gep new_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+        ignore(L.build_store new_length len_ptr builder);
+      let new_arr_alloc = L.build_array_alloca i32_t new_length "array" builder in 
+      let big_idx_ptr = L.build_alloca i32_t "big_idx" builder in 
+      (* store a 0 in that location *)
+      let big_idx = L.build_store (L.const_int i32_t 0) big_idx_ptr builder in 
+        copy_list (length1, list1, big_idx_ptr , new_arr_alloc, builder);
+        copy_list (length2, list2, big_idx_ptr , new_arr_alloc, builder);
+      new_arr_alloc
+
 
 
     | A.ABlock(es, t) -> 
@@ -353,14 +406,7 @@ let translate (exprs) =
   in
     let builder = List.fold_left exprbuilder builder (List.rev(exprs))
 
-  in(* 
-  let build_fun_body fdecl = 
-    let (the_function, _) = StringMap.find fdecl.A.ident function_decls in
-    let builder = L.builder_at_end context (L.entry_block the_function) in 
-    let ret_val = expr builder fdecl.A.body in  
-    ignore(L.build_ret ret_val builder)
   in
-    List.iter build_fun_body functions; 
- *)
+
   ignore (L.build_ret (L.const_int i32_t 0) builder);
   the_module
