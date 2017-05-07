@@ -45,15 +45,24 @@ let translate (exprs) =
   let i32pp_t = L.pointer_type i32p_t in         (* int**  *)
   let i32ppp_t= L.pointer_type i32pp_t in        (* int***  *)
   let floatp_t= L.pointer_type float_t in        (* float* *)
-
+  let list_t  = L.named_struct_type context "list_struct" in 
+  L.struct_set_body list_t  [| i32_t ; i32p_t |] true; 
+  let listp_t = L.pointer_type list_t in 
+  let list_t_f  = L.named_struct_type context "list_struct_f" in 
+  L.struct_set_body list_t_f  [| i32_t ; floatp_t |] true; 
+  let listp_t_f = L.pointer_type list_t_f in 
+(*   print_endline (string_of_bool (L.is_packed list_t)); *)
 
   let ltype_of_typ = function
       A.TInt     -> i32_t
     | A.TBool    -> i1_t
+    | A.TList(A.TInt)    -> listp_t
+    | A.TList(A.TFloat)  -> floatp_t
     (* | A.TVoid    -> void_t  *)
     | A.TFloat   -> float_t 
     | A.TString  -> i8p_t 
     | A.TUnit    -> void_t 
+
     | _ -> raise (Failure "Shouldn't be here") in
     
 
@@ -88,6 +97,9 @@ let translate (exprs) =
   let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
   let str_format = L.build_global_stringptr "%s\n" "str" builder in
   let float_format = L.build_global_stringptr "%f\n" "flt" builder in 
+  let char_no_line = L.build_global_stringptr "%c" "str" builder in 
+  let int_no_line = L.build_global_stringptr "%d " "fmt" builder in 
+
   let rec expr builder = function
       A.ALiteral(i, _) ->  L.const_int i32_t i
     | A.AFloatLit(f, _) -> L.const_float float_t f 
@@ -116,23 +128,48 @@ let translate (exprs) =
 	    | A.Greater -> L.build_icmp L.Icmp.Sgt
 	    | A.Geq     -> L.build_icmp L.Icmp.Sge
     ) e1' e2' "tmp" builder
-    | A.AList(es, _)    -> 
-          let arr_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (List.length es)) "array" builder
+   | A.AList(es, _)    -> 
+        let s_list = L.build_alloca list_t "array_struct" builder in
+          let pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+            ignore(L.build_store (L.const_int i32_t (List.length es)) pointer builder);
+          let arr_alloc = L.build_array_alloca (i32_t) (L.const_int i32_t (List.length es)) "array" builder
           in 
             let deal_with_element index e =  
-              let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "elem" builder in 
+              let pointer = L.build_gep arr_alloc [| (L.const_int i32_t index)|] "elem" builder in 
               let e' = expr builder e in 
                 ignore(L.build_store e' pointer builder)
             in
-             List.iteri deal_with_element es; arr_malloc
- (*   | A.ASubset(s, index, _)  ->
+             List.iteri deal_with_element es;
+          let pointer_arr = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "actual_list" builder in 
+            ignore(L.build_store arr_alloc pointer_arr builder);
+        s_list
+(*    | A.Subset(s, index)  ->
           let var = try Hashtbl.find main_vars s
+                    with Not_found -> raise (Failure (s ^ " Not Found!"))
+            in 
+              let s_list = L.build_load var "head" builder in 
+              let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
+            let act_list = L.build_load list_pointer "cur_list" builder in
+              let pointer = L.build_in_bounds_gep act_list [| (L.const_int i32_t index) |] "pointer" builder in 
+               L.build_load pointer "tmp" builder *)
+   | A.ASubset(e1, e2, _)  ->
+      let s_list = expr builder e1 in 
+      let index  = expr builder e2 in 
+        let pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+          let length = L.build_load pointer "size" builder in 
+            let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
+            let act_list = L.build_load list_pointer "cur_list" builder in
+            let pointer_to_element = L.build_gep act_list [| index |] "pointer_to_element" builder in 
+            L.build_load pointer_to_element "tmp" builder
+
+
+(*           let var = try Hashtbl.find main_vars s
                     with Not_found -> raise (Failure (s ^ " Not Found!"))
             in 
               let head = L.build_load var "head" builder in 
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
-               L.build_load pointer "tmp" builder *)
-  
+               L.build_load pointer "tmp" builder
+ *)  
     | A.ARList(es, _) ->
           let arr_malloc = L.build_array_malloc (float_t) (L.const_int i32_t (List.length es)) "array" builder
           in 
@@ -145,17 +182,16 @@ let translate (exprs) =
 
 	    
     | A.AChordList(cs, _) ->
-
             (* allocates the chord list *)
 	    let arr_malloc = L.build_array_malloc (i32pp_t) (L.const_int i32_t (List.length cs)) "chord_pointer_array" builder in
 	    
               let iter_thru_chord index chord=
-		(* assigns pointer to chord *)
-		let chord_pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
-		(*allocates  array for pitches*)
-		let arr_chord_malloc = L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length chord)) "arr_pitch" builder in
-                (* stores array for pitches into pointer to chord*)	
-                ignore(L.build_store arr_chord_malloc chord_pointer builder); 
+  		(* assigns pointer to chord *)
+  		let chord_pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "chord_pointer_elem" builder in
+  		(*allocates  array for pitches*)
+  		let arr_chord_malloc = L.build_array_malloc (i32p_t) (L.const_int i32_t (List.length chord)) "arr_pitch" builder in
+                  (* stores array for pitches into pointer to chord*)	
+                  ignore(L.build_store arr_chord_malloc chord_pointer builder); 
 
 		  let deal_with_pitch index el=
 		    (*assigns a pointer to the pitch *)
@@ -177,14 +213,12 @@ let translate (exprs) =
                         let postfield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 2)|] "postfield_elem" builder in
                         let el'=L.const_int i32_t (third el) in
                         ignore(L.build_store el' postfield_pointer builder); 
-
- 
-		in
-                (* iterates through pitches with deal_with_pitch*)
-		ignore(List.iteri deal_with_pitch chord)
-           in
-           (*iterates through chords with iter_thru_chord *)   
-           ignore(List.iteri iter_thru_chord cs); arr_malloc
+  		in
+                  (* iterates through pitches with deal_with_pitch*)
+  		ignore(List.iteri deal_with_pitch chord)
+             in
+             (*iterates through chords with iter_thru_chord *)   
+             ignore(List.iteri iter_thru_chord cs); arr_malloc
 
 
     | A.ABlock(es, t) -> 
@@ -198,14 +232,11 @@ let translate (exprs) =
 		     A.Neg     -> L.build_neg
 		   | A.Not     -> L.build_not
        ) e' "tmp" builder
-    | A.AAssign (s, e, _) -> let e' = expr builder e in 
+    | A.AAssign (s, e, t) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
-                    let local_var = L.build_alloca (match e with 
-                          A.AList(_) -> i32p_t
-		                    | A.ARList(_) -> floatp_t 
-                        | _ -> i32_t) s builder in 
-                        Hashtbl.add main_vars s local_var;local_var in
+                    let local_var = L.build_alloca (ltype_of_typ t) s builder in 
+                        Hashtbl.add main_vars s local_var; local_var in
                 ignore (L.build_store e' var builder); e' 
 
 
@@ -215,6 +246,69 @@ let translate (exprs) =
        L.build_call printf_func [| str_format; (expr builder e) |] "printf" builder
     | A.ACall (A.AID("Printfloat", _), [e], _) ->
        L.build_call printf_func [| float_format; (expr builder e) |] "printf" builder
+    | A.ACall (A.AID("Printlist", _), [e], _) -> 
+      (* cur_index = 0
+         while cur_index < length:
+            printf act_list[cur_index] 
+            cur_index += 1*)
+      (* Get the struct we made before *)
+      let s_list = expr builder e in 
+        (* get pointer to length in the struct (at position 0,0) *)
+        let pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+          (* load that pointer to the length *)
+          let length = L.build_load pointer "size" builder in 
+            (* get pointer to the int* in the struct (at position 0,1) *)
+            let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
+            (* load that pointer - now act_list is the pointer to the head of the list *)
+            let act_list = L.build_load list_pointer "cur_list" builder in
+            (* allocate a pointer to an int (on the stack) *)
+            let cur_index_ptr = L.build_alloca i32_t "cur_index_ptr" builder in 
+            (* store a 0 in that location *)
+            let cur_index = L.build_store (L.const_int i32_t 0) cur_index_ptr builder in 
+            
+            (* we are creating blocks, so we need the function we are currently in *)
+            let cur_fun = L.block_parent (L.insertion_block builder) in 
+            (* create the block that's supposed to have cur_index < length
+               "the conditional block" ==> pred_bb *)
+            let pred_bb = L.append_block context "while" cur_fun in 
+              ignore (L.build_br pred_bb builder);
+
+            (* create the block of the body - basically 
+                printf act_list[cur_index] *)
+            let body_bb = L.append_block context "while_body" cur_fun in 
+              (* body_builder is the builder in the "while body" *)
+              let body_builder = L.builder_at_end context body_bb in
+
+            (* DO THE WORK ON THE ACTUAL ELEMENTS OF THE LIST HERE *)
+                (* loads the value in cur_index_ptr *)
+                let cur_idx_in_body = L.build_load cur_index_ptr "cur_indexplz" body_builder in
+                (* get a pointer into the list at the index with the value just loaded *)
+                let ptr_to_idx = L.build_in_bounds_gep act_list [| cur_idx_in_body |] "cur_val" body_builder in
+                  (* load the value at that pointer (aka value of act_list[cur_index]) *)
+                  let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in 
+               (* call printf with that value *)
+              ignore(L.build_call printf_func [|int_no_line ; val_idx |] "printf" body_builder);
+            (* END WORK HERE *)
+            
+              (* loads the value in cur_index_ptr *)
+              let cur_index_val = L.build_load cur_index_ptr "cur_index" body_builder in
+              (* add 1 to the value *)
+              let new_idx = L.build_add cur_index_val (L.const_int i32_t 1) "new_idx" body_builder in 
+                (* store the new value in the pointer  *)
+                ignore(L.build_store new_idx cur_index_ptr body_builder);
+                ignore(L.build_br pred_bb body_builder); 
+
+            (* the builder at the "check if cur_index < length" *)
+            let pred_builder = L.builder_at_end context pred_bb in
+            let cur_index_val2 = L.build_load cur_index_ptr "cur_index2" pred_builder in
+            let bool_val = L.build_icmp L.Icmp.Ne length cur_index_val2 "pred" pred_builder in 
+
+            let merge_bb = L.append_block context "merge" cur_fun in 
+              ignore(L.build_cond_br bool_val body_bb merge_bb pred_builder);
+              L.position_at_end merge_bb builder;
+              L.const_int i32_t 1;
+
+
     | A.ACall (A.AID(s, _), act, _) ->
        let (fdef, fdecl) = Hashtbl.find function_defs s  in
        let actuals = List.rev (List.map (expr builder) (List.rev act)) in
