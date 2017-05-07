@@ -312,8 +312,11 @@ let map s_list  application =
                         Hashtbl.add main_vars s local_var; local_var in
                 ignore (L.build_store e' var builder); e' 
 (*    | A.ACall (A.AID("Map", _), act, _) -> 
+	let func = expr builder (List.hd act) in
+	let lst = expr builder (List.hd (List.tl act)) in
+	map lst func; L.const_int i32_t 1
+*)	
 
-*)
     | A.ACall (A.AID("Printint", _), [e], _) ->
        L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
     | A.ACall (A.AID("Printstr", _), [e], _) ->
@@ -331,7 +334,7 @@ let map s_list  application =
 
 
 	(* assumed order of acutals: pitchlist, rhythmlist, modelist, start note *)
-(*    | A.ACall (A.AID("Synth", _), act, _)
+    | A.ACall (A.AID("Synth", _), act, _)
 	(*extract the actuals *)
 	let clist = expr builder act.hd in
 	let rlist = expr builder (act.tl).hd in
@@ -342,7 +345,7 @@ let map s_list  application =
 		
 		let arr_malloc=
 	 
-*)		
+		
 	
     | A.ACall (A.AID(s, _), act, _) ->
        let (fdef, fdecl) = Hashtbl.find function_defs s  in
