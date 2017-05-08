@@ -68,9 +68,6 @@ let translate (exprs) =
  
  
 
-  
-(*   print_endline (string_of_bool (L.is_packed list_t)); *)
-
   let ltype_of_typ = function
       A.TInt     -> i32_t
     | A.TBool    -> i1_t
@@ -98,9 +95,16 @@ let translate (exprs) =
   let char_no_line = L.build_global_stringptr "%c" "str" builder in 
   let int_no_line = L.build_global_stringptr "%d " "fmt" builder in 
 
-let get_length (struct_obj, sub_builder) = 
+  (* Declare the built-in synth() function *)
+  let synth_t = L.function_type void_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t  |] in
+  let synth_func = L.declare_function "synth" synth_t the_module in
+
+
+
+  (* get length of struct *)
+  let get_length (struct_obj, sub_builder) = 
     (* get pointer to length in the struct (at position 0,0) *)
-    let pointer = L.build_in_bounds_gep struct_obj [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" sub_builder in
+  let pointer = L.build_in_bounds_gep struct_obj [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" sub_builder in
           (* load that pointer to the length *)
           L.build_load pointer "size" sub_builder 
   in 
@@ -352,16 +356,24 @@ let map s_list  application =
     | A.ACall (A.AID("Synth", _), act, _) ->
 	(*extract the actuals *)
 	let clist = expr builder (List.hd act) in
+	let clist_len = get_length (clist, builder) in
 	let rlist = expr builder (List.hd (List.tl act)) in
 	let modelist = expr builder (List.hd (List.tl (List.tl act))) in
-	let pitch = expr builder (List.hd (List.tl (List.tl (List.tl act)))) in
+	let mode_len = get_length(modelist, builder) in
+	let start_pitch = expr builder (List.hd (List.tl (List.tl (List.tl act)))) in
 	(*build the nessesary structures to pass into c function - plist as non-struct int***, list of chord lengths, return-arr *)
 	
+	(*malloced structure that contains lengths of chords *)
+	let chord_lengths = L.build_array_malloc i32_t ( get_length(clist, builder)) "return_arr" builder in
 	(*malloced structure that normalized pitch array (no octaves or accidnetals) will be build into. This is passed into C synth function *)
         let clear_cl_list = L.build_array_malloc i32p_t ( get_length(clist, builder)) "return_arr" builder in
 	(*building non-struct chord : Note that this refers to both the normal builder and the builder inside the while loop (builder1)*)
 	let passed_cl_list =L.build_array_malloc i32pp_t ( get_length(clist, builder)) "norm_arr" builder in 
 		let chord_func value1 index builder1= 
+			(* for chord_lengths *)
+			let len_malloc = L.build_array_malloc i32_t ( get_length(value1, builder1)) "chord_length" builder in
+			let len_ptr = L.build_gep chord_lengths [| index|] "len_pointer" builder in
+			ignore(L.build_store len_malloc  len_ptr builder);
 	        	(* for passed_cl_list *)
 			let chord_arr_malloc = L.build_array_malloc i32p_t ( get_length(value1, builder1)) "norm_chord_arr" builder in 
 	                let pchord_pointer = L.build_gep passed_cl_list [| index|] "norm_chord_ptr" builder in
@@ -395,8 +407,10 @@ let map s_list  application =
 				let pitch_return_malloc = L.build_array_malloc i32_t (L.const_int i32_t 1) "ret_pitch" builder in
 				let pitch_return_ptr = L.build_gep chord_return_malloc [| index|] "ret_pitch_ptr" builder in
 				ignore(L.build_store pitch_return_malloc pitch_return_ptr  builder);     in  
-			map (get_list(value1)) pitch_func in
-	map (get_list(plist)) chord_func; L.const_int i32_t 1
+			map (get_list(value1, builder1)) pitch_func in
+	map (get_list(clist, builder)) chord_func;
+
+        L.build_call synth_func [| passed_cl_list; clist_len; chord_lengths; start_pitch; modelist; mode_len; rlist; clear_cl_list  |] "synth" builder	
 	
 	
                       	
