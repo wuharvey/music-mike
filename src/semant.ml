@@ -29,8 +29,19 @@ let check (aexprs: aexpr list) =
     | _ -> false
   in
   let polycalls = List.filter is_call aexprs in
-  let Afuniter ae = match ae with
-    | AFun(fn, _, _, _) -> if List.mem fn polycalls
+  let rec matching x lst =
+      match lst
+      with [] -> []
+    | ACall(AID(x), a, b)::rest -> ACall(AID(x), a, b)::(matching x rest)
+    | y::rest -> matching x rest
+    in
+  let rec iterAexprs alist = match alist with
+    [] -> []
+    | AFun(fn, a, b, _)::rest -> let callmatches = matching fn polycalls in
+        let calltofun cm = AFun(fn, a, b, )
+
+
+
         then (* iterate thru polycalls for matching fnames replace AFun with new Afun with matching polycals *)
         else (*check if function is called at all and throw away*)
     | _ ->
