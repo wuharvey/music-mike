@@ -65,8 +65,6 @@ let translate (exprs) =
   let list_i32pp_t  = L.named_struct_type context "list_struct_i32pp_t" in
   L.struct_set_body list_i32pp_t  [| i32_t ; i32ppp_t |] true;
   let listppp_t = L.pointer_type list_i32pp_t in
- 
- 
 
   let ltype_of_typ = function
       A.TInt     -> i32_t
