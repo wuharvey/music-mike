@@ -324,6 +324,39 @@ let map s_list  application =
 		     A.Neg     -> L.build_neg
 		   | A.Not     -> L.build_not
        ) e' "tmp" builder
+(*
+    | A.AMuPreop(op, e, _) ->
+	(* given pointer to pitch array, memory operations for adding or subtracting to position 0 of pitch element *)
+	(* index is needed so map will accept it *)
+	let interior_operation index pitch builder1 =
+	let prefield_pointer=L.build_gep pitch [| (L.const_int i32_t 0)|] "prefield_elem" builder1 in
+	let cur_prefield = L.build_load prefield_pointer "cur_prefield" builder1 in
+	(match op with
+	  A.AOup -> 
+		let new_prefield = L.build_add cur_prefield (L.const_int i32_t 1) builder1
+
+	  A.AOdown ->
+		let new_prefield = L.build_sub cur_prefield (L.const_int i32_t 1) builder1
+
+	)  in
+	ignore(L.build_store new_prefield prefield_pointer builder); in
+	(* match different things mupreops could be applied to, there are 3 *)
+         (match e with
+	  |  A.APitch -> 
+		let e'=expr builder e in
+		interior_operation e' builder
+	  
+	  | A.AChord ->
+		let e' = expr builder e in
+		map (get_list e' builder) interior_operation
+		
+
+	  | A.AChordlist ->
+		let e' = expr builder e in 
+
+	)
+
+*)
     | A.AAssign (s, e, t) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  
@@ -333,7 +366,8 @@ let map s_list  application =
 (*    | A.ACall (A.AID("Map", _), act, _) -> 
 	let func = expr builder (List.hd act) in
 	let lst = expr builder (List.hd (List.tl act)) in
-	map lst func; L.const_int i32_t 1
+	let wrapper f=f in 
+	map lst (wrapper func); L.const_int i32_t 1
 *)	
 
     | A.ACall (A.AID("Printint", _), [e], _) ->
