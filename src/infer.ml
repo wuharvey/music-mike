@@ -184,7 +184,7 @@ let rec collect_expr ae : constraints =
           args_c @ [(t, ret_t)]
         end
       | TType(_) -> [(fnt, TFun(List.map type_of args, t))] 
-      | _ -> raise (Failure "Mismatched types")
+      | _ -> raise (Failure "Infer Error (187): Mismatched types")
     in 
     (collect_expr name) @ (List.flatten (List.map collect_expr args)) @ s
 
@@ -222,7 +222,7 @@ and unify_one t1 t2 =
     if l1 = l2 then unify ((List.combine u x) @ [(v, y)])  (* Double check if
          args are correct *)
     else raise (Failure "Mismatched Argument Count") 
-  | _ -> raise (Failure "Mismatched types")
+  | _ -> raise (Failure ("Infer Error (225): Mismatched types" ^ string_of_typ(t1) ^ string_of_typ(t2)))
 ;;
 
 let rec apply_expr subs ae = 
