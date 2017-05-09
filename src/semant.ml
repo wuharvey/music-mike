@@ -25,7 +25,7 @@ let check (aexprs: aexpr list) =
   let poly_fnames = List.map getname poly in
 
   let is_call ae = match ae with
-    | ACall(AID(fn), args, _) -> let name = fn in
+    | ACall(AID(fn,t), args, _) -> let name = fn in
       List.mem name poly_fnames
     | _ -> false
   in
@@ -33,7 +33,7 @@ let check (aexprs: aexpr list) =
   let rec matching x lst =
       match lst
       with [] -> []
-    | ACall(AID(x), a, b)::rest -> ACall(AID(x), a, b)::(matching x rest)
+    | ACall(AID(x,t), a, b)::rest -> ACall(AID(x,t), a, b)::(matching x rest)
     | y::rest -> matching x rest
     in
   let rec iterAexprs alist =
