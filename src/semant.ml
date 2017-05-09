@@ -46,6 +46,6 @@ let check (aexprs: aexpr list) =
           | _ -> [] )
         in
         let calltofun cm1 = AFun(fn, a, b, TFun(typelist cm1, Infer.type_of cm1)) in
-        (List.map calltofun callmatches)::(iterAexprs rest)
+        (List.map calltofun callmatches)@(iterAexprs rest)
     | w::rest -> w::(iterAexprs rest)
   in iterAexprs aexprs;;
