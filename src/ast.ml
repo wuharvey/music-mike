@@ -143,6 +143,7 @@ let rec string_of_expr = function
   | Concat(e1, e2) -> string_of_expr e1 ^ "@" ^ string_of_expr e2
   | Noexpr -> ""
   | Unit -> "()"
+  | Fun(n, args, e) -> "Fun " ^ n ^ String.concat " " args ^ " = " ^ string_of_expr e 
   | _ -> "string_of_expr not implemented for your expression yet."
 
 let rec string_of_typ = function

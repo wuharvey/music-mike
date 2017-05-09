@@ -13,14 +13,17 @@ http://llvm.moe/ocaml/
 
 *)
 
+
+
 module L = Llvm
 module A = Ast
 
 module StringMap = Map.Make(String)
 
-let first  (a,_,_) = a;; 
-let second (_,a,_) = a;; 
-let third  (_,_,a) = a;; 
+
+   let first  (a,_,_) = a;; 
+    let second (_,a,_) = a;; 
+    let third  (_,_,a) = a;; 
 
 let main_vars:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
 let function_defs:(string, (L.llvalue * A.aexpr)) Hashtbl.t = Hashtbl.create 100
