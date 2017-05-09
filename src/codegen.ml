@@ -52,21 +52,22 @@ let translate (exprs) =
   L.struct_set_body list_t  [| i32_t ; i32p_t |] true; 
   let listp_t = L.pointer_type list_t in 
 
+  (* int * list struct *) 
+  let chord_struct  = L.named_struct_type context "chord_struct" in
+  L.struct_set_body chord_struct  [| i32_t ; i32pp_t |] true;
+  let chord_structp = L.pointer_type chord_struct in
+ 
+  (* int ** list struct  *)
+  let chordlist_struct  = L.named_struct_type context "chordlist_struct" in
+  L.struct_set_body chordlist_struct  [| i32_t ; chord_structp |] true;
+  let chordlist_structp = L.pointer_type chordlist_struct in
+ 
+
+
   (* float list struct   *)
   let list_t_f  = L.named_struct_type context "list_struct_f" in 
   L.struct_set_body list_t_f  [| i32_t ; floatp_t |] true; 
   let listp_t_f = L.pointer_type list_t_f in
- 
-  (* int * list struct *) 
-  let list_i32p_t  = L.named_struct_type context "list_struct_i32p_t" in
-  L.struct_set_body list_i32p_t  [| i32_t ; listp_t |] true;
-  let listpp_t = L.pointer_type list_i32p_t in
- 
-  (* int ** list struct  *)
-  let list_i32pp_t  = L.named_struct_type context "list_struct_i32pp_t" in
-  L.struct_set_body list_i32pp_t  [| i32_t ; listpp_t |] true;
-  let listppp_t = L.pointer_type list_i32pp_t in
- 
  
 
   let ltype_of_typ = function
@@ -74,7 +75,7 @@ let translate (exprs) =
     | A.TBool    -> i1_t
     | A.TList(A.TInt)    -> listp_t
     | A.TList(A.TFloat)  -> listp_t_f
-    | A.TList(A.TList(A.TPitch)) -> listppp_t
+    | A.TList(A.TList(A.TPitch)) -> chordlist_structp
     (* | A.TVoid    -> void_t  *)
     | A.TFloat   -> float_t 
     | A.TString  -> i8p_t 
@@ -109,9 +110,9 @@ let translate (exprs) =
 
 
   (* get length of struct *)
-  let get_length (struct_obj, sub_builder) = print_endline(L.string_of_lltype (L.type_of struct_obj));
+  let get_length (struct_obj, sub_builder) = (* print_endline(L.string_of_lltype (L.type_of struct_obj)); *)
     (* get pointer to length in the struct (at position 0,0) *)
-  let pointer = L.build_in_bounds_gep struct_obj [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" sub_builder in print_endline(L.string_of_lltype (L.type_of pointer));
+  let pointer = L.build_in_bounds_gep struct_obj [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" sub_builder in(*  print_endline(L.string_of_lltype (L.type_of pointer)); *)
           (* load that pointer to the length *)
           L.build_load pointer "size" sub_builder 
   in 
@@ -124,7 +125,7 @@ let translate (exprs) =
 
 
 (* s_list is llvalue, application is function taking element of list, index, and builder *)
-let map s_list  application = print_endline("line 127");  print_endline(L.string_of_llvalue (s_list));
+let map s_list  application = print_endline("line 127 " ^ L.string_of_lltype (L.type_of s_list));
       (* cur_index = 0
           while cur_index < length:
             printf act_list[cur_index] 
@@ -137,6 +138,7 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
             let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
             (* load that pointer - now act_list is the pointer to the head of the list *)
             let act_list = L.build_load list_pointer "cur_list" builder in
+            print_endline("line 141 " ^ L.string_of_lltype (L.type_of act_list));
             (* allocate a pointer to an int (on the stack) *)
             let cur_index_ptr = L.build_alloca i32_t "cur_index_ptr" builder in 
             (* store a 0 in that location *)
@@ -163,11 +165,10 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
                   (* load the value at that pointer (aka value of act_list[cur_index]) *)
                   let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in 
                (* apply function onto element*)
-               print_endline("line 166");
-               print_endline(L.string_of_llvalue (val_idx));
+               print_endline("line 166 " ^ L.string_of_lltype (L.type_of val_idx));
               ignore(application  val_idx cur_index body_builder);
-              print_endline("line 169");
-            (* END WORK HERE *)
+(*               print_endline("line 169");
+ *)            (* END WORK HERE *)
             
               (* loads the value in cur_index_ptr *)
               let cur_index_val = L.build_load cur_index_ptr "cur_index" body_builder in
@@ -218,11 +219,6 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
 
    | A.APitch(preop, e, postop, _) ->
 			  (* allocates single pitch *)
-			  let pitch_malloc = L.build_malloc list_t "pitch" builder in  
-			    (* stores allocated pitch into pointer for the pitch  *)
-			 				(* for each field of pitch tuple, allocate space and write in *)
-        let pointer = L.build_in_bounds_gep pitch_malloc [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
-        ignore(L.build_store (L.const_int i32_t 3) pointer builder);
         let arr_pitch_malloc = L.build_array_malloc i32_t (L.const_int i32_t 3) "array" builder in
 				(* prefield *)
 				let prefield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 0)|] "prefield_elem" builder in
@@ -236,8 +232,7 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
 				let postfield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 2)|] "postfield_elem" builder in
 				let el'=L.const_int i32_t postop in
 				ignore(L.build_store el' postfield_pointer builder); 
-        let pointer_arr = L.build_in_bounds_gep pitch_malloc [| L.const_int i32_t 0; L.const_int i32_t 1 |] "actual_list" builder in 
-            ignore(L.build_store arr_pitch_malloc pointer_arr builder);  pitch_malloc
+        arr_pitch_malloc
         
 
    | A.AList(es, t)    ->
@@ -247,12 +242,12 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
            struct_b = {i32_t, struct_a* }     <- list_i32p_t
            struct_c = {i32_t, struct_b* }   <- list_i32pp_t *)
 		    (*allocate struct to hold chordlist and length, struct_c {i32_t, struct_b*} *)
-		    let cl_struct=L.build_malloc list_i32pp_t "cl_struct" builder in
+		    let cl_struct=L.build_malloc chordlist_struct "cl_struct" builder in
 		      (* builds pointer for length field in struct to hold length of chordlist *)
           let c_len_pointer = L.build_in_bounds_gep cl_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in 
               ignore(L.build_store (L.const_int i32_t (List.length es)) c_len_pointer builder);
           (* malloc's an array of type struct_b {i32_t, i32_t** } *)
-		      let arr_malloc = L.build_array_malloc list_i32p_t (L.const_int i32_t (List.length es)) "chord_pointer_array" builder in 
+		      let arr_malloc = L.build_array_malloc chord_struct (L.const_int i32_t (List.length es)) "chord_pointer_array" builder in 
           (*makes chord struct- length + content *)
 		      (* iterates thru es and builds each chord *)  
            
@@ -271,17 +266,17 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
   
        |  TList(TPitch) -> (*A List of Pitches (aka things separated by | ) *)
 	       (* allocates the chord list *)
-    			let c_struct=L.build_malloc list_i32p_t "chord_struct" builder in
+    			let c_struct=L.build_malloc chord_struct "chord_struct" builder in
     			 let c_len_pointer = L.build_in_bounds_gep c_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
     				ignore(L.build_store (L.const_int i32_t (List.length es)) c_len_pointer builder);
-    			 let arr_chord_malloc = L.build_array_malloc list_t (L.const_int i32_t (List.length es)) "arr_pitch" builder in
+    			 let arr_chord_malloc = L.build_array_malloc i32p_t (L.const_int i32_t (List.length es)) "arr_pitch" builder in
     			 (* ties c_struct to cl_struct  *)
       			let deal_with_pitch index el = 
       			    (*assigns a pointer to the pitch *)
       			    let pitch_pointer = L.build_gep arr_chord_malloc [| (L.const_int i32_t index)|] "pitch_pointer_elem" builder in
                   let e' = expr builder el in 
-                  let e_val = L.build_load e' "actual_pitch_struct" builder in 
-      	          ignore(L.build_store e_val pitch_pointer builder);
+(*                   let e_val = L.build_load e' "actual_pitch_struct" builder in 
+ *)      	          ignore(L.build_store e' pitch_pointer builder);
       		  in
       			(* iterates through pitches with deal_with_pitch*)
       			List.iteri deal_with_pitch es;
@@ -401,7 +396,7 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
 	(* assumed order of acutals: pitchlist, rhythmlist, modelist, start note *)
     | A.ACall (A.AID("Synth", _), act, _) -> 
 	(*extract the actuals *)
-	let clist = expr builder (List.hd act) in
+	let clist = expr builder (List.hd act) in print_endline("line 398 " ^ L.string_of_lltype (L.type_of clist));
 	let clist_len = get_length (clist, builder) in
 	let rlist = expr builder (List.hd (List.tl act)) in
 	let modelist = expr builder (List.hd (List.tl (List.tl act))) in
@@ -412,51 +407,22 @@ let map s_list  application = print_endline("line 127");  print_endline(L.string
 	(*malloced structure that contains lengths of chords *)
 	let chord_lengths = L.build_array_malloc i32_t clist_len "return_arr" builder in 
 	(*malloced structure that normalized pitch array (no octaves or accidnetals) will be built into. This is passed into C synth function *)
-  let clear_cl_list = L.build_array_malloc i32p_t clist_len "return_arr" builder in
+  	let clear_cl_list = L.build_array_malloc i32p_t clist_len "return_arr" builder in
 	(*building non-struct chord : Note that this refers to both the normal builder and the builder inside the while loop (builder1)*)
 	let passed_cl_list =L.build_array_malloc i32pp_t clist_len "norm_arr" builder in 
-		let chord_func value1 index builder1= print_endline(L.string_of_llvalue (get_length(value1, builder1)));
-			(* for chord_lengths *)
-			let len_malloc = L.build_array_malloc i32_t ( get_length(value1, builder1)) "chord_length" builder1 in 
-			let len_ptr = L.build_gep chord_lengths [| index|] "len_pointer" builder1 in
-			ignore(L.build_store len_malloc  len_ptr builder1);
-	        	(* for passed_cl_list *)
-			let chord_arr_malloc = L.build_array_malloc i32p_t ( get_length(value1, builder1)) "norm_chord_arr" builder1 in 
-	                let pchord_pointer = L.build_gep passed_cl_list [| index|] "norm_chord_ptr" builder1 in
-		        ignore(L.build_store chord_arr_malloc  pchord_pointer builder1);      
-			(* for clear_cl_list *) 
-			let chord_return_malloc = L.build_array_malloc i32_t ( get_length(value1, builder1)) "ret_chord_arr" builder1 in
-		        let cchord_pointer = L.build_gep clear_cl_list [| index|] "ret_chord_ptr" builder1 in
-		        ignore(L.build_store chord_return_malloc cchord_pointer builder1);      
-			let pitch_func value2 index2 builder2=
-				(*for passed_cl_list *)
-				let pitch_arr_malloc = L.build_array_malloc i32_t (L.const_int i32_t 3) "norm_pitch" builder2 in
-				let pitch_pointer = L.build_gep chord_arr_malloc [| index2|] "norm_pitch_ptr" builder2 in
-				ignore(L.build_store pitch_arr_malloc pitch_pointer builder2);     
-				(* copy value from struct list to int *** list *)
-				(*octave *)
-				let octave_ptr = L.build_gep value2 [| L.const_int i32_t 0|] "retrieved_octave_ptr" builder2 in
-				let octave_val=L.build_load octave_ptr "retrieved_octave" builder2 in
-				let new_octave_ptr=L.build_gep pitch_arr_malloc  [| L.const_int i32_t 0|] "norm_octave_ptr" builder2 in
-				ignore(L.build_store octave_val new_octave_ptr builder2);          
-				(*pitch literal *)
-				let lit_ptr = L.build_gep value2 [| L.const_int i32_t 1|] "retrieved_lit_ptr" builder2 in
-				let lit_val=L.build_load octave_ptr "retrieved_lit" builder2 in
-				let new_lit_ptr=L.build_gep pitch_arr_malloc  [| L.const_int i32_t 1|] "norm_lit_ptr" builder2 in
-				ignore(L.build_store lit_val new_lit_ptr builder2);          
-				(*accidental literal *)
-				let a_ptr = L.build_gep value2 [| L.const_int i32_t 2|] "retrieved_a_ptr" builder2 in
-				let a_val=L.build_load a_ptr "retrieved_a" builder2 in
-				let new_a_ptr=L.build_gep pitch_arr_malloc  [| L.const_int i32_t 2|] "norm_a_ptr" builder2 in
-				ignore(L.build_store a_val new_a_ptr builder2);          
-				(* for clear_cl_list *)
-				let pitch_return_malloc = L.build_array_malloc i32_t (L.const_int i32_t 1) "ret_pitch" builder2 in
-				let pitch_return_ptr = L.build_gep chord_return_malloc [| index2|] "ret_pitch_ptr" builder2 in
-				ignore(L.build_store pitch_return_malloc pitch_return_ptr  builder2); 
-      in  
-			 map (get_list(value1, builder1)) pitch_func 
-    in print_endline("line 391");  print_endline(L.string_of_llvalue (get_list(clist, builder)));
-	   map (get_list(clist, builder)) chord_func;
+		let chord_func value1 index builder1= print_endline("line 413 " ^ (L.string_of_lltype (L.type_of value1)) ^ L.string_of_llvalue (value1));
+		(* for chord_lengths *)
+			let pointer_to_ret_elem = L.build_in_bounds_gep passed_cl_list [| index |] "cur_val" builder1 in 
+			print_endline("line 416 " ^ L.string_of_lltype (L.type_of pointer_to_ret_elem));
+			let pointer_to_new_elem = get_list(value1, builder1) in 
+			print_endline("line 418 " ^ L.string_of_lltype (L.type_of pointer_to_new_elem));
+
+			ignore(L.build_store pointer_to_new_elem pointer_to_ret_elem builder1);
+		in
+
+			
+     print_endline("line 452 " ^ L.string_of_lltype (L.type_of(get_list(clist, builder))));
+	   map clist (* (get_list(clist, builder)) *) chord_func;
 
         L.build_call synth_func [| (* int *** *)passed_cl_list; (* int  *)clist_len;     (* int * *)chord_lengths; (* int  *) start_pitch; (* int *  *)modelist; (* int  *)mode_len; (* double *  *)rlist; (* int ** *)clear_cl_list  |] "synth" builder	
 	
