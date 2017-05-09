@@ -2,7 +2,7 @@ Introduction Section
 ### Introduction
 Western music is usually notated on a five-line staff, on which **notes** are given a **duration** based on symbol type, and **pitch** based on location in the staff. Composers can use proprietary software such as Sibelius or Finale to manipulate a virtual five-line staff through mouse clicks or keyboard gestures. Fans of computer music might instead use music synthesis libraries to programmatically create music in languages such as C++, but such libraries can be unintuitive for musicians unfamiliar with signals and waves.
 
-We propose Music-mike, a compiled, strongly typed, programming language, to give users an alternative option in music creation. Music-mike is designed for users to create music based on varied manipulations of short patterns. We owe this idea to Note Hashtag, a previous project completed in COMS W4115. However, unlike Note Hashtag, Music-mike is **modal** rather than **key-based**. Furthermore, lists - treated as the fundamental building block of music - are manipulated with special list operators (syntactic sugar) which create an intuitive interface based on traditional staff notation.
+We propose Music-mike, a compiled, strongly typed, functional programming language, to give users an alternative option in music creation. Music-mike is designed for users to create music based on varied manipulations of short patterns. We owe this idea to Note Hashtag, a previous project completed in COMS W4115. However, unlike Note Hashtag, Music-mike is **modal** rather than **key-based**. Furthermore, lists - treated as the fundamental building block of music - are manipulated with special list operators (syntactic sugar) which create an intuitive interface based on traditional staff notation.
 
 ### Design Ethos
 The most basic unit in music is a **note**, which can be decomposed into pitch and duration. A simple melody can thus be described as two lists: one list of pitches and another of durations. A **chord** is a collection of notes played simultaneously.
@@ -46,20 +46,20 @@ A. Process
   looking and failed early-on, the error messages told the developer whether we were making progress towards making these larger full stack
   tests work or if it was failing in whatever module the developer was working on.
 B. Programming Style Guide
-
 1. Landin's pseudo law: Treat the indentation of your programs as if it determines the meaning of your programs.
+Keep indentation consistent with that of the MicroC code.
 
 2. Keep lines shorter than 80 characters.
 
-3. Use line breaks for crazy pattern matching so the reader knows where's what.
+3. A function should always fit within one screenful (of about 70 lines), or in exceptional cases two, at the very most three. To go beyond this is unreasonable.
 
-4. Use two spaces instead of tabs when indenting.
+Justification: When a function goes beyond one screenful, it's time to divide it into subproblems and handle them independently. Beyond a screenful, one gets lost in the code. The indentation is not readable and is difficult to keep correct.
 
-5. Use underscores instead of Camel case when naming variables.
+4. The change in indentation between successive lines of the program is 2 spaces.
 
-6. Avoid breaking expressions up into multiple lines unless absolutely necessary.
+5. Using the tab character (ASCII character 9) is absolutely not recommended. Change your .vimrc if you have tabs.
 
-7. Comments go above the code they reference.
+6. Use underscores instead of Camel case
 
 C. Timeline
 Table
@@ -72,8 +72,6 @@ Mar 26      Basic AST and Parser Complete
 Mar 29      Hello World runs
 Apr 7       Testing Framework Complete
 Apr 23      Final Scanner, Parser and AST Complete
-May 5       First Music Generated!
-May 10      Project Completion
 
 D. Roles and Responsibilities
 While we had defined project roles at the beginning of the semester, about
@@ -90,11 +88,11 @@ Harvey Wu         Language Guru     Compiler Front-end, Semantic Checker, Type I
 E. Software Development Environment
 Our Stack
 /list
-/l1 Version Control: Git / GitHub
-/l2 Bug Repo: GitHub Issues
-/l3 Language: Ocaml 4.04.0, C, Bash.
-/l4 Editor: Vim (with Merlin plug-in), Sublime Text
-/l5 Operating System: Ubuntu 16.04, Mac OSX 10.12
+/l1 Github-Hosted Git Repository - used for version control and contained all of our code
+and documentation
+/l2 Ocaml 4.04.0 - Used Ocamlyacc and Ocamllex extensions for compiling scanner and parser. Used OCaml for
+the CodeGen, Semantic Checker and Backend.
+*************HUSAM PLEASE ADD MORE NEED HELP FLESHING THIS PART OUT*****************
 
 Testing Environment
 /list
@@ -122,21 +120,13 @@ C. Parser (Husam, Harvey, Lakshmi, Kaitlin)
 The parser is written in OCamlYacc and takes in a series of tokens. It uses the grammar described
 in parser.mly and datatypes defined in ast.ml to generate an Abstract Syntax Tree. In parser.mly, we define
 the Music-mike context-free grammar using productions. If the tokens produced by the scanner are successfully
-parsed that means that the .mike file is syntactically correct.
+parsed that means that the .mike file is syntactically (though perhaps not semantically) correct.
 
-D. Abstract Syntax Tree (Harvey, Husam)
-Relevant Files: ast.ml
-
-ast.ml houses two important data structures: program, which is a list of expressions and inferred_program, which is a list of type-annotated expressions. 
-
-E. Semantic Checker ()
-Relevant Files: infer.ml semant.ml
-
-The semantic checker goes through a two-step process. The first is a modified version of Hindley-Milner type inference (Algorithm W) that takes the original AST as input (a list of expressions) and returns a list of type-inferred expressions.   
-E. Code Generator (Husam)
-F. C Libraries ()
+D. The Semantic Checker ()
+E. The Code Generator (Husam)
+F. The C Libraries ()
 
 Test Plan Section
 A. *****************2 examples of source to code******************
 B. Test Suites
-We wrote tests every time we implemented a new feature. 
+We wrote tests for every time we implemented a new feature. 
