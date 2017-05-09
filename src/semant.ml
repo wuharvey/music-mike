@@ -40,7 +40,11 @@ let check (aexprs: aexpr list) =
     match alist with
     [] -> []
     | AFun(fn, a, b, _)::rest -> let callmatches = matching fn polycalls in
-        let typelist cm = match cm with ACall(_, c, _) -> List.map Infer.type_of c | _ -> [] in
+        let typelist cm =
+          (match cm with
+          ACall(_, c, _) -> List.map Infer.type_of c
+          | _ -> [] )
+        in
         let calltofun cm1 = AFun(fn, a, b, TFun(typelist cm1, Infer.type_of cm1)) in
         (List.map calltofun callmatches)::(iterAexprs rest)
     | w::rest -> w::(iterAexprs rest)
