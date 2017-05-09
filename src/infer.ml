@@ -26,8 +26,8 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | FloatLit(n) -> AFloatLit(n, TFloat), env
   | BoolLit(n)  -> ABoolLit(n, TBool), env
   | String(n)   -> AString(n, TString), env
-  | ID(n)       -> if StringMap.mem n env then
-                     AID(n, StringMap.find n env), env
+  | ID(n)       -> if StringMap.mem n env 
+                   then AID(n, StringMap.find n env), env
                    else raise(Failure(n ^ " Not Found"))
   | Binop(e1, op, e2) -> 
     let ae1, _ = annotate_expr e1 env 
@@ -43,10 +43,10 @@ let rec annotate_expr exp env : (aexpr * environment) =
     and ntyp = new_type () in 
     APostop(ae, postop, ntyp), env
   | Assign(name, e) -> 
-    if StringMap.mem name env then
-      raise (Failure "Reassignment")
-    else if StringSet.mem name keywords then
-      raise (Failure "Redefining keyword")
+    if StringMap.mem name env
+      then raise (Failure "Reassignment")
+      else if StringSet.mem name keywords
+      then raise (Failure "Redefining keyword")
       else let ntyp = new_type () in 
     let nenv = StringMap.add name ntyp env in
     let ae, _ = annotate_expr e nenv in 
@@ -77,8 +77,8 @@ let rec annotate_expr exp env : (aexpr * environment) =
               then raise (Failure "Variable already defined")
               else StringMap.add id t e) env a_args 
       in
-    if StringMap.mem name env then 
-      raise (Failure "Redefining function") 
+    if StringMap.mem name env 
+    then raise (Failure "Redefining function") 
     else let nenv = StringMap.add name fun_t nenv in
     let ae, _ = annotate_expr e nenv in 
     AFun(name, args, ae, fun_t), nenv  
@@ -86,7 +86,7 @@ let rec annotate_expr exp env : (aexpr * environment) =
     let avar, _ = annotate_expr var env 
     and ae, _ = annotate_expr e env 
     and t = new_type() in
-    let typ = t in
+    let typ = TFun([TList(t); TInt], t) in
     ASubset(avar, ae, t), env
   | _ -> AUnit(TUnit), env
 ;;
@@ -152,7 +152,7 @@ let rec collect_expr ae : constraints =
       | AID(_) -> type_of v
       | _ -> raise (Failure "Unreachable state in Subset") ) in
     let s = match vt with 
-      | TList(t) -> [(t, typ)]
+      | TList(t) -> [(TFun([t;TInt], t), typ)]
       | TType(t) -> [(vt, TList(typ))] 
       | _ -> raise (Failure "Subset can only be applied to lists") 
     in
@@ -243,18 +243,18 @@ let rec apply_expr subs ae =
 let infer expr env flag = 
   let aexpr, nenv = annotate_expr expr env in
   let constraints =
-    if flag then
-      print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
+    if flag
+    then print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
     collect_expr aexpr in
   let subs = 
     List.iter (fun (a,b) -> 
       if flag then
-        print_endline 
+      print_endline 
       ("CONSTRAINTS: " ^ string_of_typ a ^ " "  ^ string_of_typ b)) constraints;
       unify constraints in 
   let inferred_expr =
       List.iter (fun (a,b) -> if flag then
-          print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
+        print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
         apply_expr subs aexpr in 
         if flag then
         print_endline("FINAL: " ^ string_of_aexpr inferred_expr);
