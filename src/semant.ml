@@ -1,6 +1,7 @@
 (* Semantic checking for the MicroC compiler *)
 
 open Ast
+open Infer
 module StringMap = Map.Make(String)
 
 (* Hack for polymorphism compilation: take each polymorphic function and check when it is called.
@@ -35,13 +36,12 @@ let check (aexprs: aexpr list) =
     | ACall(AID(x), a, b)::rest -> ACall(AID(x), a, b)::(matching x rest)
     | y::rest -> matching x rest
     in
-  let rec iterAexprs alist = match alist with
+  let rec iterAexprs alist =
+    match alist with
     [] -> []
     | AFun(fn, a, b, _)::rest -> let callmatches = matching fn polycalls in
-        let calltofun cm = AFun(fn, a, b, )
-
-
-
-        then (* iterate thru polycalls for matching fnames replace AFun with new Afun with matching polycals *)
-        else (*check if function is called at all and throw away*)
-    | _ ->
+        let typelist cm = match cm with ACall(_, c, _) -> List.map Infer.type_of c | _ -> [] in
+        let calltofun cm1 = AFun(fn, a, b, TFun(typelist cm1, Infer.type_of cm1)) in
+        (List.map calltofun callmatches)::(iterAexprs rest)
+    | w::rest -> w::(iterAexprs rest)
+  in iterAexprs aexprs;;
