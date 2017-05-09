@@ -185,15 +185,18 @@ actuals_list:
 used in Plist (pitch list) "*/
 
 pxpr_list:
-    chord                   { [$1] }
-  | pxpr_list chord         { $2 :: $1 }
+    chord                   { [Chord($1)] }
+  | pxpr_list chord         { Chord($2) :: $1 }
 
 
 /* "List of simulateous pitches" */
 
+
 chord:
     pitch                   { [$1] }         
   | chord BAR pitch         { $3 :: $1 }
+
+
 /*p:[3|5|6  3  ^^3#|9bb]*/
 
 
@@ -203,7 +206,7 @@ chord:
   	postfield-a list of ints representing '#' and 'b' as '1' and '-1' "*/
 
 pitch:
-    prefield expr postfield { ($1, $2, $3) }
+    prefield expr postfield { Pitch($1, $2, $3) }
 
 
 /*"a list of ints representing '^' and 'v' as  '1' and '-1' respectively" */

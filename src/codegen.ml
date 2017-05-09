@@ -80,6 +80,11 @@ let translate (exprs) =
 
     | _ -> raise (Failure "Shouldn't be here") in
     
+  let stype_of_typ = function 
+    A.TList(A.TInt) -> (i32_t, list_t) 
+  | A.TList(A.TFloat) -> (float_t, list_t_f)
+  | _ -> raise (Failure "No Struct of this type") in
+
 
   (* Declare printf(), which the print built-in function will call *)
   let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
@@ -206,7 +211,7 @@ let map s_list  application =
 	    | A.Geq     -> L.build_icmp L.Icmp.Sge
     ) e1' e2' "tmp" builder
 
-   | A.APitch(preop, e, postop) ->
+   | A.APitch(preop, e, postop, _) ->
 			  (* allocates single pitch *)
 			    let arr_pitch_malloc = L.build_array_malloc (i32_t) (L.const_int i32_t (3)) "pitch" builder in  
 			    (* stores allocated pitch into pointer for the pitch  *)
@@ -249,9 +254,9 @@ let map s_list  application =
            |  TList(TPitch) ->
 	 (* allocates the chord list *)
 			let c_struct=L.build_array_malloc listpp_t (L.const_int i32_t 1) "chord_struct" builder in
-			 let c_len_pointer = L.build_in_bounds_gep cl_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
-				ignore(L.build_store (L.const_int i32_t (List.length chord)) c_len_pointer builder);
-			 let arr_chord_malloc = L.build_array_malloc i32p_t (L.const_int i32_t (List.length chord)) "arr_pitch" builder in
+			 let c_len_pointer = L.build_in_bounds_gep c_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+				ignore(L.build_store (L.const_int i32_t (List.length es)) c_len_pointer builder);
+			 let arr_chord_malloc = L.build_array_malloc i32p_t (L.const_int i32_t (List.length es)) "arr_pitch" builder in
 			 let c_pointer_arr = L.build_in_bounds_gep c_struct [| L.const_int i32_t 0; L.const_int i32_t 1 |] "struct_c_pointer" builder in
 				ignore(L.build_store arr_chord_malloc c_pointer_arr builder);
 			 (* ties c_struct to cl_struct  *)
@@ -259,11 +264,12 @@ let map s_list  application =
 			let deal_with_pitch index el=
 			    (*assigns a pointer to the pitch *)
 			    let pitch_pointer = L.build_gep arr_chord_malloc [| (L.const_int i32_t index)|] "pitch_pointer_elem" builder in
-	                        ignore(L.build_store expr builder el pitch_pointer builder);
-				  (* iterates through pitches with deal_with_pitch*)
+	                        ignore(L.build_store (expr builder el) pitch_pointer builder);
+		in
+			(* iterates through pitches with deal_with_pitch*)
 			ignore(List.iteri deal_with_pitch es); c_struct	  
 
-	          |  _ ->
+	     |  _ ->
 
 	      let s_list = L.build_alloca (snd (stype_of_typ t)) "array_struct" builder in
 		let pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
@@ -277,8 +283,7 @@ let map s_list  application =
 		  in
 		   List.iteri deal_with_element es;
 		let pointer_arr = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "actual_list" builder in 
-		  ignore(L.build_store arr_alloc pointer_arr builder);
-	      s_list
+		  ignore(L.build_store arr_alloc pointer_arr builder);  s_list
 
 
    )
@@ -302,16 +307,6 @@ let map s_list  application =
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
  *)  
-    | A.ARList(es, _) ->
-          let arr_malloc = L.build_array_malloc (float_t) (L.const_int i32_t (List.length es)) "array" builder
-          in 
-            let deal_with_element index e =  
-              let pointer = L.build_gep arr_malloc [| (L.const_int i32_t index)|] "elem" builder in 
-              let e' = expr builder e in 
-                ignore(L.build_store e' pointer builder)
-            in
-             List.iteri deal_with_element es; arr_malloc
-
 	    
     | A.ABlock(es, t) -> 
         (match es with 
