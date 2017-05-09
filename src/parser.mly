@@ -116,7 +116,7 @@ primaries:
 
     LBRACE semi_list RBRACE { Block(List.rev($2)) }
 	/* "Calling a function "*/
-  | FID LPAREN actuals_list RPAREN   { Call(ID($1), $3) }
+  | FID LPAREN actuals_list RPAREN   { Call(ID($1), List.rev($3)) }
 	/* "Assigning a value to an variable"*/       
   | assign          { $1 }
 	/* "list of expressions of same type (enforced in semant.ml)" */
