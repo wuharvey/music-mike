@@ -4,7 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
-int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[],  int start_pitch, int *modelist, int mode_length){
+int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[], 
+ int start_pitch, int *modelist, int mode_length){
 printf("%s\n", "entering chord list");
 //map the mode to absolute pitches (0 corresponds to first scale degree)
 int i=0;
@@ -78,7 +79,7 @@ int ** apply_accidentals (int ***chordlist, int cl_len, int *chord_lengths, int 
 
 //string generator, takes rhythm list plus absolute pitch list and turns into strings that can be plopped in Cfugue
 //gonna mix in some c++ lets see if it crashes :/
-int strgen (char * buff, float * rhythmlist, int ** corrected_chordlist, int cl_len, int * chord_lengths){
+int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl_len, int * chord_lengths){
 	//make the buffer: max 11 characters per note (two digit pitch and 5 digit note length)
 
 	int j=0;
@@ -128,7 +129,9 @@ int strgen (char * buff, float * rhythmlist, int ** corrected_chordlist, int cl_
 
 //synth- imitates behavior of main(), compared at end
 
-int synth(int *** chordlist, int len_chordlist, int * chord_lengths, int start_pitch, int * modelist, int mode_length, float *rhythmlist, int **pure_chord_arr ){
+int synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
+	int start_pitch, int * modelist, int mode_length, double *rhythmlist, 
+	int **pure_chord_arr ){
 	//modifies chordlist so mode is normalize to absolute value of notes. If range goes above octave, adds to prefield
 	int ***new_list = fold_lists(chordlist, len_chordlist, chord_lengths, start_pitch, modelist, mode_length);
 	//copies new_list into pure_chord_list to incorporate octaves and accidentals (yes, I know a new int ** is redundant but atm just want to see if works
@@ -160,7 +163,7 @@ int main(){
 	int start_pitch=10;
 	int modelist[4]={1,3,5,7};
 	int mode_length=4;
-	float  rhythmlist[]={1, 1.5, 0.25, 0.33};
+	double  rhythmlist[]={1, 1.5, 0.25, 0.33};
 	//build chordlist
 	chordlist=(int ***)malloc(4 * sizeof(int **));
 	int r=0; //pitch literal value
