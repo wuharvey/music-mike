@@ -104,7 +104,7 @@ let translate (exprs) =
   let int_no_line = L.build_global_stringptr "%d " "fmt" builder in 
   let float_no_line = L.build_global_stringptr "%f " "fmt" builder in
   (* Declare the built-in synth() function *)
-  let synth_t = L.function_type void_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t  |] in
+  let synth_t = L.function_type i32_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t  |] in
   let synth_func = L.declare_function "synth" synth_t the_module in
 
 
@@ -125,7 +125,7 @@ let translate (exprs) =
 
 
 (* s_list is llvalue, application is function taking element of list, index, and builder *)
-let map s_list  application = print_endline("line 127 " ^ L.string_of_lltype (L.type_of s_list));
+let map s_list  application = 
       (* cur_index = 0
           while cur_index < length:
             printf act_list[cur_index] 
@@ -138,7 +138,6 @@ let map s_list  application = print_endline("line 127 " ^ L.string_of_lltype (L.
             let list_pointer = L.build_in_bounds_gep s_list [| L.const_int i32_t 0; L.const_int i32_t 1 |] "cur_list_ptr" builder in 
             (* load that pointer - now act_list is the pointer to the head of the list *)
             let act_list = L.build_load list_pointer "cur_list" builder in
-            print_endline("line 141 " ^ L.string_of_lltype (L.type_of act_list));
             (* allocate a pointer to an int (on the stack) *)
             let cur_index_ptr = L.build_alloca i32_t "cur_index_ptr" builder in 
             (* store a 0 in that location *)
@@ -165,8 +164,7 @@ let map s_list  application = print_endline("line 127 " ^ L.string_of_lltype (L.
                   (* load the value at that pointer (aka value of act_list[cur_index]) *)
                   let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in 
                (* apply function onto element*)
-               print_endline("line 166 " ^ L.string_of_lltype (L.type_of val_idx));
-              ignore(application  val_idx cur_index body_builder);
+              ignore(application  val_idx cur_idx_in_body body_builder);
 (*               print_endline("line 169");
  *)            (* END WORK HERE *)
             
@@ -396,10 +394,12 @@ let map s_list  application = print_endline("line 127 " ^ L.string_of_lltype (L.
 	(* assumed order of acutals: pitchlist, rhythmlist, modelist, start note *)
     | A.ACall (A.AID("Synth", _), act, _) -> 
 	(*extract the actuals *)
-	let clist = expr builder (List.hd act) in print_endline("line 398 " ^ L.string_of_lltype (L.type_of clist));
+	let clist = expr builder (List.hd act) in
 	let clist_len = get_length (clist, builder) in
 	let rlist = expr builder (List.hd (List.tl act)) in
+	let act_rlist = get_list(rlist, builder) in 
 	let modelist = expr builder (List.hd (List.tl (List.tl act))) in
+	let act_modelist = get_list(modelist, builder) in 
 	let mode_len = get_length(modelist, builder) in 
 	let start_pitch = expr builder (List.hd (List.tl (List.tl (List.tl act)))) in
 	(*build the nessesary structures to pass into c function - plist as non-struct int***, list of chord lengths, return-arr *)
@@ -410,21 +410,21 @@ let map s_list  application = print_endline("line 127 " ^ L.string_of_lltype (L.
   	let clear_cl_list = L.build_array_malloc i32p_t clist_len "return_arr" builder in
 	(*building non-struct chord : Note that this refers to both the normal builder and the builder inside the while loop (builder1)*)
 	let passed_cl_list =L.build_array_malloc i32pp_t clist_len "norm_arr" builder in 
-		let chord_func value1 index builder1= print_endline("line 413 " ^ (L.string_of_lltype (L.type_of value1)) ^ L.string_of_llvalue (value1));
+		let chord_func value1 index builder1= 
 		(* for chord_lengths *)
 			let pointer_to_ret_elem = L.build_in_bounds_gep passed_cl_list [| index |] "cur_val" builder1 in 
-			print_endline("line 416 " ^ L.string_of_lltype (L.type_of pointer_to_ret_elem));
-			let pointer_to_new_elem = get_list(value1, builder1) in 
-			print_endline("line 418 " ^ L.string_of_lltype (L.type_of pointer_to_new_elem));
+
+			let pointer_to_new_elem = L.build_extractvalue value1 1 "stuff" builder1 in 
 
 			ignore(L.build_store pointer_to_new_elem pointer_to_ret_elem builder1);
 		in
 
 			
-     print_endline("line 452 " ^ L.string_of_lltype (L.type_of(get_list(clist, builder))));
 	   map clist (* (get_list(clist, builder)) *) chord_func;
 
-        L.build_call synth_func [| (* int *** *)passed_cl_list; (* int  *)clist_len;     (* int * *)chord_lengths; (* int  *) start_pitch; (* int *  *)modelist; (* int  *)mode_len; (* double *  *)rlist; (* int ** *)clear_cl_list  |] "synth" builder	
+        L.build_call synth_func [| (* int *** *)passed_cl_list; (* int  *)clist_len;     
+        (* int * *)chord_lengths; (* int  *) start_pitch; (* int *  *)act_modelist; 
+        (* int  *)mode_len; (* double *  *)act_rlist; (* int ** *)clear_cl_list  |] "synth" builder	
 	
 	(* int ***chordlist, int len_chordlist, int *chord_lengths, 
   int start_pitch, int * modelist, int mode_length, double *rhythmlist, 
