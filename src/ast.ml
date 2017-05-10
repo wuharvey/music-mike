@@ -4,6 +4,9 @@ type op = Add | FAdd | Sub | FSub | Mult | FMult | Div | FDiv | Equal | Neq | Le
 
 type preop = Neg | Not | FNeg 
 
+type mupreop = Oup | Odown
+
+type mupostop = Flat | Sharp
 type postop = Rhythmdot 
 
 type typ = 
@@ -28,6 +31,8 @@ type expr =
   | Preop of preop * expr
   | Postop of expr * postop
   | Assign of string * expr
+  | MuPreop of mupreop * expr
+  | MuPostop of expr * mupostop
   | Call of expr * expr list      
   | If of expr * expr * expr
   | Pitch of int * expr * int
@@ -51,6 +56,8 @@ type aexpr =
   | AString of string * typ
   | ABinop of aexpr * op * aexpr * typ
   | APreop of preop * aexpr * typ
+  | AMuPreop of mupreop * aexpr * typ
+  | AMuPostop of aexpr * mupostop * typ
   | APostop of aexpr * postop * typ
   | AAssign of string * aexpr * typ
   | ACall of aexpr * aexpr list * typ     

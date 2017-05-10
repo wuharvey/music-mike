@@ -186,6 +186,60 @@ let map s_list  application =
               L.position_at_end merge_bb builder;
          in
 
+
+
+  let copy_list (length, small_list, big_idx_ptr , big_list, sub_builder) = 
+    (* allocate a pointer to an int (on the stack) *)
+    let cur_index_ptr = L.build_alloca i32_t "cur_index_ptr" sub_builder in 
+    (* store a 0 in that location *)
+    let cur_index = L.build_store (L.const_int i32_t 0) cur_index_ptr sub_builder in 
+    
+    (* we are creating blocks, so we need the function we are currently in *)
+    let cur_fun = L.block_parent (L.insertion_block sub_builder) in 
+    (* create the block that's supposed to have cur_index < length
+       "the conditional block" ==> pred_bb *)
+    let pred_bb = L.append_block context "while" cur_fun in 
+      ignore (L.build_br pred_bb sub_builder);
+
+    (* create the block of the body - basically 
+        printf act_list[cur_index] *)
+    let body_bb = L.append_block context "while_body" cur_fun in 
+      (* body_builder is the builder in the "while body" *)
+      let body_builder = L.builder_at_end context body_bb in
+
+      (* loads the value in cur_index_ptr *)
+      let cur_idx_in_body = L.build_load cur_index_ptr "cur_indexplz" body_builder in
+      (* get a pointer into the list at the index with the value just loaded *)
+      let ptr_to_idx = L.build_in_bounds_gep small_list [| cur_idx_in_body |] "cur_val" body_builder in
+      (* load the value at that pointer (aka value of act_list[cur_index]) *)
+      let val_idx = L.build_load ptr_to_idx "val_idx" body_builder in 
+
+      let big_idx_in_body = L.build_load big_idx_ptr "big_idx_in_body" body_builder in 
+      let ptr_to_dest = L.build_in_bounds_gep big_list [|big_idx_in_body|] "ptr_to_dest" body_builder in 
+      ignore(L.build_store val_idx ptr_to_dest body_builder);
+
+      let big_idx_val = L.build_load big_idx_ptr "big_index" body_builder in 
+      let big_idx = L.build_add big_idx_val (L.const_int i32_t 1) "new_big_idx" body_builder in 
+        ignore(L.build_store big_idx big_idx_ptr body_builder);
+    
+      (* loads the value in cur_index_ptr *)
+      let cur_index_val = L.build_load cur_index_ptr "cur_index" body_builder in
+      (* add 1 to the value *)
+      let new_idx = L.build_add cur_index_val (L.const_int i32_t 1) "new_idx" body_builder in 
+        (* store the new value in the pointer  *)
+        ignore(L.build_store new_idx cur_index_ptr body_builder);
+        ignore(L.build_br pred_bb body_builder); 
+
+    (* the builder at the "check if cur_index < length" *)
+    let pred_builder = L.builder_at_end context pred_bb in
+    let cur_index_val2 = L.build_load cur_index_ptr "cur_index2" pred_builder in
+    let bool_val = L.build_icmp L.Icmp.Ne length cur_index_val2 "pred" pred_builder in 
+
+    let merge_bb = L.append_block context "merge" cur_fun in 
+      ignore(L.build_cond_br bool_val body_bb merge_bb pred_builder);
+      L.position_at_end merge_bb sub_builder;
+  in 
+
   let rec expr builder = function
       A.ALiteral(i, _) ->  L.const_int i32_t i
     | A.AFloatLit(f, _) -> L.const_float float_t f 
@@ -315,51 +369,78 @@ let map s_list  application =
               let pointer = L.build_gep head [| (L.const_int i32_t index) |] "pointer" builder in 
                L.build_load pointer "tmp" builder
  *)  
+    | A.AConcat(e1, e2, _) -> 
+      let struct1 = expr builder e1 
+      and struct2 = expr builder e2 in 
+      let length1 = get_length(struct1, builder) 
+      and length2 = get_length(struct2, builder) in 
+      let list1 = get_list(struct1, builder) 
+      and list2 = get_list(struct2, builder) in 
+      let new_length = L.build_add length1 length2 "new_length" builder in 
+      let new_struct = L.build_alloca list_t "array_struct" builder in
+      let len_ptr = L.build_in_bounds_gep new_struct [| L.const_int i32_t 0; L.const_int i32_t 0 |] "length" builder in
+        ignore(L.build_store new_length len_ptr builder);
+      let new_arr_alloc = L.build_array_alloca i32_t new_length "array" builder in 
+      let big_idx_ptr = L.build_alloca i32_t "big_idx" builder in 
+      (* store a 0 in that location *)
+      let big_idx = L.build_store (L.const_int i32_t 0) big_idx_ptr builder in 
+        copy_list (length1, list1, big_idx_ptr , new_arr_alloc, builder);
+        copy_list (length2, list2, big_idx_ptr , new_arr_alloc, builder);
+      new_arr_alloc
+
+
+
 	    
     | A.ABlock(es, t) -> 
         (match es with 
         e::e1::rest -> ignore(expr builder e); expr builder (A.ABlock(e1::rest,
         t))
       | [e] -> expr builder e)
+
+
     | A.APreop(op, e, _) ->
        let e' = expr builder e in
        (match op with
 		     A.Neg     -> L.build_neg
 		   | A.Not     -> L.build_not
        ) e' "tmp" builder
-(*
-    | A.AMuPreop(op, e, _) ->
+
+    | A.AMuPreop(op, e, t) ->
 	(* given pointer to pitch array, memory operations for adding or subtracting to position 0 of pitch element *)
 	(* index is needed so map will accept it *)
 	let interior_operation index pitch builder1 =
-	let prefield_pointer=L.build_gep pitch [| (L.const_int i32_t 0)|] "prefield_elem" builder1 in
-	let cur_prefield = L.build_load prefield_pointer "cur_prefield" builder1 in
-	(match op with
-	  A.AOup -> 
-		let new_prefield = L.build_add cur_prefield (L.const_int i32_t 1) builder1
+		let prefield_pointer=L.build_gep pitch [| (L.const_int i32_t 0)|] "prefield_elem" builder1 in
+		let cur_prefield = L.build_load prefield_pointer "cur_prefield" builder1 in
+		let new_prefield =
+		(match op with
+		  A.Oup -> 
+			L.build_add cur_prefield (L.const_int i32_t 1) "sum_pref_up"  builder1
 
-	  A.AOdown ->
-		let new_prefield = L.build_sub cur_prefield (L.const_int i32_t 1) builder1
+		 | A.Odown ->
+			L.build_sub cur_prefield (L.const_int i32_t 1) "sum_pref_down" builder1
 
-	)  in
-	ignore(L.build_store new_prefield prefield_pointer builder); in
+		)  in
+		ignore(L.build_store new_prefield prefield_pointer builder); in
 	(* match different things mupreops could be applied to, there are 3 *)
-         (match e with
-	  |  A.APitch -> 
+	(match t with
+       
+	    TPitch -> 
 		let e'=expr builder e in
-		interior_operation e' builder
+		interior_operation (L.const_int i32_t 1) e' builder; e'
 	  
-	  | A.AChord ->
+	  | TList(TPitch) ->
 		let e' = expr builder e in
-		map (get_list e' builder) interior_operation
+		map  e'  interior_operation; e'
 		
 
-	  | A.AChordlist ->
+	  | TList(TPitch) ->
 		let e' = expr builder e in 
+		let map1 index el builder1= 
+			map el  interior_operation in
+		map e'  map1; e'
+	) 
 
-	)
 
-*)
     | A.AAssign (s, e, t) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
                     with Not_found ->  

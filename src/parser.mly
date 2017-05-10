@@ -24,11 +24,13 @@
 %nonassoc LT GT LEQ GEQ
 %left PLUS MINUS FPLUS FMINUS
 %left TIMES DIVIDE FTIMES FDIVIDE
-%left OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT
+%left  FLAT OCTOTHORPE RHYTHMDOT
+%right OUP ODOWN
 %right RBRACKET
 %left LBRACKET
 %left CONCAT
-%right NOT NEG
+%right NOT NEG IOUP IODOWN
+%left IOCTOTHORPE IFLAT
 
 %start program
 %type <Ast.program> program
@@ -106,10 +108,12 @@ binop:
   | expr OR      expr { Binop($1, Or,    $3) }
 
 unop:
-/*| MINUS expr %prec NEG { Preop(Neg, $2) }  */
-  | NOT expr             { Preop(Not, $2) }
-
-
+/*| MINUS expr %prec NEG               { Preop(Neg, $2) }  */
+  | NOT expr                           { Preop(Not, $2) }
+  | expr FLAT  %prec IFLAT             { MuPostop($1, Flat) }
+  | expr OCTOTHORPE  %prec IOCTOTHORPE { MuPostop($1, Sharp) }
+  | OUP expr    %prec IOUP             { MuPreop( Oup, $2) }
+  | ODOWN expr   %prec IODOWN          { MuPreop(Odown, $2) }
 
 primaries:
 	/* "Block of expressions" */
@@ -213,14 +217,14 @@ pitch:
 
 prefield:
 /* nothing */               { 0 }  
-  | prefield OUP            { $1+1 }
-  | prefield ODOWN          { $1-1 }
+  | prefield IOUP            { $1+1 }
+  | prefield IODOWN          { $1-1 }
 
 
 /* "a list of ints representing '#' and 'b' as '1' and '-1' "*/
 
 postfield:
 /*nothing*/                 { 0 }
-  | postfield OCTOTHORPE    { $1+1 }
-  | postfield FLAT          { $1-1 }
+  | postfield IOCTOTHORPE    { $1+1 }
+  | postfield IFLAT          { $1-1 }
  
