@@ -416,6 +416,9 @@ let map s_list  application =
 			let new_elem_list = L.build_extractvalue value1 1 "stuff" builder1 in
       let chord_len_pointer =  L.build_in_bounds_gep chord_lengths [| index |] "len" builder1 in
       let new_elem_len = L.build_extractvalue value1 0 "oldlen" builder1 in 
+      let clear_list_pointer = L.build_in_bounds_gep clear_cl_list [| index |] "len" builder1 in
+      let new_clear_arr = L.build_array_malloc i32_t new_elem_len "clear_cl_list_elem" builder1 in 
+      ignore(L.build_store new_clear_arr clear_list_pointer builder1);
       ignore(L.build_store new_elem_len chord_len_pointer builder1);
       ignore(L.build_store new_elem_list pointer_to_ret_elem builder1);
 		in
