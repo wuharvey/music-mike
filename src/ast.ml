@@ -110,7 +110,7 @@ let rec string_of_expr = function
   | FloatLit(f) -> string_of_float f
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
-  | ChordList(_) -> "Chord"
+  | ChordList(_) -> "Chordlist"
   | ID(s) -> s
   | String(s) -> s
   | Binop(e1, o, e2) ->
