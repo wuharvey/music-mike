@@ -103,9 +103,13 @@ let translate (exprs) =
   let char_no_line = L.build_global_stringptr "%c" "str" builder in
   let int_no_line = L.build_global_stringptr "%d " "fmt" builder in
   let float_no_line = L.build_global_stringptr "%f " "fmt" builder in
+
+
   (* Declare the built-in synth() function *)
-  let synth_t = L.function_type i32_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t  |] in
+  let synth_t = L.function_type i32_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t; i32_t  |] in
   let synth_func = L.declare_function "synth" synth_t the_module in
+
+
   (*Declare the build-in make_midi() function*)
   let make_midi_t = L.function_type void_t [|i8p_t|] in
   let make_midi_func = L.declare_function "make_midi" make_midi_t the_module in
@@ -394,7 +398,7 @@ let map s_list  application =
 
 
 
-	(* assumed order of acutals: pitchlist, rhythmlist, modelist, start note *)
+	(* assumed order of acutals: pitchlist, rhythmlist, modelist, start note, channel num *)
     | A.ACall (A.AID("Synth", _), act, _) ->
 	(*extract the actuals *)
 	let clist = expr builder (List.hd act) in
@@ -405,6 +409,7 @@ let map s_list  application =
 	let act_modelist = get_list(modelist, builder) in
 	let mode_len = get_length(modelist, builder) in
 	let start_pitch = expr builder (List.hd (List.tl (List.tl (List.tl act)))) in
+	let channel = expr builder (List.hd(List.tl(List.tl(List.tl(List.tl act))))) in
 	(*build the nessesary structures to pass into c function - plist as non-struct int***, list of chord lengths, return-arr *)
 
 	(*malloced structure that contains lengths of chords *)
@@ -431,7 +436,7 @@ let map s_list  application =
 
         L.build_call synth_func [| (* int *** *)passed_cl_list; (* int  *)clist_len;
         (* int * *)chord_lengths; (* int  *) start_pitch; (* int *  *)act_modelist;
-        (* int  *)mode_len; (* double *  *)act_rlist; (* int ** *)clear_cl_list  |] "synth" builder
+        (* int  *)mode_len; (* double *  *)act_rlist; (* int ** *)clear_cl_list; channel  |] "synth" builder
 
 	(* int ***chordlist, int len_chordlist, int *chord_lengths,
   int start_pitch, int * modelist, int mode_length, double *rhythmlist,
