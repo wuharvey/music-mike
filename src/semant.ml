@@ -36,17 +36,25 @@ let check (aexprs: aexpr list) =
     | ACall(AID(x,t), a, b)::rest -> ACall(AID(x,t), a, b)::(matching x rest)
     | y::rest -> matching x rest
     in
+  let poly t = match t with
+          | TType(_) -> true
+          | _ -> false
+        in 
   let rec iterAexprs alist =
     match alist with
     [] -> []
-    | AFun(fn, a, b, _)::rest -> let callmatches = matching fn polycalls in
+    | AFun(fn, a, b, TFun(ts, ret_t))::rest -> 
+    if List.exists poly ts then 
+       let callmatches = matching fn polycalls in
         let typelist cm =
           (match cm with
           ACall(_, c, _) -> List.map Infer.type_of c
           | _ -> [] )
         in
         let calltofun cm1 = AFun(fn, a, b, TFun(typelist cm1, Infer.type_of cm1)) in
-        (List.map calltofun callmatches)@(iterAexprs rest)
+         (List.map calltofun callmatches)@(iterAexprs rest)
+    else 
+      AFun(fn, a, b, TFun(ts, ret_t))::(iterAexprs rest)
     | w::rest -> w::(iterAexprs rest)
   in iterAexprs aexprs;;
 
