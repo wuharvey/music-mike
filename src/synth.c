@@ -159,23 +159,24 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 
 	int j1=0;
 	while (j1<len_chordlist){
+		fprintf(stderr, "%d\n", j1);
 		fprintf(stderr, "%s\n", "LINE 162");
 		int ** chord= chordlist[j1]; //old
 		int ** new_chord = (int **) malloc(chord_lengths[j1]*sizeof(int *));		
+		new_chordlist[j1]=new_chord;//stuff in
 		int i=0;
 		while (i<chord_lengths[j1]){
 			fprintf(stderr, "%s\n", "LINE 167");
-			int *pitch= chord[i];
+			int *pitch= chord[i];//old
 			int *new_pitch = (int *) malloc(3*sizeof(int));
+			new_chord[i]=new_pitch;
 			new_pitch[0] = pitch[0];
 			new_pitch[1] = pitch[1];
 			new_pitch[2] = pitch[2];
 			fprintf(stderr, "%s\n", "LINE 173");
-			new_chordlist[j1][i] = new_pitch;
 			fprintf(stderr, "%s\n", "LINE 175");
 			i++;
 			}	
-		new_chordlist[j1] = new_chord;
 		j1++;
 	}
 
@@ -183,7 +184,8 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 	int j2 = 0;
 	while(j2 < mode_length) {
 		new_modelist[j2] = modelist[j2];
-	}
+		j2++;
+		}
 
 	// int i = 0;
 	// while (i<len_chordlist){
