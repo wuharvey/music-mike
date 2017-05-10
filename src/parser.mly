@@ -60,7 +60,7 @@ stmts:
     a body which consists of an `expr` expression "*/
 
 fdecl: 
-    DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }  
+    DEF FID formals_list ASSIGN expr { Fun($2, List.rev($3), $5) }  
     
 /* "expressions always return a value and consists of:
 	literals-basic types

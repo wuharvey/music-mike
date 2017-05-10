@@ -81,7 +81,7 @@ let translate (exprs) =
     | A.TString  -> i8p_t 
     | A.TUnit    -> void_t 
 
-    | _ -> raise (Failure "Shouldn't be here") in
+    | t -> raise (Failure (A.string_of_typ(t) ^ "Shouldn't be here")) in
     
   let stype_of_typ = function 
     A.TList(A.TInt) -> (i32_t, list_t) 
@@ -437,12 +437,23 @@ let map s_list  application =
 			
 		
 	
-    | A.ACall (A.AID(s, _), act, _) ->
-       let (fdef, fdecl) = Hashtbl.find function_defs s  in
-       let actuals = List.rev (List.map (expr builder) (List.rev act)) in
+    | A.ACall (A.AID(s, _), act, _) -> 
+      let (fdef, fdecl) = Hashtbl.find function_defs s  in
+      let actuals = List.rev (List.map (expr builder) (List.rev act)) in
+      (* let names = (match fdecl with 
+            A.AFun(_, arg_list, _, _) -> arg_list 
+            | _ -> raise (Failure "problem with call")) in
+      let store_actuals actual_llv s = 
+        let location = Hashtbl.find main_vars s in 
+          ignore(L.build_store actual_llv location builder );
+      print_endline "line 449";
+      in List.iter2 store_actuals actuals names; *)
 (* let result = (match fdecl.A.typ with A.Void -> ""
     | _ -> f ^ "_result") in *)
-       L.build_call fdef (Array.of_list actuals) "" builder
+      let result = (match fdecl with 
+        A.AFun(f, _, _, _) -> f 
+        | _ -> raise(Failure "second problem with call") ) in
+       L.build_call fdef (Array.of_list actuals) result builder
 
     | A.AIf(e1, e2, e3, _) -> 
         let bool_val = expr builder e1 in 
@@ -458,13 +469,28 @@ let map s_list  application =
           ignore(L.build_cond_br bool_val then_bb else_bb builder); 
           L.position_at_end merge_bb builder;
             L.const_int i32_t 1 
-    | A.AFun(fid, arg_list, e, typ) -> 
+    | A.AFun(fid, arg_list, e, A.TFun(arg_types, ret_type)) -> 
       (* and formal_types =
   Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.A.formals) *)
-      let ftype = L.function_type i32_t [||] in
+      let formal_types = Array.of_list (List.map ltype_of_typ arg_types) in 
+      let ftype = L.function_type (ltype_of_typ ret_type) formal_types in
       let the_function = L.define_function fid ftype the_module in
-      Hashtbl.add function_defs fid (the_function, A.AFun(fid, arg_list, e, typ)); 
+      Hashtbl.add function_defs fid 
+          (the_function, A.AFun(fid, arg_list, e, A.TFun(arg_types, ret_type))); 
       let builder2 = L.builder_at_end context (L.entry_block the_function) in 
+      let alloc_local (s, t, p) = 
+        L.set_value_name s p;
+        let local_var = L.build_alloca (ltype_of_typ t) s builder2 in
+            ignore(Hashtbl.add main_vars s local_var);
+            ignore(L.build_store p local_var builder2)
+      in
+        let rec iter3 (f, l1, l2, l3) = 
+        (match (l1, l2, l3) with 
+        (hd1::rest1, hd2::rest2, hd3::rest3) -> f(hd1, hd2, hd3); ignore(iter3(f, rest1, rest2, rest3))
+        | ([], [], []) -> ()
+        | _ -> print_endline "ERROR LINE 491";
+       ) in 
+        iter3 (alloc_local, arg_list, arg_types, (Array.to_list((L.params the_function)))); 
       let ret_val = expr builder2 e in 
         L.build_ret ret_val builder2
 
