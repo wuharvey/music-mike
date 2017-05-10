@@ -413,10 +413,11 @@ let map s_list  application =
 		let chord_func value1 index builder1= 
 		(* for chord_lengths *)
 			let pointer_to_ret_elem = L.build_in_bounds_gep passed_cl_list [| index |] "cur_val" builder1 in 
-
-			let pointer_to_new_elem = L.build_extractvalue value1 1 "stuff" builder1 in 
-
-			ignore(L.build_store pointer_to_new_elem pointer_to_ret_elem builder1);
+			let new_elem_list = L.build_extractvalue value1 1 "stuff" builder1 in
+      let chord_len_pointer =  L.build_in_bounds_gep chord_lengths [| index |] "len" builder1 in
+      let new_elem_len = L.build_extractvalue value1 0 "oldlen" builder1 in 
+      ignore(L.build_store new_elem_len chord_len_pointer builder1);
+      ignore(L.build_store new_elem_list pointer_to_ret_elem builder1);
 		in
 
 			
