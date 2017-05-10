@@ -60,7 +60,7 @@ stmts:
     a body which consists of an `expr` expression "*/
 
 fdecl: 
-    DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }  
+    DEF FID formals_list ASSIGN expr { Fun($2, List.rev($3), $5) }  
     
 /* "expressions always return a value and consists of:
 	literals-basic types
@@ -116,7 +116,7 @@ primaries:
 
     LBRACE semi_list RBRACE { Block(List.rev($2)) }
 	/* "Calling a function "*/
-  | FID LPAREN actuals_list RPAREN   { Call(ID($1), $3) }
+  | FID LPAREN actuals_list RPAREN   { Call(ID($1), List.rev($3)) }
 	/* "Assigning a value to an variable"*/       
   | assign          { $1 }
 	/* "list of expressions of same type (enforced in semant.ml)" */
@@ -185,15 +185,18 @@ actuals_list:
 used in Plist (pitch list) "*/
 
 pxpr_list:
-    chord                   { [$1] }
-  | pxpr_list chord         { $2 :: $1 }
+    chord                   { [Chord($1)] }
+  | pxpr_list chord         { Chord($2) :: $1 }
 
 
 /* "List of simulateous pitches" */
 
+
 chord:
     pitch                   { [$1] }         
   | chord BAR pitch         { $3 :: $1 }
+
+
 /*p:[3|5|6  3  ^^3#|9bb]*/
 
 
@@ -203,7 +206,7 @@ chord:
   	postfield-a list of ints representing '#' and 'b' as '1' and '-1' "*/
 
 pitch:
-    prefield expr postfield { ($1, $2, $3) }
+    prefield expr postfield { Pitch($1, $2, $3) }
 
 
 /*"a list of ints representing '^' and 'v' as  '1' and '-1' respectively" */

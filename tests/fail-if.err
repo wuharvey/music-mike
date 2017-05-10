@@ -1,0 +1,1 @@
+Fatal error: exception Failure("Infer Error (225): Mismatched types [int] [bool]")
