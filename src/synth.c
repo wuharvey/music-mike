@@ -132,15 +132,19 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 int synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
 	int start_pitch, int * modelist, int mode_length, double *rhythmlist, 
 	int **pure_chord_arr ){
+	printf("%s\n", "in synth");
 	//modifies chordlist so mode is normalize to absolute value of notes. If range goes above octave, adds to prefield
 	int ***new_list = fold_lists(chordlist, len_chordlist, chord_lengths, start_pitch, modelist, mode_length);
 	//copies new_list into pure_chord_list to incorporate octaves and accidentals (yes, I know a new int ** is redundant but atm just want to see if works
+	printf("%s\n", "after new_list");
 	int **correct_pitches=apply_accidentals(new_list, len_chordlist, chord_lengths, mode_length, pure_chord_arr);
-
+	printf("%d\n", chord_lengths[0]);
 	//takes rhythm list and turns into string that can be fed into CFugue
         char buff[1000];//max length of each note should be 11 so more space than we need.
         buff[0]='\0';
         strgen (buff, rhythmlist, correct_pitches, len_chordlist, chord_lengths );
+        buff[10] = '\0';
+		printf("%s\n", buff);
         execl("./testCFugueLib", "./testCFugueLib", buff, (char *)0);
 	printf("%s\n", buff);
 
@@ -151,100 +155,100 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 
 
 
-//tester
-int main(){
+// //tester
+// int main(){
 
 
 
-	//variablesle we need
-	int ***chordlist;
-	int cl_len=4;
-	int chord_lengths[4]={2,2,2,2};
-	int start_pitch=10;
-	int modelist[4]={1,3,5,7};
-	int mode_length=4;
-	double  rhythmlist[]={1, 1.5, 0.25, 0.33};
-	//build chordlist
-	chordlist=(int ***)malloc(4 * sizeof(int **));
-	int r=0; //pitch literal value
-	int c=-1; //accidental value
-	int i=0; //number of chords
-	while (i<4){
-        	int **temp=(int **)malloc(2*sizeof(int *));
-		printf("%s\n", "fuck pointers");
-		chordlist[i]=temp;
-		printf("%s\n", "pointers are cooeilo");
-         	int j=0;
-		while (j<2){
-			printf("%s %d\n", "r = ", r);
-			int* temp=(int *) malloc(3*sizeof(int));
-			(chordlist[i])[j]=temp;
-			int* pitch=(chordlist[i])[j];
-			pitch[1]=r;
-			pitch[2]=c;
-			r++;
-			j++;
-		}
-		i++;
-	}
+// 	//variablesle we need
+// 	int ***chordlist;
+// 	int cl_len=4;
+// 	int chord_lengths[4]={2,2,2,2};
+// 	int start_pitch=10;
+// 	int modelist[4]={1,3,5,7};
+// 	int mode_length=4;
+// 	double  rhythmlist[]={1, 1.5, 0.25, 0.33};
+// 	//build chordlist
+// 	chordlist=(int ***)malloc(4 * sizeof(int **));
+// 	int r=0; //pitch literal value
+// 	int c=-1; //accidental value
+// 	int i=0; //number of chords
+// 	while (i<4){
+//         	int **temp=(int **)malloc(2*sizeof(int *));
+// 		printf("%s\n", "fuck pointers");
+// 		chordlist[i]=temp;
+// 		printf("%s\n", "pointers are cooeilo");
+//          	int j=0;
+// 		while (j<2){
+// 			printf("%s %d\n", "r = ", r);
+// 			int* temp=(int *) malloc(3*sizeof(int));
+// 			(chordlist[i])[j]=temp;
+// 			int* pitch=(chordlist[i])[j];
+// 			pitch[1]=r;
+// 			pitch[2]=c;
+// 			r++;
+// 			j++;
+// 		}
+// 		i++;
+// 	}
 
 
-        printf("%s\n", "chord list was created");
-	//
-	int temp1[2];
-	int temp2[2];
-	int temp3[2];
-	int temp4[2];
-	int *modarr[4]={ temp1, temp2, temp3, temp4};
+//         printf("%s\n", "chord list was created");
+// 	//
+// 	int temp1[2];
+// 	int temp2[2];
+// 	int temp3[2];
+// 	int temp4[2];
+// 	int *modarr[4]={ temp1, temp2, temp3, temp4};
 
-	//testing synth
-        synth(chordlist, cl_len, chord_lengths, start_pitch,  modelist,  mode_length, rhythmlist, modarr );
+// 	//testing synth
+//         synth(chordlist, cl_len, chord_lengths, start_pitch,  modelist,  mode_length, rhythmlist, modarr );
 
-	//let's see...
-	int ***new_list = fold_lists(chordlist, cl_len, chord_lengths, start_pitch, modelist, mode_length);
-	//print it!
-	int j=0;
-	while (j<cl_len){
-		int ** chord= new_list[j];
-		printf("%p\n", chord);
-		int i=0;
-		while (i<chord_lengths[j]){
-			int * pitch= chord[i];
-		        printf("\t%p\n", pitch);
-		        printf("\t\t%d\n", pitch[0]);
-			printf("\t\t%d\n", pitch[1]);
-			printf("\t\t%d\n", pitch[2]);
+// 	//let's see...
+// 	int ***new_list = fold_lists(chordlist, cl_len, chord_lengths, start_pitch, modelist, mode_length);
+// 	//print it!
+// 	int j=0;
+// 	while (j<cl_len){
+// 		int ** chord= new_list[j];
+// 		printf("%p\n", chord);
+// 		int i=0;
+// 		while (i<chord_lengths[j]){
+// 			int * pitch= chord[i];
+// 		        printf("\t%p\n", pitch);
+// 		        printf("\t\t%d\n", pitch[0]);
+// 			printf("\t\t%d\n", pitch[1]);
+// 			printf("\t\t%d\n", pitch[2]);
 
-			i++;
-			}
-		j++;
-		}
+// 			i++;
+// 			}
+// 		j++;
+// 		}
 
-	int **correct_pitches=apply_accidentals(new_list, cl_len, chord_lengths, mode_length, modarr);
-
-
-        j=0;
-        while (j<cl_len){
-                int * chord= correct_pitches[j];
-                printf("%p\n", chord);
-                int i=0;
-                while (i<chord_lengths[j]){
-                        int pitch= chord[i];
-                        printf("\t%d\n", pitch);
-                        i++;
-                        }
-                j++;
-                }
+// 	int **correct_pitches=apply_accidentals(new_list, cl_len, chord_lengths, mode_length, modarr);
 
 
-//testing adding rhythm to the whole shebang
-	char buff[14* 8+1];
-	buff[0]='\0';
-	strgen (buff, rhythmlist, correct_pitches, cl_len, chord_lengths );
-        printf("%s\n", buff);
+//         j=0;
+//         while (j<cl_len){
+//                 int * chord= correct_pitches[j];
+//                 printf("%p\n", chord);
+//                 int i=0;
+//                 while (i<chord_lengths[j]){
+//                         int pitch= chord[i];
+//                         printf("\t%d\n", pitch);
+//                         i++;
+//                         }
+//                 j++;
+//                 }
 
 
-//testing aggregate synth funtion
+// //testing adding rhythm to the whole shebang
+// 	char buff[14* 8+1];
+// 	buff[0]='\0';
+// 	strgen (buff, rhythmlist, correct_pitches, cl_len, chord_lengths );
+//         printf("%s\n", buff);
 
-return 0;
-}
+
+// //testing aggregate synth funtion
+
+// return 0;
+// }
