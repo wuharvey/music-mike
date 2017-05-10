@@ -83,10 +83,12 @@ int ** apply_accidentals (int ***chordlist, int cl_len, int *chord_lengths, int 
 //gonna mix in some c++ lets see if it crashes :/
 int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl_len, int * chord_lengths, int channel){
        //first add channel to beginning
-	strcpy(buff, "V");
-	char channel_num[3];
-	strcpy(channel_num, channel);
-	strcat(buff, channel_num);
+	char v[3];
+	strcpy(v, "V");
+	strcat(buff, v);
+	char channel_buff[3];
+	snprintf(channel_buff, 3, "%d", channel);
+	strcat(buff, channel_buff);
 	char space[2];
 	strcpy(space, " ");
 	strcat(buff, space);
@@ -148,9 +150,9 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 
 //synth- imitates behavior of main(), compared at end
 
-char* synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
+int synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
 	int start_pitch, int * modelist, int mode_length, double *rhythmlist,
-	int **pure_chord_arr, int channel ){
+	int **pure_chord_arr, int channel, char * buff){
 	fprintf(stderr,"%s\n", "in synth");
 
 
@@ -194,13 +196,11 @@ char* synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 	int **correct_pitches=apply_accidentals(new_list, len_chordlist, chord_lengths, mode_length, pure_chord_arr);
 	fprintf(stderr,"%d\n", chord_lengths[0]);
 	//takes rhythm list and turns into string that can be fed into CFugue
-        char buff[1000];//max length of each note should be 11 so more space than we need.
-        buff[0]='\0';
         memset(buff, '\0', 900);
         strgen (buff, rhythmlist, correct_pitches, len_chordlist, chord_lengths, channel );
 		fprintf(stderr,"buff %s\n", buff);
 
-	return buff;
+	return 0;
 }
 
 

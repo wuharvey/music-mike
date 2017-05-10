@@ -97,7 +97,7 @@ Check() {
     Run "$MICROC" "<" $1 ">" "${basename}.ll" &&
     # Run "$LLI" "${basename}.ll" ">" "${basename}.out" &&
     Run "$LLC" "${basename}.ll" ">" "${basename}.s" &&
-    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "src/synth.o" &&
+    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "src/synth.o"  "src/make_midi.o" &&
     Run "./${basename}.exe" > "${basename}.out" &&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 

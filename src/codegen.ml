@@ -106,12 +106,12 @@ let translate (exprs) =
 
 
   (* Declare the built-in synth() function *)
-  let synth_t = L.function_type i32_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t; i32_t  |] in
+  let synth_t = L.function_type i32_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t; i32_t; i8p_t  |] in
   let synth_func = L.declare_function "synth" synth_t the_module in
 
 
   (*Declare the build-in make_midi() function*)
-  let make_midi_t = L.function_type void_t [|i8p_t|] in
+  let make_midi_t = L.function_type i32_t [|i8p_t; i8p_t|] in
   let make_midi_func = L.declare_function "make_midi" make_midi_t the_module in
 
 
@@ -395,7 +395,8 @@ let map s_list  application =
       let s_list= expr builder e in
       map s_list printfun; L.const_int i32_t 1
 
-
+    | A.ACall(A.AID("Make_midi", _), [e1; e2], _) ->
+	L.build_call make_midi_func [| (expr builder e1); (expr builder e2) |] "make_midi" builder 
 
 
 	(* assumed order of acutals: pitchlist, rhythmlist, modelist, start note, channel num *)
@@ -422,26 +423,26 @@ let map s_list  application =
 		(* for chord_lengths *)
 			let pointer_to_ret_elem = L.build_in_bounds_gep passed_cl_list [| index |] "cur_val" builder1 in
 			let new_elem_list = L.build_extractvalue value1 1 "stuff" builder1 in
-      let chord_len_pointer =  L.build_in_bounds_gep chord_lengths [| index |] "len" builder1 in
-      let new_elem_len = L.build_extractvalue value1 0 "oldlen" builder1 in
-      let clear_list_pointer = L.build_in_bounds_gep clear_cl_list [| index |] "len" builder1 in
-      let new_clear_arr = L.build_array_malloc i32_t new_elem_len "clear_cl_list_elem" builder1 in
-      ignore(L.build_store new_clear_arr clear_list_pointer builder1);
-      ignore(L.build_store new_elem_len chord_len_pointer builder1);
-      ignore(L.build_store new_elem_list pointer_to_ret_elem builder1);
-		in
+	        let chord_len_pointer =  L.build_in_bounds_gep chord_lengths [| index |] "len" builder1 in
+	        let new_elem_len = L.build_extractvalue value1 0 "oldlen" builder1 in
+	        let clear_list_pointer = L.build_in_bounds_gep clear_cl_list [| index |] "len" builder1 in
+	        let new_clear_arr = L.build_array_malloc i32_t new_elem_len "clear_cl_list_elem" builder1 in
+	        ignore(L.build_store new_clear_arr clear_list_pointer builder1);
+	        ignore(L.build_store new_elem_len chord_len_pointer builder1);
+	        ignore(L.build_store new_elem_list pointer_to_ret_elem builder1);
+			in
 
 
 	   map clist (* (get_list(clist, builder)) *) chord_func;
 
-        L.build_call synth_func [| (* int *** *)passed_cl_list; (* int  *)clist_len;
+
+        (* build buffer *)
+	let buff = L.build_array_malloc i8_t (L.const_int i32_t 1000) "synth-buffer" builder in
+	(* call synth *)
+        ignore(L.build_call synth_func [| (* int *** *)passed_cl_list; (* int  *)clist_len;
         (* int * *)chord_lengths; (* int  *) start_pitch; (* int *  *)act_modelist;
-        (* int  *)mode_len; (* double *  *)act_rlist; (* int ** *)clear_cl_list; channel  |] "synth" builder
-
-	(* int ***chordlist, int len_chordlist, int *chord_lengths,
-  int start_pitch, int * modelist, int mode_length, double *rhythmlist,
-  int **pure_chord_arr *)
-
+        (* int  *)mode_len; (* double *  *)act_rlist; (* int ** *)clear_cl_list; (* int *)channel; (* char * *) buff |] "synth" builder); 
+	buff
 
 
 
