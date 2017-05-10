@@ -60,6 +60,10 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | Pitch(i1, e, i2) ->
     let ae, _ = annotate_expr e env in
     APitch(i1, ae, i2, TPitch), env
+  | Block(e_list) ->
+    let ae_list, nenv = ListLabels.fold_left ~init: ([], env) e_list
+        ~f: (fun (ae_list, env) e -> let ae, env = annotate_expr e env in (ae::ae_list, env))
+    in ABlock(ae_list, new_type ()), nenv
   | Chord(e_list) ->
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
     AList(ae_list, TList(TPitch)), env
@@ -113,6 +117,7 @@ let type_of ae =
   | APostop(_,_,t)  -> t
   | AAssign(_,_,t)  -> t
   | ACall(_,_,t)    -> t
+  | ABlock(_,t)   -> t
   | AFun(_,_,_,t)   -> t
   | AList(_,t)      -> t
   | AIf(_,_,_,t)    -> t
@@ -142,6 +147,10 @@ let rec collect_expr ae : constraints =
     (collect_expr ae1) @ (collect_expr ae2) @ con 
 
   | AAssign(_, ae, t) -> (collect_expr ae) @ [(t, type_of ae)]
+  | ABlock(ae_list, t) ->
+    let ret = List.hd (List.rev ae_list) in
+    let ret_t = type_of ret in 
+    (List.flatten (List.map collect_expr ae_list)) @ [(t, ret_t)]
   | AList(ae_list, t)   ->
     let list_t = match t with
       | TList(s) -> s
@@ -249,6 +258,8 @@ let rec apply_expr subs ae =
   | ACall(fname, args, t)    -> 
       ACall(apply_expr subs fname, 
             List.map (apply_expr subs) args, apply subs t)
+  | ABlock(ae_list, t)       -> 
+      ABlock(List.map (apply_expr subs) ae_list, apply subs t)
   | ASubset(var, i, t)       ->
       ASubset(apply_expr subs var, apply_expr subs i, apply subs t)
   | e -> raise (Failure ("No apply_expr for AEXPR:" ^ string_of_aexpr e))  
