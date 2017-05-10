@@ -269,22 +269,22 @@ let map s_list  application =
 	    | A.Geq     -> L.build_icmp L.Icmp.Sge
     ) e1' e2' "tmp" builder
 
-   | A.APitch(preop, e, postop, _) ->
+   | A.APitch(e,  _) ->
 			  (* allocates single pitch *)
         let arr_pitch_malloc = L.build_array_malloc i32_t (L.const_int i32_t 3) "array" builder in
-				(* prefield *)
+				(* prefield- default is zero *)
 				let prefield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 0)|] "prefield_elem" builder in
-				let el'=L.const_int i32_t preop  in
+				let el'=L.const_int i32_t 0  in
 				ignore(L.build_store el' prefield_pointer builder);
+
 				(*scale degree *)
 				let sd_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 1)|] "scaledegreer_elem" builder in
 				let el'=expr builder e in
 				ignore(L.build_store el' sd_pointer builder); 
-				(*posfield*)
+				(*posfield- default is zero*)
 				let postfield_pointer=L.build_gep arr_pitch_malloc [| (L.const_int i32_t 2)|] "postfield_elem" builder in
-				let el'=L.const_int i32_t postop in
-				ignore(L.build_store el' postfield_pointer builder); 
-        arr_pitch_malloc
+				let el'=L.const_int i32_t 0 in
+				ignore(L.build_store el' postfield_pointer builder);         arr_pitch_malloc
         
 
    | A.AList(es, t)    ->

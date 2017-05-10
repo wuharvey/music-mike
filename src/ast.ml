@@ -35,7 +35,7 @@ type expr =
   | MuPostop of expr * mupostop
   | Call of expr * expr list      
   | If of expr * expr * expr
-  | Pitch of int * expr * int
+  | Pitch of expr
   | Chord of expr list
   | Subset of expr * expr
   | List of expr list
@@ -65,7 +65,7 @@ type aexpr =
   | ASubset of aexpr * aexpr * typ
   | AList of aexpr list * typ
   | APList of aexpr list * typ
-  | APitch of int * aexpr * int * typ 
+  | APitch of aexpr  * typ 
   | AChord of aexpr list * typ
   | AChordList of aexpr list * typ (*PList --> "list of chords"*)
   | ARList of aexpr list * typ
@@ -80,7 +80,7 @@ type program = expr list
 type inferred_program = aexpr list
 
 (* Pretty-printing functions *)
-
+(*
 let string_of_op = function
     Add -> "+"
   | FAdd -> "+."
@@ -104,12 +104,12 @@ let string_of_preop = function
     Neg -> "-"
   | Not -> "!"
   | FNeg -> "-"
-(*| OctaveUp -> "^"
-  | OctaveDown -> "v" *)
+  | OctaveUp -> "^"
+  | OctaveDown -> "v" 
 
 let string_of_postop = function
-(*    Sharp -> "#"
-  | Flat -> "b" *)
+    Sharp -> "#"
+  | Flat -> "b" 
   | Rhythmdot -> "o"
 
 let rec string_of_expr = function
@@ -119,9 +119,12 @@ let rec string_of_expr = function
   | BoolLit(false) -> "false"
   | ID(s) -> s
   | String(s) -> s
+  | Pitch(s) -> string_of_expr s
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Preop(o, e) -> string_of_preop o ^ string_of_expr e
+  | MuPreop(o, e) -> string_of_preop o ^ string_of_expr e
+  | MuPostop( e, o) -> string_of_expr e ^ string_of_postop o
 (*| Postop(e, o) -> string_of_expr e ^ string_of_postop o *)
   | Assign(v, e) -> "Assign(" ^ v ^ " = " ^ (string_of_expr e) ^ ")"
   | Call(f, el) ->
@@ -174,18 +177,7 @@ let rec string_of_aexpr = function
   | ABoolLit(false, t)      -> "false" ^ string_of_typ t
   | AID(s, t)               -> s ^ string_of_typ t
   | AString(s, t)           -> s ^ string_of_typ t
-  | APitch(i1, ae, i2, t)   -> 
-    let signs = (i1 >= 0, i2 >= 0) in
-    (match signs with
-        false, false -> 
-          (String.make (abs i1) 'v') ^ (string_of_aexpr ae) ^ (String.make (abs i2) 'b')
-      | false, true  -> 
-          (String.make (abs i1) 'v') ^ (string_of_aexpr ae) ^ (String.make (abs i2) '#')
-      | true, false  ->  
-          (String.make (abs i1) '^') ^ (string_of_aexpr ae) ^ (String.make (abs i2) 'b')
-      | _ ->    
-          (String.make (abs i1) '^') ^ (string_of_aexpr ae) ^ (String.make (abs i2) '#'))
-
+  | APitch(ae, t)           -> string_of_aexpr ae ^ string_of_type t
   | ABinop(e1, o, e2, t)    -> string_of_aexpr e1 ^ " " ^ string_of_op o ^
                                 " " ^ string_of_aexpr e2 ^ string_of_typ t
   | APreop(o, e, t) -> string_of_preop o ^ string_of_aexpr e ^ string_of_typ t
@@ -215,4 +207,4 @@ let string_of_program (exprs) =
 let string_of_inferred (aexprs) = 
   "INFERRED EXPRS: " ^ String.concat "\n" (List.map string_of_aexpr aexprs) ^
   "\n"
-
+*)

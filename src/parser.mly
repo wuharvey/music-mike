@@ -110,10 +110,10 @@ binop:
 unop:
 /*| MINUS expr %prec NEG               { Preop(Neg, $2) }  */
   | NOT expr                           { Preop(Not, $2) }
-  | expr FLAT  %prec IFLAT             { MuPostop($1, Flat) }
-  | expr OCTOTHORPE  %prec IOCTOTHORPE { MuPostop($1, Sharp) }
-  | OUP expr    %prec IOUP             { MuPreop( Oup, $2) }
-  | ODOWN expr   %prec IODOWN          { MuPreop(Odown, $2) }
+  | expr FLAT               { MuPostop($1, Flat) }
+  | expr OCTOTHORPE  { MuPostop($1, Sharp) }
+  | OUP expr                { MuPreop( Oup, $2) }
+  | ODOWN expr             { MuPreop(Odown, $2) }
 
 primaries:
 	/* "Block of expressions" */
@@ -197,34 +197,10 @@ pxpr_list:
 
 
 chord:
-    pitch                   { [$1] }         
-  | chord BAR pitch         { $3 :: $1 }
+    expr                   { [Pitch($1)] }         
+  | chord BAR expr         { Pitch($3) :: $1 }
 
 
 /*p:[3|5|6  3  ^^3#|9bb]*/
 
 
-/* "Tuple consisting of 3 fields: 
-	prefield-a list of ints representing '^' and 'v' as  '1' and '-1'
-  	an int representing scale degree inputed by user
-  	postfield-a list of ints representing '#' and 'b' as '1' and '-1' "*/
-
-pitch:
-    prefield expr postfield { Pitch($1, $2, $3) }
-
-
-/*"a list of ints representing '^' and 'v' as  '1' and '-1' respectively" */
-
-prefield:
-/* nothing */               { 0 }  
-  | prefield IOUP            { $1+1 }
-  | prefield IODOWN          { $1-1 }
-
-
-/* "a list of ints representing '#' and 'b' as '1' and '-1' "*/
-
-postfield:
-/*nothing*/                 { 0 }
-  | postfield IOCTOTHORPE    { $1+1 }
-  | postfield IFLAT          { $1-1 }
- 
