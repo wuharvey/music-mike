@@ -369,7 +369,7 @@ let map s_list  application =
     | A.ACall (A.AID("Map", _), act, _) -> 
 	let funcID = List.hd act in   (* this is name of function *) 
 	let lst = List.hd (List.tl act) in
-	let iterable_func index el builder1 = expr1 builder A.ACall(A.AID(funcID, _), el, _)
+	let iterable_func index el builder1 = expr builder1 A.ACall(A.AID(funcID, _), el, _)
 	map lst iterable_func; L.const_int i32_t 1
 	
 
