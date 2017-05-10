@@ -15,6 +15,7 @@ let _ =
   let ast = Parser.program Scanner.next_token lexbuf in
   let sast = 
   match action with
+  | Ast -> []  
   | Sast -> Infer.typecheck ast true 
   | Semant -> Semant.check (Infer.typecheck ast true)
   | _ -> Semant.check (Infer.typecheck ast false) in 

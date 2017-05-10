@@ -10,6 +10,7 @@ let stdlib = [
     ("Printrlist", TFun([TList(TFloat)], TString));
     ("Synth", TFun( [TList(TList(TPitch)); TList(TFloat); TList(TInt); TInt; TInt], TString));
     ("Make_midi", TFun( [TString; TString], TUnit));
+    ("Merge", TFun( [TString; TString] , TString));
 ];;
 
 let predefined =
