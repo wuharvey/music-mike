@@ -2,7 +2,7 @@
     open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
 %token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOTLBRACKET BAR
 
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
@@ -37,31 +37,31 @@
 
 /* "A program consists of a list of statements, aka `stmts`"*/
 
-program:        
+program:
 
   stmts EOF             { $1 }
 
 
 
 /* "stmts is a tuple with the first field being a list of expressions (expr),
-the second field being a list of function declarations (fdecl), and the 
+the second field being a list of function declarations (fdecl), and the
 third field being a list of type declaratiosn (tdecl)" */
 
 stmts:
                         { [] }
   | stmts expr  SEMI    { $2 :: $1 }
 
-                            
-/* "A function declaration `fdecl` consists of 
+
+/* "A function declaration `fdecl` consists of
     a keyword 'Def'
 
     a Function Identifier `FID` - string w/ first letter capitalized
     a list of formals `formals_list`
     a body which consists of an `expr` expression "*/
 
-fdecl: 
-    DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }  
-    
+fdecl:
+    DEF FID formals_list ASSIGN expr { Fun($2, $3, $5) }
+
 /* "expressions always return a value and consists of:
 	literals-basic types
 	binop-binary operator
@@ -75,7 +75,7 @@ expr:
   | primaries { $1 }
   | fdecl     { $1 }
   | LPAREN expr RPAREN { $2 }
-  
+
 literals:
     LITERAL          { Literal($1) }
   | FLITERAL         { FloatLit($1) }
@@ -117,12 +117,12 @@ primaries:
     LBRACE semi_list RBRACE { Block(List.rev($2)) }
 	/* "Calling a function "*/
   | FID LPAREN actuals_list RPAREN   { Call(ID($1), List.rev($3)) }
-	/* "Assigning a value to an variable"*/       
+	/* "Assigning a value to an variable"*/
   | assign          { $1 }
 	/* "list of expressions of same type (enforced in semant.ml)" */
   | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
 	/* "list of chords" */
-  | PLBRACKET pxpr_list RBRACKET { ChordList(List.rev($2)) }  
+  | PLBRACKET pxpr_list RBRACKET { ChordList(List.rev($2)) }
        /*"list of rhythms"*/
   | RLBRACKET expr_list RBRACKET { RList(List.rev($2)) }
        /* "tuple of expressions with different types (enforced in semant.ml)" */
@@ -130,21 +130,21 @@ primaries:
 	/* "concatanating 2 lists (enforced in semant.ml)" */
   | expr CONCAT expr  { Concat($1, $3) }
 	/* "If, then else "*/
-  | IF expr THEN expr ELSE expr  
+  | IF expr THEN expr ELSE expr
       %prec IF
       { If($2, $4, $6) }
 	/* "getting an element from a list/tuple/pitchlist" */
   | ID DOTLBRACKET expr RBRACKET  { Subset(ID($1), $3) }
- 
+
 
 
         /* "Assigning a value to an variable"*/
 assign:
     ID ASSIGN expr          { Assign($1, $3) }
 
-/*" List of assingments (a=b) used in type declaration " */  
+/*" List of assingments (a=b) used in type declaration " */
 
-assign_list: 
+assign_list:
 
     assign                  { [$1] }
   | assign_list assign      { $2 :: $1 }
@@ -152,7 +152,7 @@ assign_list:
 
 /* "List of whitespace separated expressions used in
 	-Lists
-	-Tuples" */	
+	-Tuples" */
 expr_list:
    /*nothing*/              { [] }
   | expr_list expr          { $2 :: $1 }
@@ -161,13 +161,13 @@ expr_list:
 
 /* "List of semicolon separated expressions used in block" */
 
-semi_list: 
-    expr SEMI               { [$1] }  
-  | semi_list expr SEMI     { $2 :: $1 } 
+semi_list:
+    expr SEMI               { [$1] }
+  | semi_list expr SEMI     { $2 :: $1 }
 
 
 
-/* "List of formal arguments used in function declaration" */   
+/* "List of formal arguments used in function declaration" */
 
 formals_list:
     /*nothing*/                      { [] }
@@ -181,7 +181,7 @@ actuals_list:
   | actuals_list expr       { $2 :: $1 }
 
 
-/* "List of whitespace separated chords(simultaneous pitches) 
+/* "List of whitespace separated chords(simultaneous pitches)
 used in Plist (pitch list) "*/
 
 pxpr_list:
@@ -193,14 +193,14 @@ pxpr_list:
 
 
 chord:
-    pitch                   { [$1] }         
+    pitch                   { [$1] }
   | chord BAR pitch         { $3 :: $1 }
 
 
 /*p:[3|5|6  3  ^^3#|9bb]*/
 
 
-/* "Tuple consisting of 3 fields: 
+/* "Tuple consisting of 3 fields:
 	prefield-a list of ints representing '^' and 'v' as  '1' and '-1'
   	an int representing scale degree inputed by user
   	postfield-a list of ints representing '#' and 'b' as '1' and '-1' "*/
@@ -212,7 +212,7 @@ pitch:
 /*"a list of ints representing '^' and 'v' as  '1' and '-1' respectively" */
 
 prefield:
-/* nothing */               { 0 }  
+/* nothing */               { 0 }
   | prefield OUP            { $1+1 }
   | prefield ODOWN          { $1-1 }
 
@@ -223,4 +223,3 @@ postfield:
 /*nothing*/                 { 0 }
   | postfield OCTOTHORPE    { $1+1 }
   | postfield FLAT          { $1-1 }
- 
