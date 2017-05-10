@@ -89,6 +89,7 @@ and listl pat = parse
 | 't'      { FLITERAL(0.33) }
 | 'e'      { FLITERAL(0.5) }
 | 's'      { FLITERAL(0.25) }
+| ','      { RHYTHMDOT }
 | ']'      { pat := NO; RBRACKET }
 
 {
