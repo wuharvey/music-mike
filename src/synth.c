@@ -99,7 +99,6 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 			int pitch= chord[i];
 			//convert pitch into string
 			char pitchstring[3];
-			memset(pitchstring, '\0', sizeof(pitchstring));
 			snprintf(pitchstring, 3, "%d", pitch);
 			//buffer all the goddamn symbols
 			char lbracket[2];
@@ -110,10 +109,18 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 			strcpy(plus, "+ ");
 			char space[2];
 			strcpy(space, " ");
-            strcat(buff, lbracket); 
-            strcat(buff, pitchstring); 
-            strcat(buff, rbracket); 
-            strcat(buff, snote_len);
+			char rest[3];
+			strcpy(rest, "R/");
+			//make acutal pitchstring
+			if (pitch==0){
+				strcat(buff, rest);
+			}
+			else{
+				strcat(buff, lbracket); 
+				strcat(buff, pitchstring); 
+				strcat(buff, rbracket);
+			} 
+                        strcat(buff, snote_len);
 
 			if (i<chord_lengths[j]-1){
 				strcat(buff, plus);
