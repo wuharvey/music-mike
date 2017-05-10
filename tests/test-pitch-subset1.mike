@@ -1,6 +1,0 @@
-a=p:[ 2 4 5|3##];
-x=p.[2];
-p.[0]=x;
-
-/* This is legal way to move around chords. Print when supported*/
-
