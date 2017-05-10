@@ -3,15 +3,17 @@
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
+
 
 int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[], 
  int start_pitch, int *modelist, int mode_length){
-printf("%s\n", "entering chord list");
+fprintf(stderr,"%s\n", "entering chord list");
 //map the mode to absolute pitches (0 corresponds to first scale degree)
 int i=0;
 while (i<mode_length){
         modelist[i]=modelist[i]+start_pitch;
-        printf("%s %d\n", "new mode value = ", modelist[i]);
+        fprintf(stderr,"%s %d\n", "new mode value = ", modelist[i]);
 	i+=1;
 		}
 //runs off assumption that malloced chunks are  not contiguous
@@ -19,13 +21,13 @@ int j=0;
 while (j<cl_length){
 	int ** chord= chord_list[j];
 	int i=0;
-	printf("%s %d\n", "chord number", j);
+	fprintf(stderr,"%s %d\n", "chord number", j);
         while (i<chord_lengths[j]){
-		printf("%s %d\n", "into while loop", i);
-		printf("%p\n", chord);
+		fprintf(stderr,"%s %d\n", "into while loop", i);
+		fprintf(stderr,"%p\n", chord);
 		int * pitch= chord[i];
-		printf("%s %d\n", "pitch number", i);
-		printf("%s\n", "int *pitch=chord[i];");
+		fprintf(stderr,"%s %d\n", "pitch number", i);
+		fprintf(stderr,"%s\n", "int *pitch=chord[i];");
 		//new pitch to be added
 		int transformed_pitch;
 		int p=pitch[1];
@@ -46,7 +48,7 @@ while (j<cl_length){
 		}
 	j++;
 	}
-
+fprintf(stderr,"%s\n", "after while loop");
 return chord_list;
 }
 
@@ -85,7 +87,8 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 	int j=0;
 	while (j<cl_len){
 		//take note_len and convert into string
-		double note_len=(double)rhythmlist[j];
+		double note_len= rhythmlist[j];
+		fprintf(stderr, "note_len: %.2f\n", note_len);
 		char snote_len[10];
 		memset(snote_len, '\0', sizeof(snote_len));
 		snprintf(snote_len, 10, "%.2f", note_len);
@@ -104,10 +107,13 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 			char rbracket[3];
 			strcpy(rbracket, "]/");
 			char plus[2];
-			strcpy(plus, "+");
+			strcpy(plus, "+ ");
 			char space[2];
 			strcpy(space, " ");
-                        strcat(buff, lbracket); strcat(buff, pitchstring); strcat(buff, rbracket); strcat(buff, snote_len);
+            strcat(buff, lbracket); 
+            strcat(buff, pitchstring); 
+            strcat(buff, rbracket); 
+            strcat(buff, snote_len);
 
 			if (i<chord_lengths[j]-1){
 				strcat(buff, plus);
@@ -132,21 +138,56 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 int synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
 	int start_pitch, int * modelist, int mode_length, double *rhythmlist, 
 	int **pure_chord_arr ){
-	printf("%s\n", "in synth");
+	fprintf(stderr,"%s\n", "in synth");
+
+
+	// int j=0;
+	// while (j<len_chordlist){
+	// 	int ** chord= chordlist[j];
+	// 	fprintf(stderr,"%p\n", chord);
+	// 	int i=0;
+	// 	while (i<chord_lengths[j]){
+	// 		int * pitch= chord[i];
+	// 	        fprintf(stderr,"\t%p\n", pitch);
+	// 	        fprintf(stderr,"\t\t%d\n", pitch[0]);
+	// 		fprintf(stderr,"\t\t%d\n", pitch[1]);
+	// 		fprintf(stderr,"\t\t%d\n", pitch[2]);
+
+	// 		i++;
+	// 		}
+	// 	j++;
+	// 	}
 	//modifies chordlist so mode is normalize to absolute value of notes. If range goes above octave, adds to prefield
 	int ***new_list = fold_lists(chordlist, len_chordlist, chord_lengths, start_pitch, modelist, mode_length);
+	fprintf(stderr,"%s\n", "AFTER NEW LIST");
+	int j=0;
+	while (j<len_chordlist){
+		int ** chord= new_list[j];
+		fprintf(stderr,"%p\n", chord);
+		int i=0;
+		while (i<chord_lengths[j]){
+			int * pitch= chord[i];
+		        fprintf(stderr,"\t%p\n", pitch);
+		        fprintf(stderr,"\t\t%d\n", pitch[0]);
+			fprintf(stderr,"\t\t%d\n", pitch[1]);
+			fprintf(stderr,"\t\t%d\n", pitch[2]);
+
+			i++;
+			}
+		j++;
+		}
 	//copies new_list into pure_chord_list to incorporate octaves and accidentals (yes, I know a new int ** is redundant but atm just want to see if works
-	printf("%s\n", "after new_list");
+	fprintf(stderr,"%s\n", "after new_list");
 	int **correct_pitches=apply_accidentals(new_list, len_chordlist, chord_lengths, mode_length, pure_chord_arr);
-	printf("%d\n", chord_lengths[0]);
+	fprintf(stderr,"%d\n", chord_lengths[0]);
 	//takes rhythm list and turns into string that can be fed into CFugue
         char buff[1000];//max length of each note should be 11 so more space than we need.
         buff[0]='\0';
+        memset(buff, '\0', 900);
         strgen (buff, rhythmlist, correct_pitches, len_chordlist, chord_lengths );
-        buff[10] = '\0';
-		printf("%s\n", buff);
+		fprintf(stderr,"buff %s\n", buff);
         execl("./testCFugueLib", "./testCFugueLib", buff, (char *)0);
-	printf("%s\n", buff);
+	fprintf(stderr,"%s\n", buff);
 
 	return 0;
 }
@@ -175,12 +216,12 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 // 	int i=0; //number of chords
 // 	while (i<4){
 //         	int **temp=(int **)malloc(2*sizeof(int *));
-// 		printf("%s\n", "fuck pointers");
+// 		fprintf(stderr,"%s\n", "fuck pointers");
 // 		chordlist[i]=temp;
-// 		printf("%s\n", "pointers are cooeilo");
+// 		fprintf(stderr,"%s\n", "pointers are cooeilo");
 //          	int j=0;
 // 		while (j<2){
-// 			printf("%s %d\n", "r = ", r);
+// 			fprintf(stderr,"%s %d\n", "r = ", r);
 // 			int* temp=(int *) malloc(3*sizeof(int));
 // 			(chordlist[i])[j]=temp;
 // 			int* pitch=(chordlist[i])[j];
@@ -193,7 +234,7 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 // 	}
 
 
-//         printf("%s\n", "chord list was created");
+//         fprintf(stderr,"%s\n", "chord list was created");
 // 	//
 // 	int temp1[2];
 // 	int temp2[2];
@@ -210,14 +251,14 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 // 	int j=0;
 // 	while (j<cl_len){
 // 		int ** chord= new_list[j];
-// 		printf("%p\n", chord);
+// 		fprintf(stderr,"%p\n", chord);
 // 		int i=0;
 // 		while (i<chord_lengths[j]){
 // 			int * pitch= chord[i];
-// 		        printf("\t%p\n", pitch);
-// 		        printf("\t\t%d\n", pitch[0]);
-// 			printf("\t\t%d\n", pitch[1]);
-// 			printf("\t\t%d\n", pitch[2]);
+// 		        fprintf(stderr,"\t%p\n", pitch);
+// 		        fprintf(stderr,"\t\t%d\n", pitch[0]);
+// 			fprintf(stderr,"\t\t%d\n", pitch[1]);
+// 			fprintf(stderr,"\t\t%d\n", pitch[2]);
 
 // 			i++;
 // 			}
@@ -230,11 +271,11 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 //         j=0;
 //         while (j<cl_len){
 //                 int * chord= correct_pitches[j];
-//                 printf("%p\n", chord);
+//                 fprintf(stderr,"%p\n", chord);
 //                 int i=0;
 //                 while (i<chord_lengths[j]){
 //                         int pitch= chord[i];
-//                         printf("\t%d\n", pitch);
+//                         fprintf(stderr,"\t%d\n", pitch);
 //                         i++;
 //                         }
 //                 j++;
@@ -245,7 +286,7 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 // 	char buff[14* 8+1];
 // 	buff[0]='\0';
 // 	strgen (buff, rhythmlist, correct_pitches, cl_len, chord_lengths );
-//         printf("%s\n", buff);
+//         fprintf(stderr,"%s\n", buff);
 
 
 // //testing aggregate synth funtion
