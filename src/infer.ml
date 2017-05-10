@@ -173,7 +173,7 @@ let rec collect_expr ae : constraints =
           args_c @ [(t, ret_t)]
         end
       | TType(_) -> [(fnt, TFun(List.map type_of args, t))] 
-      | _ -> raise (Failure "Mismatched types")
+      | _ -> print_endline (string_of_typ fnt); raise (Failure "Mismatched type")
     in 
     (collect_expr name) @ (List.flatten (List.map collect_expr args)) @ s
 
@@ -216,6 +216,7 @@ and unify_one t1 t2 =
 
 let rec apply_expr subs ae = 
   match ae with
+  | AUnit(t)                 -> AUnit(apply subs t)
   | ALiteral(value, t)       -> ALiteral(value, apply subs t)
   | AFloatLit(value, t)      -> AFloatLit(value, apply subs t)
   | ABoolLit(value, t)       -> ABoolLit(value, apply subs t)

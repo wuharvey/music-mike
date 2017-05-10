@@ -185,7 +185,7 @@ let rec string_of_aexpr = function
   | APreop(o, e, t) -> string_of_preop o ^ string_of_aexpr e ^ string_of_typ t
   | APostop(e, o, t) -> string_of_aexpr e ^ string_of_postop o ^ string_of_typ t
   | AAssign(v, e, t) -> "Assign(" ^ v ^ " = " ^ (string_of_aexpr e) ^ ")" ^ string_of_typ t
-  | AFun(id, f, e, t) -> "Function" ^ id ^ " " ^ String.concat " " f ^ " -> " ^ string_of_aexpr e ^ string_of_typ t
+  | AFun(id, f, e, t) -> "Function:" ^ "\n" ^ id ^ " " ^ String.concat " " f ^ " -> " ^ string_of_aexpr e ^ "\n Type:" ^ string_of_typ t
   | ACall(f, el, t) ->
     "Call:" ^ "[" ^ string_of_aexpr f ^ "]" ^ "(" ^ String.concat ", " (List.map string_of_aexpr el) ^ ")" ^ string_of_typ t
   | AIf(e1, e2, e3, t) -> "if " ^ string_of_aexpr e1 ^ " then " ^ string_of_aexpr
