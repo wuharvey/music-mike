@@ -26,8 +26,8 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | FloatLit(n) -> AFloatLit(n, TFloat), env
   | BoolLit(n)  -> ABoolLit(n, TBool), env
   | String(n)   -> AString(n, TString), env
-  | ID(n)       -> if StringMap.mem n env 
-                   then AID(n, StringMap.find n env), env
+  | ID(n)       -> if StringMap.mem n env then
+                     AID(n, StringMap.find n env), env
                    else raise(Failure(n ^ " Not Found"))
   | Binop(e1, op, e2) -> 
     let ae1, _ = annotate_expr e1 env 
@@ -43,10 +43,10 @@ let rec annotate_expr exp env : (aexpr * environment) =
     and ntyp = new_type () in 
     APostop(ae, postop, ntyp), env
   | Assign(name, e) -> 
-    if StringMap.mem name env
-      then raise (Failure "Reassignment")
-      else if StringSet.mem name keywords
-      then raise (Failure "Redefining keyword")
+    if StringMap.mem name env then
+      raise (Failure "Reassignment")
+    else if StringSet.mem name keywords then
+      raise (Failure "Redefining keyword")
       else let ntyp = new_type () in 
     let nenv = StringMap.add name ntyp env in
     let ae, _ = annotate_expr e nenv in 
@@ -54,15 +54,6 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | List(e_list) ->
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
     AList(ae_list, TList(new_type ())), env
-  | Pitch(i1, e, i2) ->
-    let ae, _ = annotate_expr e env in
-    APitch(i1, ae, i2, TPitch), env
-  | Chord(e_list) ->
-    let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
-    AList(ae_list, TList(TPitch)), env
-  | ChordList(e_list) -> 
-    let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
-    AList(ae_list, TList(TList(TPitch))), env
   | RList(e_list) -> 
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in
     AList(ae_list, TList(TFloat)), env
@@ -86,8 +77,8 @@ let rec annotate_expr exp env : (aexpr * environment) =
               then raise (Failure "Variable already defined")
               else StringMap.add id t e) env a_args 
       in
-    if StringMap.mem name env 
-    then raise (Failure "Redefining function") 
+    if StringMap.mem name env then 
+      raise (Failure "Redefining function") 
     else let nenv = StringMap.add name fun_t nenv in
     let ae, _ = annotate_expr e nenv in 
     AFun(name, args, ae, fun_t), nenv  
@@ -117,7 +108,6 @@ let type_of ae =
   | AList(_,t)      -> t
   | AIf(_,_,_,t)    -> t
   | ASubset(_,_,t)  -> t
-  | APitch(_,_,_,t) -> t
   | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
 
@@ -148,7 +138,6 @@ let rec collect_expr ae : constraints =
       | _ -> raise (Failure "Unreachable state in List literal") in
     let con = List.map (fun aexpr -> (list_t, type_of aexpr)) ae_list in 
     (List.flatten (List.map collect_expr ae_list)) @ con
-  | APitch(i1, ae, i2, t) -> [(type_of ae, TInt)]
   | AIf(pred, ae1, ae2, t) ->
     let pt = type_of pred and t1 = type_of ae1 and t2 = type_of ae2 in
     let con = [(pt, TBool); (t1, t2); (t, t1)] in 
@@ -184,7 +173,7 @@ let rec collect_expr ae : constraints =
           args_c @ [(t, ret_t)]
         end
       | TType(_) -> [(fnt, TFun(List.map type_of args, t))] 
-      | _ -> raise (Failure "Infer Error (187): Mismatched types")
+      | _ -> raise (Failure "Mismatched types")
     in 
     (collect_expr name) @ (List.flatten (List.map collect_expr args)) @ s
 
@@ -222,7 +211,7 @@ and unify_one t1 t2 =
     if l1 = l2 then unify ((List.combine u x) @ [(v, y)])  (* Double check if
          args are correct *)
     else raise (Failure "Mismatched Argument Count") 
-  | _ -> raise (Failure ("Infer Error (225): Mismatched types" ^ string_of_typ(t1) ^ string_of_typ(t2)))
+  | _ -> raise (Failure "Mismatched types")
 ;;
 
 let rec apply_expr subs ae = 
@@ -231,8 +220,6 @@ let rec apply_expr subs ae =
   | AFloatLit(value, t)      -> AFloatLit(value, apply subs t)
   | ABoolLit(value, t)       -> ABoolLit(value, apply subs t)
   | AString(value, t)        -> AString(value, apply subs t)
-  | APitch(a, ae, b, t)      -> 
-      APitch(a, apply_expr subs ae, b, apply subs t)
   | ABinop(ae1, op, ae2, t)  -> 
       ABinop(apply_expr subs ae1, op, apply_expr subs ae2, apply subs t) 
   | AID(name, t)             -> AID(name, apply subs t)
@@ -256,18 +243,18 @@ let rec apply_expr subs ae =
 let infer expr env flag = 
   let aexpr, nenv = annotate_expr expr env in
   let constraints =
-    if flag
-    then print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
+    if flag then
+      print_endline ("AEXPR: " ^ string_of_aexpr aexpr);
     collect_expr aexpr in
   let subs = 
     List.iter (fun (a,b) -> 
       if flag then
-      print_endline 
+        print_endline 
       ("CONSTRAINTS: " ^ string_of_typ a ^ " "  ^ string_of_typ b)) constraints;
       unify constraints in 
   let inferred_expr =
       List.iter (fun (a,b) -> if flag then
-        print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
+          print_endline ("SUBS: " ^ a ^ " "  ^ string_of_typ b)) subs;  
         apply_expr subs aexpr in 
         if flag then
         print_endline("FINAL: " ^ string_of_aexpr inferred_expr);
@@ -296,3 +283,4 @@ let typecheck program flag : (aexpr list) =
     
     in (* List.rev *) inferred_program
 ;;
+
