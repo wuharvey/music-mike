@@ -367,10 +367,10 @@ let map s_list  application =
                         Hashtbl.add main_vars s local_var; local_var in
                 ignore (L.build_store e' var builder); e' 
     | A.ACall (A.AID("Map", _), act, _) -> 
-	let func = expr builder (List.hd act) in
-	let lst = expr builder (List.hd (List.tl act)) in
-	let wrapper f=f in 
-	map lst (wrapper func); L.const_int i32_t 1
+	let funcID = List.hd act in   (* this is name of function *) 
+	let lst = List.hd (List.tl act) in
+	let iterable_func index el builder1 = expr1 builder A.ACall(A.AID(funcID, _), el, _)
+	map lst iterable_func; L.const_int i32_t 1
 	
 
     | A.ACall (A.AID("Printint", _), [e], _) ->
