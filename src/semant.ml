@@ -23,13 +23,21 @@ let check (aexprs: aexpr list) =
     | _ -> raise (Failure "What the hell you doin")
   in
   let poly_fnames = List.map getname poly in
-
-  let is_call ae = match ae with
-    | ACall(AID(fn,t), args, _) -> let name = fn in
-      List.mem name poly_fnames
-    | _ -> false
+  let rec is_call ae = match ae with
+    | [] -> []
+    | AAssign(_,ie,_)::rest -> (match ie with 
+        | ACall(AID(fn,t), args, rt) -> let name = fn in
+        if List.mem name poly_fnames then
+          ACall(AID(fn,t),args, rt)::(is_call rest)
+        else (is_call rest)
+        | _ -> is_call rest)
+    | ACall(AID(fn,t), args, rt)::rest -> let name = fn in
+        if List.mem name poly_fnames then
+          ACall(AID(fn,t),args, rt)::(is_call rest)
+        else (is_call rest)
+    | x::rest -> is_call rest
   in
-  let polycalls = List.filter is_call aexprs in
+  let polycalls = is_call aexprs in
   let rec matching x lst =
       match lst
       with [] -> []
