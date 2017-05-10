@@ -30,10 +30,12 @@ type expr =
   | Assign of string * expr
   | Call of expr * expr list      
   | If of expr * expr * expr
+  | Pitch of int * expr * int
+  | Chord of expr list
   | Subset of expr * expr
   | List of expr list
   | PList of expr list
-  | ChordList of ((int * expr * int) list)  list (*PList --> "list of chords"*)
+  | ChordList of expr list (*PList --> "list of chords"*)
   | RList of expr list
   | Block of expr list
   | Concat of expr * expr
@@ -56,7 +58,9 @@ type aexpr =
   | ASubset of aexpr * aexpr * typ
   | AList of aexpr list * typ
   | APList of aexpr list * typ
-  | AChordList of ((int * aexpr * int) list) list * typ (*PList --> "list of chords"*)
+  | APitch of int * aexpr * int * typ 
+  | AChord of aexpr list * typ
+  | AChordList of aexpr list * typ (*PList --> "list of chords"*)
   | ARList of aexpr list * typ
   | ABlock of aexpr list * typ
   | AConcat of aexpr * aexpr * typ
@@ -119,7 +123,7 @@ let rec string_of_expr = function
   | Subset(s, i) -> string_of_expr s ^ ".[" ^ string_of_expr i ^ "]"
   | List(es) -> "[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
 
-  | ChordList(cs) -> 
+(*  | ChordList(cs) -> 
     let string_of_chord ps = 
       let string_of_pitch (i1, e, i2) = 
         if i1 < 0 && i2 < 0 then 
@@ -135,7 +139,7 @@ let rec string_of_expr = function
       in
         String.concat "|" (List.map string_of_pitch ps) 
     in
-    "p:[" ^ String.concat " " (List.map string_of_chord cs) ^ " ]"
+    "p:[" ^ String.concat " " (List.map string_of_chord cs) ^ " ]" *)
 
 
   | RList(es) -> "r:[ " ^ String.concat " " (List.map string_of_expr es) ^ " ]"
@@ -158,14 +162,26 @@ let rec string_of_typ = function
   | TList(s) -> string_of_typ s ^ "list"
 
 let rec string_of_aexpr = function
-    ALiteral(l,t) -> string_of_int l ^ string_of_typ t
-  | AFloatLit(f,t) -> string_of_float f ^ string_of_typ t
-  | ABoolLit(true, t) -> "true" ^ string_of_typ t
-  | ABoolLit(false, t) -> "false" ^ string_of_typ t
-  | AID(s, t) -> s ^ string_of_typ t
-  | AString(s, t) -> s ^ string_of_typ t
-  | ABinop(e1, o, e2, t) ->
-      string_of_aexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_aexpr e2 ^ string_of_typ t
+    ALiteral(l,t)           -> string_of_int l ^ string_of_typ t
+  | AFloatLit(f,t)          -> string_of_float f ^ string_of_typ t
+  | ABoolLit(true, t)       -> "true" ^ string_of_typ t
+  | ABoolLit(false, t)      -> "false" ^ string_of_typ t
+  | AID(s, t)               -> s ^ string_of_typ t
+  | AString(s, t)           -> s ^ string_of_typ t
+  | APitch(i1, ae, i2, t)   -> 
+    let signs = (i1 >= 0, i2 >= 0) in
+    (match signs with
+        false, false -> 
+          (String.make (abs i1) 'v') ^ (string_of_aexpr ae) ^ (String.make (abs i2) 'b')
+      | false, true  -> 
+          (String.make (abs i1) 'v') ^ (string_of_aexpr ae) ^ (String.make (abs i2) '#')
+      | true, false  ->  
+          (String.make (abs i1) '^') ^ (string_of_aexpr ae) ^ (String.make (abs i2) 'b')
+      | _ ->    
+          (String.make (abs i1) '^') ^ (string_of_aexpr ae) ^ (String.make (abs i2) '#'))
+
+  | ABinop(e1, o, e2, t)    -> string_of_aexpr e1 ^ " " ^ string_of_op o ^
+                                " " ^ string_of_aexpr e2 ^ string_of_typ t
   | APreop(o, e, t) -> string_of_preop o ^ string_of_aexpr e ^ string_of_typ t
   | APostop(e, o, t) -> string_of_aexpr e ^ string_of_postop o ^ string_of_typ t
   | AAssign(v, e, t) -> "Assign(" ^ v ^ " = " ^ (string_of_aexpr e) ^ ")" ^ string_of_typ t
@@ -175,7 +191,11 @@ let rec string_of_aexpr = function
   | AIf(e1, e2, e3, t) -> "if " ^ string_of_aexpr e1 ^ " then " ^ string_of_aexpr
   e2 ^ " else " ^ string_of_aexpr e3 ^ string_of_typ t
   | ASubset(s, i, t) -> string_of_aexpr s ^ ".[" ^ string_of_aexpr i ^ "]" ^ string_of_typ t
-  | AList(es, t) -> "[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
+  | AList(es, t) -> begin match t with
+    | TList(TPitch) -> "CHORD"
+    | TList(TList(TPitch)) -> "CHORDLIST"
+    | _ -> "[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
+    end
   | APList(es, t) -> "p:[ " ^ String.concat " " (List.map string_of_aexpr es) ^ " ]" ^ string_of_typ t
   | ABlock(es, t) -> "{ " ^ String.concat " " (List.map string_of_aexpr es) ^ " }" ^ string_of_typ t
   | AConcat(e1, e2, t) -> string_of_aexpr e1 ^ "@" ^ string_of_aexpr e2 ^ string_of_typ t

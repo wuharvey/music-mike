@@ -1,0 +1,3 @@
+p:[3 4 -4 ];
+
+/* pitch literals cannot be negative */
