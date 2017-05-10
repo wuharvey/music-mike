@@ -135,7 +135,7 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 
 //synth- imitates behavior of main(), compared at end
 
-int synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
+char *  synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
 	int start_pitch, int * modelist, int mode_length, double *rhythmlist, 
 	int **pure_chord_arr ){
 	fprintf(stderr,"%s\n", "in synth");
@@ -189,7 +189,7 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
         execl("./testCFugueLib", "./testCFugueLib", buff, (char *)0);
 	fprintf(stderr,"%s\n", buff);
 
-	return 0;
+	return buff;
 }
 
 

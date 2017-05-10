@@ -405,23 +405,23 @@ let map s_list  application =
 		   | A.Not     -> L.build_not
        ) e' "tmp" builder
 
-    | A.AMuPreop(op, e, t) ->
+    | A.AMuPreop(op, e, _) ->
 	(* given pointer to pitch array, memory operations for adding or subtracting to position 0 of pitch element *)
 	(* index is needed so map will accept it *)
-	let interior_operation index pitch builder1 =
-		let prefield_pointer=L.build_gep pitch [| (L.const_int i32_t 0)|] "prefield_elem" builder1 in
-		let cur_prefield = L.build_load prefield_pointer "cur_prefield" builder1 in
-		let new_prefield =
-		(match op with
-		  A.Oup -> 
-			L.build_add cur_prefield (L.const_int i32_t 1) "sum_pref_up"  builder1
 
-		 | A.Odown ->
-			L.build_sub cur_prefield (L.const_int i32_t 1) "sum_pref_down" builder1
+	let prefield_pointer=L.build_gep pitch [| (L.const_int i32_t 0)|] "prefield_elem" builder1 in
+	let cur_prefield = L.build_load prefield_pointer "cur_prefield" builder1 in
+	let new_prefield =
+	(match op with
+	  A.Oup -> 
+		L.build_add cur_prefield (L.const_int i32_t 1) "sum_pref_up"  builder1
 
-		)  in
-		ignore(L.build_store new_prefield prefield_pointer builder); in
-	(* match different things mupreops could be applied to, there are 3 *)
+	 | A.Odown ->
+		L.build_sub cur_prefield (L.const_int i32_t 1) "sum_pref_down" builder1
+
+	)  in
+	ignore(L.build_store new_prefield prefield_pointer builder); e
+(*	(* match different things mupreops could be applied to, there are 3 *)
 	(match t with
        
 	    TPitch -> 
@@ -429,17 +429,34 @@ let map s_list  application =
 		interior_operation (L.const_int i32_t 1) e' builder; e'
 	  
 	  | TList(TPitch) ->
-		let e' = expr builder e in
-		map  e'  interior_operation; e'
+		let map1 index el builder1 = A.AMuPreop(el, op, t) in
+		map e map1; e
 		
 
-	  | TList(TPitch) ->
-		let e' = expr builder e in 
-		let map1 index el builder1= 
-			map el  interior_operation in
+	  | TList(TList(TPitch)) ->
+		let map1 index el builder1= A.AMuPreop(el, op, t) in
 		map e'  map1; e'
 	) 
+*)
 
+
+
+    | A.AMuPostop (e, op, _) ->
+	(* given pointer to pitch array, memory operations for adding or subtracting to position 0 of pitch element *)
+	(* index is needed so map will accept it *)
+
+	let postfield_pointer=L.build_gep pitch [| (L.const_int i32_t 2)|] "postfield_elem" builder1 in
+	let cur_postfield = L.build_load prefield_pointer "cur_postfield" builder1 in
+	let new_postfield =
+	(match op with
+	  A.Oup -> 
+		L.build_add cur_postfield (L.const_int i32_t 1) "sum_pref_up"  builder1
+
+	 | A.Odown ->
+		L.build_sub cur_postfield (L.const_int i32_t 1) "sum_pref_down" builder1
+
+	)  in
+	ignore(L.build_store new_postfield postfield_pointer builder); e
 
     | A.AAssign (s, e, t) -> let e' = expr builder e in 
           let var = try Hashtbl.find main_vars s 
