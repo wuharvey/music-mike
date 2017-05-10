@@ -107,6 +107,8 @@ let translate (exprs) =
   let synth_t = L.function_type i32_t [|i32ppp_t ; i32_t ; i32p_t; i32_t; i32p_t; i32_t; floatp_t; i32pp_t  |] in
   let synth_func = L.declare_function "synth" synth_t the_module in
 
+  let strcat_t = L.function_type i8p_t [|i8p_t; i8p_t|] in 
+  let strcat_func = L.declare_function "strcat" strcat_t the_module in 
 
 
   (* get length of struct *)
@@ -389,6 +391,15 @@ let map s_list  application =
       map s_list printfun; L.const_int i32_t 1
 
 
+    | A.ACall(A.AID("Merge", _), [e1; e2], _) ->
+(*       ignore(L.build_call printf_func [| str_format; (expr builder e1) |] "printf" builder);
+      L.build_call printf_func [| str_format; (expr builder e2) |] "printf" builder
+ *)   let new_str = L.build_array_malloc i8_t (L.const_int i32_t 1000) "new_string" builder in
+      let ptr_to_first = L.build_in_bounds_gep new_str [| L.const_int i32_t 0 |] "first" builder in 
+      ignore(L.build_store (L.const_int i8_t 0) ptr_to_first builder);
+      ignore(L.build_call strcat_func [| new_str; (expr builder e1) |] "put_first" builder);
+      ignore(L.build_call strcat_func [| new_str; (expr builder e2) |] "put_first" builder);
+      new_str
 
 
 	(* assumed order of acutals: pitchlist, rhythmlist, modelist, start note *)
