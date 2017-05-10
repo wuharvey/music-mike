@@ -6,7 +6,7 @@
 #include <errno.h>
 
 
-int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[], 
+int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[],
  int start_pitch, int *modelist, int mode_length){
 fprintf(stderr,"%s\n", "entering chord list");
 //map the mode to absolute pitches (0 corresponds to first scale degree)
@@ -116,10 +116,10 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 				strcat(buff, rest);
 			}
 			else{
-				strcat(buff, lbracket); 
-				strcat(buff, pitchstring); 
+				strcat(buff, lbracket);
+				strcat(buff, pitchstring);
 				strcat(buff, rbracket);
-			} 
+			}
                         strcat(buff, snote_len);
 
 			if (i<chord_lengths[j]-1){
@@ -142,8 +142,8 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 
 //synth- imitates behavior of main(), compared at end
 
-int synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
-	int start_pitch, int * modelist, int mode_length, double *rhythmlist, 
+char* synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
+	int start_pitch, int * modelist, int mode_length, double *rhythmlist,
 	int **pure_chord_arr ){
 	fprintf(stderr,"%s\n", "in synth");
 
@@ -193,10 +193,8 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
         memset(buff, '\0', 900);
         strgen (buff, rhythmlist, correct_pitches, len_chordlist, chord_lengths );
 		fprintf(stderr,"buff %s\n", buff);
-        execl("./testCFugueLib", "./testCFugueLib", buff, (char *)0);
-	fprintf(stderr,"%s\n", buff);
 
-	return 0;
+	return buff;
 }
 
 
