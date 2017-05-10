@@ -8,7 +8,7 @@ let stdlib = [
     ("Printfloat", TFun([TFloat], TString));
     ("Printlist", TFun([TList(TInt)], TString));
     ("Printrlist", TFun([TList(TFloat)], TString));
-    ("Synth", TFun( [TList(TList(TPitch)); TList(TFloat); TList(TInt); TInt], TString));
+    ("Synth", TFun( [TList(TList(TPitch)); TList(TFloat); TList(TInt); TInt], TUnit));
 ];;
 
 let predefined = 
