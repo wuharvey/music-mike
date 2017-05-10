@@ -9,6 +9,13 @@
 LLI="lli"
 #LLI="/usr/local/opt/llvm/bin/lli"
 
+# Path to the LLVM compiler
+LLC="llc"
+
+
+# Path to the C compiler
+CC="gcc"
+
 # Path to the microc compiler.  Usually "./microc.native"
 # Try "_build/microc.native" if ocamlbuild was unable to create a symbolic link.
 MICROC="src/musicmike.native"
@@ -88,7 +95,10 @@ Check() {
 
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.out" &&
     Run "$MICROC" "<" $1 ">" "${basename}.ll" &&
-    Run "$LLI" "${basename}.ll" ">" "${basename}.out" &&
+    # Run "$LLI" "${basename}.ll" ">" "${basename}.out" &&
+    Run "$LLC" "${basename}.ll" ">" "${basename}.s" &&
+    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "src/synth.o" &&
+    Run "./${basename}.exe" > "${basename}.out" &&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 
     # Report the status and clean up the generated files
@@ -158,6 +168,12 @@ LLIFail() {
 
 which "$LLI" >> $globallog || LLIFail
 
+if [ ! -f src/synth.o ]
+then
+    echo "Could not find synth.o"
+    echo "Try \"make synth.o\""
+    exit 1
+fi
 
 if [ $# -ge 1 ]
 then

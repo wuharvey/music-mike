@@ -54,6 +54,15 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | List(e_list) ->
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
     AList(ae_list, TList(new_type ())), env
+  | Pitch(i1, e, i2) ->
+    let ae, _ = annotate_expr e env in
+    APitch(i1, ae, i2, TPitch), env
+  | Chord(e_list) ->
+    let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
+    AList(ae_list, TList(TPitch)), env
+  | ChordList(e_list) -> 
+    let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
+    AList(ae_list, TList(TList(TPitch))), env
   | RList(e_list) -> 
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in
     AList(ae_list, TList(TFloat)), env
@@ -86,7 +95,7 @@ let rec annotate_expr exp env : (aexpr * environment) =
     let avar, _ = annotate_expr var env 
     and ae, _ = annotate_expr e env 
     and t = new_type() in
-    let typ = TFun([TList(t); TInt], t) in
+    let typ = t in
     ASubset(avar, ae, t), env
   | _ -> AUnit(TUnit), env
 ;;
@@ -108,6 +117,7 @@ let type_of ae =
   | AList(_,t)      -> t
   | AIf(_,_,_,t)    -> t
   | ASubset(_,_,t)  -> t
+  | APitch(_,_,_,t) -> t
   | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
 
@@ -138,6 +148,7 @@ let rec collect_expr ae : constraints =
       | _ -> raise (Failure "Unreachable state in List literal") in
     let con = List.map (fun aexpr -> (list_t, type_of aexpr)) ae_list in 
     (List.flatten (List.map collect_expr ae_list)) @ con
+  | APitch(i1, ae, i2, t) -> [(type_of ae, TInt)]
   | AIf(pred, ae1, ae2, t) ->
     let pt = type_of pred and t1 = type_of ae1 and t2 = type_of ae2 in
     let con = [(pt, TBool); (t1, t2); (t, t1)] in 
@@ -152,7 +163,7 @@ let rec collect_expr ae : constraints =
       | AID(_) -> type_of v
       | _ -> raise (Failure "Unreachable state in Subset") ) in
     let s = match vt with 
-      | TList(t) -> [(TFun([t;TInt], t), typ)]
+      | TList(t) -> [(t, typ)]
       | TType(t) -> [(vt, TList(typ))] 
       | _ -> raise (Failure "Subset can only be applied to lists") 
     in
@@ -173,7 +184,7 @@ let rec collect_expr ae : constraints =
           args_c @ [(t, ret_t)]
         end
       | TType(_) -> [(fnt, TFun(List.map type_of args, t))] 
-      | _ -> raise (Failure "Mismatched types")
+      | _ -> raise (Failure "Infer Error (187): Mismatched types")
     in 
     (collect_expr name) @ (List.flatten (List.map collect_expr args)) @ s
 
@@ -211,7 +222,7 @@ and unify_one t1 t2 =
     if l1 = l2 then unify ((List.combine u x) @ [(v, y)])  (* Double check if
          args are correct *)
     else raise (Failure "Mismatched Argument Count") 
-  | _ -> raise (Failure "Mismatched types")
+  | _ -> raise (Failure ("Infer Error (225): Mismatched types" ^ string_of_typ(t1) ^ string_of_typ(t2)))
 ;;
 
 let rec apply_expr subs ae = 
@@ -220,6 +231,8 @@ let rec apply_expr subs ae =
   | AFloatLit(value, t)      -> AFloatLit(value, apply subs t)
   | ABoolLit(value, t)       -> ABoolLit(value, apply subs t)
   | AString(value, t)        -> AString(value, apply subs t)
+  | APitch(a, ae, b, t)      -> 
+      APitch(a, apply_expr subs ae, b, apply subs t)
   | ABinop(ae1, op, ae2, t)  -> 
       ABinop(apply_expr subs ae1, op, apply_expr subs ae2, apply subs t) 
   | AID(name, t)             -> AID(name, apply subs t)
@@ -283,4 +296,3 @@ let typecheck program flag : (aexpr list) =
     
     in (* List.rev *) inferred_program
 ;;
-
