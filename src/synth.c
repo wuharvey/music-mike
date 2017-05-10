@@ -155,6 +155,60 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 	int **pure_chord_arr, int channel, char * buff){
 	fprintf(stderr,"%s\n", "in synth");
 
+	int *** new_chordlist = (int ***) malloc(len_chordlist * sizeof(int **));
+
+	int j1=0;
+	while (j1<len_chordlist){
+		fprintf(stderr, "%d\n", j1);
+		fprintf(stderr, "%s\n", "LINE 162");
+		int ** chord= chordlist[j1]; //old
+		int ** new_chord = (int **) malloc(chord_lengths[j1]*sizeof(int *));		
+		new_chordlist[j1]=new_chord;//stuff in
+		int i=0;
+		while (i<chord_lengths[j1]){
+			fprintf(stderr, "%s\n", "LINE 167");
+			int *pitch= chord[i];//old
+			int *new_pitch = (int *) malloc(3*sizeof(int));
+			new_chord[i]=new_pitch;
+			new_pitch[0] = pitch[0];
+			new_pitch[1] = pitch[1];
+			new_pitch[2] = pitch[2];
+			fprintf(stderr, "%s\n", "LINE 173");
+			fprintf(stderr, "%s\n", "LINE 175");
+			i++;
+			}	
+		j1++;
+	}
+
+	int *new_modelist = (int *) malloc(mode_length * sizeof(int *));
+	int j2 = 0;
+	while(j2 < mode_length) {
+		new_modelist[j2] = modelist[j2];
+		j2++;
+		}
+
+	// int i = 0;
+	// while (i<len_chordlist){
+ //        int **temp=(int **)malloc(chord_lengths[i]*sizeof(int *));
+	// 	fprintf(stderr,"%s\n", "fuck pointers");
+	// 	new_chordlist[i]=temp;
+	// 	fprintf(stderr,"%s\n", "pointers are cooeilo");
+ //        int j=0;
+	// 	while (j<chord_lengths[i]){
+	// 		fprintf(stderr,"%s %d\n", "r = ", r);
+	// 		int* temp2=(int *) malloc(3*sizeof(int));
+	// 		temp[j] = temp2;
+	// 		// (chordlist[i])[j]=temp2;
+	// 		int* pitch=(chordlist[i])[j];
+	// 		pitch[1]=r;
+	// 		pitch[2]=c;
+	// 		r++;
+	// 		j++;
+	// 	}
+	// 	i++;
+	// }
+
+
 
 	// int j=0;
 	// while (j<len_chordlist){
@@ -173,7 +227,7 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 	// 	j++;
 	// 	}
 	//modifies chordlist so mode is normalize to absolute value of notes. If range goes above octave, adds to prefield
-	int ***new_list = fold_lists(chordlist, len_chordlist, chord_lengths, start_pitch, modelist, mode_length);
+	int ***new_list = fold_lists(new_chordlist, len_chordlist, chord_lengths, start_pitch, new_modelist, mode_length);
 	fprintf(stderr,"%s\n", "AFTER NEW LIST");
 	int j=0;
 	while (j<len_chordlist){
