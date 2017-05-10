@@ -366,12 +366,12 @@ let map s_list  application =
                     let local_var = L.build_alloca (ltype_of_typ t) s builder in 
                         Hashtbl.add main_vars s local_var; local_var in
                 ignore (L.build_store e' var builder); e' 
-(*    | A.ACall (A.AID("Map", _), act, _) -> 
+    | A.ACall (A.AID("Map", _), act, _) -> 
 	let func = expr builder (List.hd act) in
 	let lst = expr builder (List.hd (List.tl act)) in
 	let wrapper f=f in 
 	map lst (wrapper func); L.const_int i32_t 1
-*)	
+	
 
     | A.ACall (A.AID("Printint", _), [e], _) ->
        L.build_call printf_func [| int_format_str ; (expr builder e) |]  "printf" builder
