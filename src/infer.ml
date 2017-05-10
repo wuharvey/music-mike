@@ -54,9 +54,9 @@ let rec annotate_expr exp env : (aexpr * environment) =
   | List(e_list) ->
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
     AList(ae_list, TList(new_type ())), env
-  | Pitch(i1, e, i2) ->
+  | Pitch(e ) ->
     let ae, _ = annotate_expr e env in
-    APitch(i1, ae, i2, TPitch), env
+    APitch( ae , TPitch), env
   | Chord(e_list) ->
     let ae_list = List.map (fun e -> fst (annotate_expr e env)) e_list in 
     AList(ae_list, TList(TPitch)), env
@@ -117,7 +117,7 @@ let type_of ae =
   | AList(_,t)      -> t
   | AIf(_,_,_,t)    -> t
   | ASubset(_,_,t)  -> t
-  | APitch(_,_,_,t) -> t
+  | APitch(_, t) -> t
   | _               -> print_string "[Missed a type in type_of]"; TUnit
 ;;
 
@@ -148,7 +148,7 @@ let rec collect_expr ae : constraints =
       | _ -> raise (Failure "Unreachable state in List literal") in
     let con = List.map (fun aexpr -> (list_t, type_of aexpr)) ae_list in 
     (List.flatten (List.map collect_expr ae_list)) @ con
-  | APitch(i1, ae, i2, t) -> [(type_of ae, TInt)]
+  | APitch(ae, t) -> [(type_of ae, TInt)]
   | AIf(pred, ae1, ae2, t) ->
     let pt = type_of pred and t1 = type_of ae1 and t2 = type_of ae2 in
     let con = [(pt, TBool); (t1, t2); (t, t1)] in 
