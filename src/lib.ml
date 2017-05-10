@@ -9,6 +9,7 @@ let stdlib = [
     ("Printlist", TFun([TList(TInt)], TString));
     ("Printrlist", TFun([TList(TFloat)], TString));
     ("Synth", TFun( [TList(TList(TPitch)); TList(TFloat); TList(TInt); TInt], TUnit));
+    ("Merge", TFun( [TString; TString] , TString));
 ];;
 
 let predefined = 
