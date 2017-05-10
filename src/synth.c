@@ -6,7 +6,7 @@
 #include <errno.h>
 
 
-int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[], 
+int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[],
  int start_pitch, int *modelist, int mode_length){
 fprintf(stderr,"%s\n", "entering chord list");
 //map the mode to absolute pitches (0 corresponds to first scale degree)
@@ -81,9 +81,17 @@ int ** apply_accidentals (int ***chordlist, int cl_len, int *chord_lengths, int 
 
 //string generator, takes rhythm list plus absolute pitch list and turns into strings that can be plopped in Cfugue
 //gonna mix in some c++ lets see if it crashes :/
-int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl_len, int * chord_lengths){
-	//make the buffer: max 11 characters per note (two digit pitch and 5 digit note length)
-
+int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl_len, int * chord_lengths, int channel){
+       //first add channel to beginning
+	char v[3];
+	strcpy(v, "V");
+	strcat(buff, v);
+	char channel_buff[3];
+	snprintf(channel_buff, 3, "%d", channel);
+	strcat(buff, channel_buff);
+	char space[2];
+	strcpy(space, " ");
+	strcat(buff, space);
 	int j=0;
 	while (j<cl_len){
 		//take note_len and convert into string
@@ -116,10 +124,10 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 				strcat(buff, rest);
 			}
 			else{
-				strcat(buff, lbracket); 
-				strcat(buff, pitchstring); 
+				strcat(buff, lbracket);
+				strcat(buff, pitchstring);
 				strcat(buff, rbracket);
-			} 
+			}
                         strcat(buff, snote_len);
 
 			if (i<chord_lengths[j]-1){
@@ -143,8 +151,8 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 //synth- imitates behavior of main(), compared at end
 
 int synth(int *** chordlist, int len_chordlist, int * chord_lengths, 
-	int start_pitch, int * modelist, int mode_length, double *rhythmlist, 
-	int **pure_chord_arr ){
+	int start_pitch, int * modelist, int mode_length, double *rhythmlist,
+	int **pure_chord_arr, int channel, char * buff){
 	fprintf(stderr,"%s\n", "in synth");
 
 
@@ -188,13 +196,9 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 	int **correct_pitches=apply_accidentals(new_list, len_chordlist, chord_lengths, mode_length, pure_chord_arr);
 	fprintf(stderr,"%d\n", chord_lengths[0]);
 	//takes rhythm list and turns into string that can be fed into CFugue
-        char buff[1000];//max length of each note should be 11 so more space than we need.
-        buff[0]='\0';
         memset(buff, '\0', 900);
-        strgen (buff, rhythmlist, correct_pitches, len_chordlist, chord_lengths );
+        strgen (buff, rhythmlist, correct_pitches, len_chordlist, chord_lengths, channel );
 		fprintf(stderr,"buff %s\n", buff);
-        execl("./testCFugueLib", "./testCFugueLib", buff, (char *)0);
-	fprintf(stderr,"%s\n", buff);
 
 	return 0;
 }
@@ -204,7 +208,7 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 
 
 // //tester
-// int main(){
+   // int main(){
 
 
 
