@@ -88,29 +88,21 @@ Harvey Wu         Language Guru     Type Inference, Compiler Front-end
 E. Software Development Environment
 Our Stack
 /list
-/l1 Github-Hosted Git Repository - used for version control and contained all of our code
-and documentation
-/l2 Ocaml 4.04.0 - Used Ocamlyacc and Ocamllex extensions for compiling scanner and parser. Used OCaml for
-the CodeGen, Semantic Checker and Backend.
-*************HUSAM PLEASE ADD MORE NEED HELP FLESHING THIS PART OUT*****************
-
-Testing Environment
-/list
-Google Cloud VM
+/l1 Version Control: Git, Github
+/l2 Languages: OCaml 4.04.0, C, Bash
+/l3 Text Editor: Vim, Sublime Text, Atom
+/l4 Operating System: Ubuntu 16.04, Mac OS X, Windows 10
+/l5 Virtual Machine: Google Cloud 
 
 F. Project Log
 ****************COPY FROM GIT WHEN FINISHED****************
 
 Architectural Design Section
-A. Block Diagram (http://www.cs.columbia.edu/~sedwards/classes/2012/w4115-fall/reports/Funk.pdf)                                            _______________ > Symbol Table
-_______________________                                              |                       |
-|Music-mike source code| -> Scanner -> Parser -> AST -> Type Inference outputs SAST -> Semantic Checking -> Code Generation -> LLVM code
-________________________
 
 B. Scanner (Lakshmi, Husam, Harvey)
 Relevant Files: scanner.mll
 
-The scanner is written in OCamlLex and takes the .mike input to the compiler
+The scanner is written in Ocamllex and takes the .mike input to the compiler
 and tokenizes it into literals, identifiers, operators and keywords. It removes the white space
 and block comments. If any character cannot be lexed by the scanner or if
 any identifier or literal is not syntactically valid, the scanner throws an error. The tokens
@@ -118,23 +110,32 @@ created by the scanner are used by the Parser to create an Abstract Syntax Tree.
 context sensitive, so uses different pattern matching inside of rhythm and pitch lists.
 
 C. Parser (Husam, Harvey, Kaitlin, Lakshmi)
-The parser is written in OCamlYacc and takes in a series of tokens. It uses the grammar described
+Relevant Files: parser.mly
+
+The parser is written in Ocamlyacc and takes in a series of tokens. It uses the grammar described
 in parser.mly and datatypes defined in ast.ml to generate an Abstract Syntax Tree. In parser.mly, we define
 the Music-mike context-free grammar using productions. If the tokens produced by the scanner are successfully
 parsed that means that the .mike file is syntactically (though perhaps not semantically) correct.
 
 D. Type Inference (Harvey)
-The type inference module, takes in the untyped AST of expressions and infers strong types or dummy
-types for expressions.
+Relevant Files: infer.ml 
+
+The type inference module takes in the untyped AST of expressions and runs Algorithm W (Hindley Milner Type 
+Inference).  
+Type checking is also done in one swift pass - a list, for example, cannot contain elements of two different
+types.
+Scope is also handled in this module - a single global map stores variables and their types and thus
+typing is dynamic. Variables and functions cannot be redefined. Other semantic checking, such as argument
+counts 
 
 E. Semant (Lakshmi, Husam, Harvey)
-
-The semant module, takes in the output from the inference module and sets types for polymorphic functions.
+Relevant Files: semant.ml
+The semant module is an extension of type inference, and handles polymorphic functions.
 It first finds all the polymorphic functions, then finds all the calls made to these functions and adds in
 typed function definitions in place of the dummy type polymorphic functions.
 
 E. The Code Generator (Husam, Kaitlin, Lakshmi)
-
+Relevant Files: codegen.ml
 
 F. The C Libraries (Kaitlin, Lakshmi, Husam)
 The synth and make_midi built-in functions were written in C. The C methods convert our rhythm, pitch and other music
@@ -149,8 +150,7 @@ We wrote tests for every time we implemented a new feature. We also wrote integr
 to make sure that our modules worked in conjunction with each other. For each test, we also wrote
 an expected output file.
 C. Test Automation
-Since we had so many tests, we wrote a test automation script called testall.sh, that runs
-every test and compares it to the expected output for that test. The testing script is included in the Appendix.
+Our test automation script, testall.sh, runs every test and compares it to the expected output for that test. The testing script is included in the Appendix.
 
 Lessons Learned Section
 A. Husam Abdul-Kafi
@@ -171,6 +171,17 @@ For future teams, start early, own features not modules and don't be afraid to O
 C. Kaitlin Pet
 
 D. Harvey Wu
+
+This was, by far, the largest project of my programming career, and the first one that involved a lot of teamwork.
+I learned to communicate often with my team, even if not much progress was being made, if just to touch base and
+keep each other interested in the project. Safe to say, I also got to know the ins-and-outs of Git pretty well. 
+
+I had never touched functional programming before this class and I loved the "if it compiles it works" aspect of 
+OCaml. By implementing a type inference algorithm I also learned a lot about what makes OCaml tick.
+
+Our group spent too much time early on arguing about syntax and design choices that seemed relatively trivial down 
+the road. For future groups: decide on something, and stick to it. Unless it breaks :)
+
 
 Appendix Section
 (*****************Include all code listings**************)
