@@ -100,5 +100,5 @@ and pitchlist pat = parse
 	let next_token lexbuf = match !state_ref with
 	    | NO -> token state_ref lexbuf
 	    | RHYTHM -> rhythmlist state_ref lexbuf
-			| PITCH -> pitchlist state_ref lexbud
+	    | PITCH -> pitchlist state_ref lexbuf
 }
