@@ -2,7 +2,7 @@
 
 {
 	open Parser
-	type is_pat = NO | RHYTHM
+	type is_pat = NO | RHYTHM | PITCH
 	let state_ref = ref NO
 }
 
@@ -17,7 +17,7 @@ rule token pat = parse
 | '['      { LBRACKET }
 | ']'      { RBRACKET }
 | '|'      { BAR }
-| "p:["    { PLBRACKET }
+| "p:["    { pat:= PITCH; PLBRACKET }
 | "r:["    { pat := RHYTHM; RLBRACKET }
 | ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
@@ -30,11 +30,6 @@ rule token pat = parse
 | '-'      { MINUS }
 | '*'      { TIMES }
 | '/'      { DIVIDE }
-| '^'      { OUP }
-| 'v'      { ODOWN }
-| 'b'      { FLAT }
-| '#'      { OCTOTHORPE }
-| 'o'      { RHYTHMDOT }
 | '@'      { CONCAT }
 | '='      { ASSIGN }
 | "=="     { EQ }
@@ -81,8 +76,8 @@ and stringl pat buffer = parse
  | eof { raise End_of_file }
  | _ as char { Buffer.add_char buffer char; stringl pat buffer lexbuf }
 
-and listl pat = parse
-[' ' '\t' '\r' '\n'] { listl pat lexbuf } (* Whitespace *)
+and rhythmlist pat = parse
+[' ' '\t' '\r' '\n'] { rhythmlist pat lexbuf } (* Whitespace *)
 | ['0'-'9']*'.'['0'-'9']+ | ['0'-'9']+'.'['0'-'9']* as lxm { FLITERAL(float_of_string lxm) }
 | 'q'      { FLITERAL(1.0)}
 | 'w'      { FLITERAL(4.0) }
@@ -92,8 +87,18 @@ and listl pat = parse
 | 's'      { FLITERAL(0.25) }
 | ']'      { pat := NO; RBRACKET }
 
+and pitchlist pat = parse
+[' ' '\t' '\r' '\n'] { pitchlist pat lexbuf } (* Whitespace *)
+| ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
+| '^'      { OUP }
+| 'v'      { ODOWN }
+| 'b'      { FLAT }
+| '#'      { OCTOTHORPE }
+| ']'      { pat := NO; RBRACKET }
+
 {
 	let next_token lexbuf = match !state_ref with
 	    | NO -> token state_ref lexbuf
-	    | RHYTHM -> listl state_ref lexbuf
+	    | RHYTHM -> rhythmlist state_ref lexbuf
+			| PITCH -> pitchlist state_ref lexbud
 }
