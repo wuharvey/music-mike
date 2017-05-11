@@ -5,13 +5,14 @@
 #  Compile, run, and check the output of each expected-to-work test
 #  Compile and check the error of each expected-to-fail test
 
+rm *.s *.ll *.exe *.diff 2> /dev/null
+
 # Path to the LLVM interpreter
 LLI="lli"
 #LLI="/usr/local/opt/llvm/bin/lli"
 
 # Path to the LLVM compiler
 LLC="llc"
-
 
 # Path to the C compiler
 CC="gcc"
