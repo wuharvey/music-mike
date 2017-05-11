@@ -174,15 +174,20 @@ D. Type Inference (Harvey)
 Relevant Files: infer.ml 
 
 The type inference module takes in the untyped AST of expressions and runs Algorithm W (Hindley Milner Type 
-Inference).  
+Inference). This would have been impossible to do without consulting these resources:
+
+JSJS, a past PLT project: https://github.com/prakhar1989/JSJS/tree/master/src
+MinCaml, a subset of OCaml: http://esumii.github.io/min-caml/
+These lecture notes from Cornell: https://www.cs.cornell.edu/courses/cs3110/2011sp/lectures/lec26-type-inference/type-inference.htm
+
 Type checking is also done in one swift pass - a list, for example, cannot contain elements of two different
-types.
-Scope is also handled in this module - a single global map stores variables and their types and thus
+types. Scope is also handled in this module - a single global map stores variables and their types and thus
 typing is dynamic. Variables and functions cannot be redefined. Other semantic checking, such as argument
 counts 
 
 E. Semant (Lakshmi, Husam, Harvey)
 Relevant Files: semant.ml
+
 The semant module is an extension of type inference, and handles polymorphic functions.
 It first finds all the polymorphic functions, then finds all the calls made to these functions and adds in
 typed function definitions in place of the dummy type polymorphic functions.
