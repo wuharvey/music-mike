@@ -43,8 +43,6 @@ rule token pat = parse
 | "<="     { LEQ }
 | ">"      { GT }
 | ">="     { GEQ }
-| "<<"     { LTUPLE }
-| ">>"     { RTUPLE }
 | "&&"     { AND }
 | "||"     { OR }
 | "!"      { NOT }
@@ -52,11 +50,8 @@ rule token pat = parse
 | "then"   { THEN }
 | "else"   { ELSE }
 | "for"    { FOR }
-(*| "return" { RETURN }*)
 | "int"    { INT }
 | "bool"   { BOOL }
-(*| "float"  { FLOAT }*)
-(*| "unit"   { UNIT }*)
 | "true"   { TRUE }
 | "false"  { FALSE }
 | "def"    { DEF }
