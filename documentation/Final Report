@@ -114,19 +114,35 @@ The scanner is written in OCamlLex and takes the .mike input to the compiler
 and tokenizes it into literals, identifiers, operators and keywords. It removes the white space
 and block comments. If any character cannot be lexed by the scanner or if
 any identifier or literal is not syntactically valid, the scanner throws an error. The tokens
-created by the scanner are used by the Parser to create an Abstract Syntax Tree.
+created by the scanner are used by the Parser to create an Abstract Syntax Tree. The scanner is
+context sensitive, so uses different pattern matching inside of rhythm and pitch lists.
 
-C. Parser (Husam, Harvey, Lakshmi, Kaitlin)
+C. Parser (Husam, Harvey, Kaitlin, Lakshmi)
 The parser is written in OCamlYacc and takes in a series of tokens. It uses the grammar described
 in parser.mly and datatypes defined in ast.ml to generate an Abstract Syntax Tree. In parser.mly, we define
 the Music-mike context-free grammar using productions. If the tokens produced by the scanner are successfully
 parsed that means that the .mike file is syntactically (though perhaps not semantically) correct.
 
-D. The Semantic Checker ()
-E. The Code Generator (Husam)
-F. The C Libraries ()
+D. Type Inference (Harvey)
+The type inference module, takes in the untyped AST of expressions and infers strong types or dummy
+types for expressions.
+
+E. Semant (Lakshmi, Husam, Harvey)
+
+The semant module, takes in the output from the inference module and sets types for polymorphic functions.
+It first finds all the polymorphic functions, then finds all the calls made to these functions and adds in
+typed function definitions in place of the dummy type polymorphic functions.
+
+E. The Code Generator (Husam, Kaitlin, Lakshmi)
+
+
+F. The C Libraries (Kaitlin, Lakshmi, Husam)
+The synth and make_midi built-in functions were written in C. The C methods convert our rhythm, pitch and other music
+structures into absolute pitches, rhythms and chords expressed in the CFugue syntax. We then call an executable we wrote
+that takes in an input string and produces a Midi file output using the CFugue libraries. This call to the compiled
+CFugue interfacer occurs in the make_midi C method.
 
 Test Plan Section
 A. *****************2 examples of source to code******************
 B. Test Suites
-We wrote tests for every time we implemented a new feature. 
+We wrote tests for every time we implemented a new feature.
