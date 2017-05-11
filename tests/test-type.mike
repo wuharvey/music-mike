@@ -1,9 +1,9 @@
 /* assume print is not different words */
 a="hello";
-Print( a);
+Print(a);
 b=8;
 Print(b);
-c='c';
+c="c";
 Print(c);
 d=[1 2 3];
 Print(d);
