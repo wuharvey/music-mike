@@ -1,17 +1,16 @@
 open Ast
+open Lib
 
 module StringMap = Map.Make(String)
 module StringSet = Set.Make(String)
 type environment = typ StringMap.t
 type constraints = (typ * typ) list 
-(* TODO: Right now everything is a global *)
 
 let letter = ref (Char.code 'a');;
-
 let new_type () = let c1 = !letter in
   incr letter; TType(Char.escaped (Char.chr c1))
 ;;
-   
+    
 let kws = ["if"; "then"; "else"; "true"; "false"; "def"]
 ;;
 
@@ -80,6 +79,8 @@ let rec annotate_expr exp env : (aexpr * environment) =
     and e2, _ = annotate_expr e2 env in
     AIf(apred, e1, e2, new_type ()), env
   | Fun(name, args, e) ->
+    if StringMap.mem name predefined 
+    then raise (Failure "Cannot redefine stdlib function.");
     let args_t = List.map (fun f -> new_type ()) args
     and ret_t = new_type() in 
     let fun_t = TFun(args_t, ret_t) in
