@@ -80,10 +80,10 @@ Tester, System Architect, Project Manager and Language Guru. Each member was inv
 in developing certain functionalities and portions of components. The team frequently worked
 together either in-person or teleconference.
 Team Member
-Husam Abdul-Kafi  Systems Architect Testing Architecture, Code generation
-Lakshmi Bodapati  Project Manager   Compiler Front-end, Documentation
-Kaitlin Pet       Tester            Pitch and Chord Full Stack Abstraction, Testing Architecture
-Harvey Wu         Language Guru     Compiler Front-end, Semantic Checker, Type Inference
+Husam Abdul-Kafi  Systems Architect Code generation, Testing Architecture
+Lakshmi Bodapati  Project Manager   Compiler Front-end, Documentation, Polymorphic Function Typing
+Kaitlin Pet       Tester            Pitch and Chord Full Stack Abstraction, Library Linking, Testing Architecture
+Harvey Wu         Language Guru     Type Inference, Compiler Front-end
 
 E. Software Development Environment
 Our Stack
@@ -114,19 +114,65 @@ The scanner is written in OCamlLex and takes the .mike input to the compiler
 and tokenizes it into literals, identifiers, operators and keywords. It removes the white space
 and block comments. If any character cannot be lexed by the scanner or if
 any identifier or literal is not syntactically valid, the scanner throws an error. The tokens
-created by the scanner are used by the Parser to create an Abstract Syntax Tree.
+created by the scanner are used by the Parser to create an Abstract Syntax Tree. The scanner is
+context sensitive, so uses different pattern matching inside of rhythm and pitch lists.
 
-C. Parser (Husam, Harvey, Lakshmi, Kaitlin)
+C. Parser (Husam, Harvey, Kaitlin, Lakshmi)
 The parser is written in OCamlYacc and takes in a series of tokens. It uses the grammar described
 in parser.mly and datatypes defined in ast.ml to generate an Abstract Syntax Tree. In parser.mly, we define
 the Music-mike context-free grammar using productions. If the tokens produced by the scanner are successfully
 parsed that means that the .mike file is syntactically (though perhaps not semantically) correct.
 
-D. The Semantic Checker ()
-E. The Code Generator (Husam)
-F. The C Libraries ()
+D. Type Inference (Harvey)
+The type inference module, takes in the untyped AST of expressions and infers strong types or dummy
+types for expressions.
+
+E. Semant (Lakshmi, Husam, Harvey)
+
+The semant module, takes in the output from the inference module and sets types for polymorphic functions.
+It first finds all the polymorphic functions, then finds all the calls made to these functions and adds in
+typed function definitions in place of the dummy type polymorphic functions.
+
+E. The Code Generator (Husam, Kaitlin, Lakshmi)
+
+
+F. The C Libraries (Kaitlin, Lakshmi, Husam)
+The synth and make_midi built-in functions were written in C. The C methods convert our rhythm, pitch and other music
+structures into absolute pitches, rhythms and chords expressed in the CFugue syntax. We then call an executable we wrote
+that takes in an input string and produces a Midi file output using the CFugue libraries. This call to the compiled
+CFugue interfacer occurs in the make_midi C method.
 
 Test Plan Section
 A. *****************2 examples of source to code******************
 B. Test Suites
-We wrote tests for every time we implemented a new feature. 
+We wrote tests for every time we implemented a new feature. We also wrote integration tests
+to make sure that our modules worked in conjunction with each other. For each test, we also wrote
+an expected output file.
+C. Test Automation
+Since we had so many tests, we wrote a test automation script called testall.sh, that runs
+every test and compares it to the expected output for that test. The testing script is included in the Appendix.
+
+Lessons Learned Section
+A. Husam Abdul-Kafi
+
+B. Lakshmi Bodapati
+
+I learned a lot about Git and pull requests and how easily git branches can become
+messy, unorganized and complicated tree of merge conflicts. I also learned how to solve those
+problems, maybe not in the Git recommended way, but some way of getting a working master branch after
+merging in 4+ branches of conflicting code. I also learned a lot about dividing work and maximizing efficiency
+when all of us were working together and trying to knock out chunks of the project during our longer weekly meetings. The trickiest
+part was dividing up work such that everyone had something to do that wasn't blocked by something someone else had to do and
+every task was being worked on by someone who had some idea of what was necessary for successful completion. The coolest thing I
+learned was how to write a context-sensitive scanner. I learned the most OCaml while writing the polymorphic function definitions and
+call matching in the semant module. I also learned that OCaml is quite frosty and nice.
+For future teams, start early, own features not modules and don't be afraid to OCaml it up!
+
+C. Kaitlin Pet
+
+D. Harvey Wu
+
+Appendix Section
+(*****************Include all code listings**************)
+(*****************Include Git log************************)
+(*****************Include test scripts********************)
