@@ -10,6 +10,7 @@ int ***fold_lists ( int ***chord_list, int cl_length, int chord_lengths[],
  int start_pitch, int *modelist, int mode_length){
 //fprintf(stderr,"%s\n", "entering chord list");
 //map the mode to absolute pitches (0 corresponds to first scale degree)
+
 int i=0;
 while (i<mode_length){
         modelist[i]=modelist[i]+start_pitch;
@@ -53,7 +54,9 @@ return chord_list;
 }
 
 //takes normalized chord list and spits out list with actual pitches
-int ** apply_accidentals (int ***chordlist, int cl_len, int *chord_lengths, int mode_length, int **return_arr){
+int ** apply_accidentals (int ***chordlist, int cl_len, int *chord_lengths, int mode_length, int **return_arr, int * mode){
+        int octave=mode[mode_length-1]-mode[0];
+
         int j=0;
         while (j<cl_len){
                 int ** chord= chordlist[j];
@@ -62,7 +65,7 @@ int ** apply_accidentals (int ***chordlist, int cl_len, int *chord_lengths, int 
                         int * pitch= chord[i];
 			if (pitch[1]!=0){
 				//add or subtract octaves
-				int octave_shift=pitch[0]*mode_length;
+				int octave_shift=pitch[0]*octave;
 				pitch[1]=pitch[1]+octave_shift;
 				//add or subtract accidentals
 				pitch[1]=pitch[1]+pitch[2];
@@ -247,7 +250,7 @@ int synth(int *** chordlist, int len_chordlist, int * chord_lengths,
 		}
 	//copies new_list into pure_chord_list to incorporate octaves and accidentals (yes, I know a new int ** is redundant but atm just want to see if works
 	//fprintf(stderr,"%s\n", "after new_list");
-	int **correct_pitches=apply_accidentals(new_list, len_chordlist, chord_lengths, mode_length, pure_chord_arr);
+	int **correct_pitches=apply_accidentals(new_list, len_chordlist, chord_lengths, mode_length, pure_chord_arr, new_modelist);
 	//fprintf(stderr,"%d\n", chord_lengths[0]);
 	//takes rhythm list and turns into string that can be fed into CFugue
         memset(buff, '\0', 900);
