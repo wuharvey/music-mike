@@ -1,1 +1,1 @@
-Fatal error: exception Failure("Infer Error (225): Mismatched types [float] [int]")
+Fatal error: exception Failure("Mismatched types")
