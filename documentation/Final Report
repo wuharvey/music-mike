@@ -12,6 +12,59 @@ A set of pitches is defined as a **mode**. All modes are subsets of the chromati
 Music-mike is based on the following observations regarding Western music: one, that Western music is fundamentally  **chordal** and **modal**. Two, that Western music is repetitive and manipulative: simple building blocks of music are modified, then repeated multiple times in a piece. Finally, and most importantly, that these simple building blocks can described using lists and altered using a functional paradigm.
 
 Language Tutorial Section
+
+Basics
+
+Let's try defining a variable first:
+
+x = 5;
+
+Now, let's write a function:
+
+def AddFive a = a + 5;
+
+Notice that we don't need to add any type annotations. Type inference handles everything for us.
+We can also write polymorphic functions, like the identity function:
+
+def Identity x = x;
+y = Identity("Who am I");
+Printstr(y);
+
+Function calls require parentheses around arguments, but no commas to separate. For example:
+
+def Add j k = j + k;
+sum = Add(4 5);
+
+Note that arithmetic operators do not overload: we cannot pass in an floats to our Add function:
+
+/* This fails! */
+wrong = Add(4.5 3);
+
+A Musical Hello World
+
+First we need to define a mode:
+
+/* A major scale */
+major = [1 3 5 6 8 10 12 13]; 
+
+A rhythm list is defined with the r:[] constructor:
+
+r1 = r:[s s s s s s e s s s s s s e];
+
+A pitch list is defined with the p:[] constructor:
+
+p1 = p:[1 1 5 5 6 6 5 4 4 3 3 2 2 1];
+
+Now, we can generate a music string with the Synth function, which
+takes a pitch list, rhythm list, mode, start node, and channel:
+
+startnote = 50;
+s = Synth(p1 r1 major startnote 1);
+/* Make_midi outputs a midi file */  
+Make_midi(s "twinkle.midi");
+
+And that is twinkle twinkle little star!
+
 LRM Section
 Project Plan Section
 A. Process
