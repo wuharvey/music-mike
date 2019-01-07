@@ -116,7 +116,7 @@ int strgen (char * buff, double * rhythmlist, int ** corrected_chordlist, int cl
 			strcpy(lbracket, "[");
 			char rbracket[3];
 			strcpy(rbracket, "]/");
-			char plus[2];
+			char plus[3];
 			strcpy(plus, "+ ");
 			char space[2];
 			strcpy(space, " ");
