@@ -17,7 +17,7 @@ http://llvm.moe/ocaml/
 
 module L = Llvm
 module A = Ast
-module I = Infer
+(* module I = Infer  *)
 
 module StringMap = Map.Make(String)
 
@@ -26,27 +26,33 @@ module StringMap = Map.Make(String)
     let second (_,a,_) = a;;
     let third  (_,_,a) = a;;
 
+(* Variables held by Hashtbl of strings: llvalue -> no type definition? *)
 let main_vars:(string, L.llvalue) Hashtbl.t = Hashtbl.create 100
+
+(* Function definitions held by Hashtbl with FID: (return_value * body ) *)
 let function_defs:(string, (L.llvalue * A.aexpr)) Hashtbl.t = Hashtbl.create 100
 
 (* , functions, structs *)
-let translate (exprs) =
+let translate exprs =
   let context = L.global_context () in
 
+  (*names references line 645 in creating actuals - see if it works *)
   let names:(string, L.llvalue) Hashtbl.t = Hashtbl.create 10 in
+
   let the_module = L.create_module  context "MusicMike"
 
-  and i32_t   = L.i32_type          context      (* integer *)
-  and i8_t    = L.i8_type           context      (* char? *)
-  and i1_t    = L.i1_type           context      (* boole *)
-  and float_t = L.double_type       context      (* float *)
-  and void_t  = L.void_type         context in   (* void *)
-  let i8p_t   = L.pointer_type i8_t   in         (* char pointer-string*)
-  let i32p_t  = L.pointer_type i32_t in          (* int* *)
-  let i32pp_t = L.pointer_type i32p_t in         (* int**  *)
-  let i32ppp_t= L.pointer_type i32pp_t in        (* int***  *)
-  let floatp_t= L.pointer_type float_t in        (* float* *)
+  and i32_t   = L.i32_type          context      (* integer            *)
+  and i8_t    = L.i8_type           context      (* char?              *)
+  and i1_t    = L.i1_type           context      (* boole              *)
+  and float_t = L.double_type       context      (* float              *)
+  and void_t  = L.void_type         context in   (* void               *)
+  let i8p_t   = L.pointer_type i8_t    in        (* char pointer-string*)
+  let i32p_t  = L.pointer_type i32_t   in        (* int*               *)
+  let i32pp_t = L.pointer_type i32p_t  in        (* int**              *)
+  let i32ppp_t= L.pointer_type i32pp_t in        (* int***             *)
+  let floatp_t= L.pointer_type float_t in        (* float*             *)
 
+(* Define types  *)
   (* int list struct  *)
   let list_t  = L.named_struct_type context "list_struct" in
   L.struct_set_body list_t  [| i32_t ; i32p_t |] true;
@@ -69,7 +75,6 @@ let translate (exprs) =
   L.struct_set_body list_t_f  [| i32_t ; floatp_t |] true;
   let listp_t_f = L.pointer_type list_t_f in
 
-
   let ltype_of_typ = function
       A.TInt     -> i32_t
     | A.TBool    -> i1_t
@@ -82,6 +87,7 @@ let translate (exprs) =
     | A.TUnit    -> void_t
     | t -> raise (Failure (A.string_of_typ(t) ^ "Shouldn't be here")) in
     
+(* used in line 301, list of ints and floats?  *)
   let stype_of_typ = function 
     A.TList(A.TInt) -> (i32_t, list_t) 
   | A.TList(A.TFloat) -> (float_t, list_t_f)

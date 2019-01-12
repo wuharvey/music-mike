@@ -2,13 +2,13 @@
     open Ast
 %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET PLBRACKET RLBRACKET LTUPLE RTUPLE 
-%token OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT DOTLBRACKET BAR
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET PLBRACKET RLBRACKET  
+%token OUP ODOWN FLAT OCTOTHORPE DOTLBRACKET BAR /*RHYTHMDOT*/ 
 
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT FPLUS FMINUS FTIMES FDIVIDE CONCAT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
-%token IF THEN ELSE WHILE INT BOOL VOID
-%token TYP DEF FOR
+%token IF THEN ELSE 
+%token DEF 
 %token <int> LITERAL
 %token <float> FLITERAL
 %token <string> STRING
@@ -16,7 +16,6 @@
 %token EOF
 
 %right ASSIGN
-%right call
 %right IF
 %left OR
 %left AND
@@ -24,11 +23,11 @@
 %nonassoc LT GT LEQ GEQ
 %left PLUS MINUS FPLUS FMINUS
 %left TIMES DIVIDE FTIMES FDIVIDE
-%left OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT
-%right RBRACKET
-%left LBRACKET
+/* %left OUP ODOWN FLAT OCTOTHORPE RHYTHMDOT */
+/* %right RBRACKET
+%left LBRACKET */
 %left CONCAT
-%right NOT NEG
+%right NOT /*NEG */
 
 %start program
 %type <Ast.program> program
@@ -43,25 +42,12 @@ program:
 
 
 
-/* "stmts is a tuple with the first field being a list of expressions (expr),
-the second field being a list of function declarations (fdecl), and the 
-third field being a list of type declaratiosn (tdecl)" */
+/* "A statement is an expression followed by semicolon " */
 
 stmts:
                         { [] }
   | stmts expr  SEMI    { $2 :: $1 }
-
-                            
-/* "A function declaration `fdecl` consists of 
-    a keyword 'Def'
-
-    a Function Identifier `FID` - string w/ first letter capitalized
-    a list of formals `formals_list`
-    a body which consists of an `expr` expression "*/
-
-fdecl: 
-    DEF FID formals_list ASSIGN expr { Fun($2, List.rev($3), $5) }  
-    
+   
 /* "expressions always return a value and consists of:
 	literals-basic types
 	binop-binary operator
@@ -75,6 +61,7 @@ expr:
   | primaries { $1 }
   | fdecl     { $1 }
   | LPAREN expr RPAREN { $2 }
+ 
   
 literals:
     LITERAL          { Literal($1) }
@@ -106,35 +93,44 @@ binop:
   | expr OR      expr { Binop($1, Or,    $3) }
 
 unop:
-/*| MINUS expr %prec NEG { Preop(Neg, $2) }  */
+/*| MINUS expr           { Preop(Neg, $2) }  */
   | NOT expr             { Preop(Not, $2) }
 
 
 
 primaries:
-	/* "Block of expressions" */
+/* "Block of expressions" */
+    LBRACE semi_list RBRACE          { Block(List.rev($2)) }
 
-    LBRACE semi_list RBRACE { Block(List.rev($2)) }
-	/* "Calling a function "*/
+/* "Calling a function "*/
   | FID LPAREN actuals_list RPAREN   { Call(ID($1), List.rev($3)) }
-	/* "Assigning a value to an variable"*/       
-  | assign          { $1 }
-	/* "list of expressions of same type (enforced in semant.ml)" */
-  | LBRACKET expr_list RBRACKET  { List(List.rev($2)) }
-	/* "list of chords" */
-  | PLBRACKET pxpr_list RBRACKET { ChordList(List.rev($2)) }  
-       /*"list of rhythms"*/
-  | RLBRACKET expr_list RBRACKET { RList(List.rev($2)) }
-       /* "tuple of expressions with different types (enforced in semant.ml)" */
-/*  | LTUPLE expr_list RTUPLE      { Tuple($2) }*/
-	/* "concatanating 2 lists (enforced in semant.ml)" */
-  | expr CONCAT expr  { Concat($1, $3) }
-	/* "If, then else "*/
+
+/* "Assigning a value to an variable"*/       
+  | assign                           { $1 }
+
+/* "list of expressions of same type (enforced in semant.ml)" */
+  | LBRACKET expr_list RBRACKET      { List(List.rev($2)) }
+
+/* "list of chords" */
+  | PLBRACKET pxpr_list RBRACKET     { ChordList(List.rev($2)) }  
+
+/*"list of rhythms"*/
+  | RLBRACKET expr_list RBRACKET     { RList(List.rev($2)) }
+
+/* "IMPLEMENTED???
+tuple of expressions with different types (enforced in semant.ml)" */
+/*  | LTUPLE expr_list RTUPLE        { Tuple($2) }*/
+
+/* "concatanating 2 lists (enforced in semant.ml)" */
+  | expr CONCAT expr                 { Concat($1, $3) }
+
+/* "If, then else "*/
   | IF expr THEN expr ELSE expr  
       %prec IF
-      { If($2, $4, $6) }
-	/* "getting an element from a list/tuple/pitchlist" */
-  | ID DOTLBRACKET expr RBRACKET  { Subset(ID($1), $3) }
+                                     { If($2, $4, $6) }
+
+/* "getting an element from a list/tuple/pitchlist" */
+  | ID DOTLBRACKET expr RBRACKET     { Subset(ID($1), $3) }
  
 
 
@@ -142,12 +138,13 @@ primaries:
 assign:
     ID ASSIGN expr          { Assign($1, $3) }
 
-/*" List of assingments (a=b) used in type declaration " */  
+/*"TYPE DEF IMPLEMENTED? List of assingments (a=b) used in type declaration "  
 
 assign_list: 
 
     assign                  { [$1] }
   | assign_list assign      { $2 :: $1 }
+*/
 
 
 /* "List of whitespace separated expressions used in
@@ -166,12 +163,6 @@ semi_list:
   | semi_list expr SEMI     { $2 :: $1 } 
 
 
-
-/* "List of formal arguments used in function declaration" */   
-
-formals_list:
-    /*nothing*/                      { [] }
-  | formals_list ID         { $2 :: $1 }
 
 
 /* "List of actual arguments used in function calls" */
@@ -223,4 +214,21 @@ postfield:
 /*nothing*/                 { 0 }
   | postfield OCTOTHORPE    { $1+1 }
   | postfield FLAT          { $1-1 }
- 
+
+                             
+/* "A function declaration `fdecl` consists of 
+    a keyword 'Def'
+    a Function Identifier `FID` - string w/ first letter capitalized
+    a list of formals `formals_list`
+    a body which consists of an `expr` expression "*/
+
+fdecl: 
+    DEF FID formals_list ASSIGN expr { Fun($2, List.rev($3), $5) }  
+
+
+/* "List of formal arguments used in function declaration" */   
+
+formals_list:
+    /*nothing*/                      { [] }
+  | formals_list ID         { $2 :: $1 }
+
