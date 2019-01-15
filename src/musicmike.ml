@@ -24,7 +24,7 @@ let _ =
   | Ast -> print_string (Ast.string_of_program ast)
   | Sast -> print_string (Ast.string_of_inferred sast)
   | LLVM_IR -> print_string (Llvm.string_of_llmodule (Codegen.translate sast))
-  | Semant -> print_string  ("SEMANT DEBUGGING :" ^ Ast.string_of_inferred sast)
+  | Semant -> print_string  ("SEMANT DEBUGGING :" ^ Ast.string_of_inferred (List.rev sast))
   | Compile -> let m = Codegen.translate sast in
     Llvm_analysis.assert_valid_module m;
     print_string (Llvm.string_of_llmodule m)

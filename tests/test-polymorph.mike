@@ -1,0 +1,4 @@
+y = 6;
+def Fun x = x;
+z = Fun(y);
+Printint(z);

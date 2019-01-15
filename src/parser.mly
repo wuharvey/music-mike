@@ -102,7 +102,9 @@ primaries:
 /* "Block of expressions" */
     LBRACE semi_list RBRACE          { Block(List.rev($2)) }
 
+
 /* "Calling a function "*/
+
   | FID LPAREN actuals_list RPAREN   { Call(ID($1), List.rev($3)) }
 
 /* "Assigning a value to an variable"*/       

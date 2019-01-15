@@ -1,4 +1,4 @@
 # music-mike
-A project for COMS W4115.
+Programming language for music generation with a Hindley-Milner type system (aka type inference!).
 
-Work in progress. Go away!
+Written mainly in OCaml.
