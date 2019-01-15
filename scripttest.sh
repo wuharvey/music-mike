@@ -8,8 +8,8 @@ rm *.ll *.s *.exe *.out
 echo "./src/musicmike.native < ./tests/${base}.mike >  ${base}.ll"
 ./src/musicmike.native < ./tests/${base}.mike >  ${base}.ll
 
-echo "llc ${base}.ll > ${base}.s"
-llc ${base}.ll > ${base}.s
+echo "llc -relocation-model=pic ${base}.ll > ${base}.s"
+llc -relocation-model=pic "${base}.ll" ">" "${base}.s"
 
 echo " cc -o ${base}.exe ${base}.s ./src/synth.o ./src/make_midi.o"
 cc -o ${base}.exe ${base}.s ./src/synth.o ./src/make_midi.o
