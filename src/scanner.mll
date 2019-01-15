@@ -21,7 +21,7 @@ rule token pat = parse
 | "r:["    { pat := RHYTHM; RLBRACKET }
 | ".["	   { DOTLBRACKET }
 | ';'      { SEMI }
-| ','      { COMMA }
+(*| ','      { COMMA }*)
 | '+'      { PLUS }
 | "+."     { FPLUS }
 | "-."     { FMINUS }
@@ -34,7 +34,7 @@ rule token pat = parse
 | 'v'      { ODOWN }
 | 'b'      { FLAT }
 | '#'      { OCTOTHORPE }
-| 'o'      { RHYTHMDOT }
+(*| 'o'      { RHYTHMDOT } NOT IMPLEMENTED *)
 | '@'      { CONCAT }
 | '='      { ASSIGN }
 | "=="     { EQ }
@@ -43,15 +43,21 @@ rule token pat = parse
 | "<="     { LEQ }
 | ">"      { GT }
 | ">="     { GEQ }
+
+(*| "<<"     { LTUPLE }
+  | ">>"     { RTUPLE }*)
+
 | "&&"     { AND }
 | "||"     { OR }
 | "!"      { NOT }
 | "if"     { IF }
 | "then"   { THEN }
 | "else"   { ELSE }
-| "for"    { FOR }
-| "int"    { INT }
-| "bool"   { BOOL }
+
+(*| "for"    { FOR }*)
+(*| "return" { RETURN }*)
+(*| "float"  { FLOAT }*)
+(*| "unit"   { UNIT }*)
 | "true"   { TRUE }
 | "false"  { FALSE }
 | "def"    { DEF }
